@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>inking web component</title>
+        <script type="module" src="./build/inking-canvas.js"></script>
+        <script type="module" src="./build/inking-toolbar.js"></script>
+    </head>
+    <body>
+        <div class="parent">
+            <div class="child1"></div>
+            <div class="child2">
+                <inking-canvas name="myCanvas"></inking-canvas>
+                <inking-toolbar canvas="myCanvas" orientation=""></inking-toolbar>
+            </div>
+        </div>
+    </body>
+    <style type="text/css" media="screen">
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+        .parent {
+            /* height: 500px; */
+            height: 100%;
+            background: pink;
+            position: relative;
+        }
+        .child1 {
+            height: 10%;
+            width: 100px;
+            background: purple;
+        }
+        .child2 {
+            /* height: 400px; */
+            height: 90%;
+            /* width: 400px; */
+            background: yellow;
+            position: relative;
+            margin-left: 100px;
+            /* margin-right: 100px; */
+        }
+    </style>
+</html>
