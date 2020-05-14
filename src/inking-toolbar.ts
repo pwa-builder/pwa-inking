@@ -652,25 +652,25 @@ export class InkingToolbar extends LitElement {
                 padding-bottom: 10px;
             }
             .pen-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_pen.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_pen.svg");
             }
             .pencil-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_pencil.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_pencil.svg");
             }
             .highlighter-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_highlighter.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_highlighter.svg");
             }
             .eraser-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_eraser.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_eraser.svg");
             }
             .ruler-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_ruler.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_ruler.svg");
             }
             .copy-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_copy.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_copy.svg");
             }
             .save-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/icons/toolbar_icons/v1/ic_save.svg");
+                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_save.svg");
             }
             #dropdown-container {
                 background-color: ${this.colorPaletteBackground};
