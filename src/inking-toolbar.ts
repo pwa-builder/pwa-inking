@@ -26,6 +26,7 @@ export class InkingToolbar extends LitElement {
     @query('.highlighter.palette') private highlighterPalette: HTMLElement;
     @query('#slider-checkbox') private sliderCheckbox: HTMLInputElement;
     @query('.slider') private slider: HTMLInputElement;
+    readonly defaultSliderSize = 12; 
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
@@ -35,8 +36,10 @@ export class InkingToolbar extends LitElement {
     @property({type: String}) private currentTool = "pen";
     @property({type: CSSResult}) private selectedPenColor: CSSResult = InkingToolbar.black;
     @property({type: CSSResult}) private selectedPenColorName: string = 'black';
+    @property({type: Number}) private selectedPenSize: number = this.defaultSliderSize;
     @property({type: CSSResult}) private selectedHighlighterColor: CSSResult = InkingToolbar.yellow;
     @property({type: CSSResult}) private selectedHighlighterColorName: string = 'yellow';
+    @property({type: Number}) private selectedHighlighterSize: number = this.defaultSliderSize;
     @property({type: String, attribute: "canvas"}) targetInkingCanvas: string = "";
     @property({type: InkingCanvas}) private inkingCanvas: InkingCanvas;
 
@@ -140,7 +143,7 @@ export class InkingToolbar extends LitElement {
                         </div>
                         <canvas class="sineCanvas"></canvas>
                         <div class="slider-container">
-                            <input type="range" min="1" max="24" value="12" class="slider" @input="${this.changeStrokeSize}">
+                            <input type="range" min="1" max="24" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
                     </div>
                     <div class="eraser-dropdown">
@@ -283,8 +286,9 @@ export class InkingToolbar extends LitElement {
                 break;
             case "eraser" :
                 return InkingToolbar.white.toString();
+                break;
             default:
-                console.log("could not find color for selected utensil");
+                console.log("could not find color value for selected utensil");
                 break;
         }
     }
@@ -298,8 +302,25 @@ export class InkingToolbar extends LitElement {
                 break;
             case "eraser" :
                 return "white";
+                break;
             default:
-                console.log("could not find color for selected utensil");
+                console.log("could not find color name for selected utensil");
+                break;
+        }
+    }
+    getCurrentStrokeSize() {
+        switch (this.currentTool) {
+            case "pen" :
+                return this.selectedPenSize;
+                break;
+            case "highlighter" :
+                return this.selectedHighlighterSize;
+                break;
+            case "eraser" :
+                return parseInt(this.slider.value);
+                break;
+            default:
+                console.log("could not find stroke size for selected utensil");
                 break;
         }
     }
@@ -313,8 +334,9 @@ export class InkingToolbar extends LitElement {
                 break;
             case "eraser" :
                 return InkingToolbar.white;
+                break;
             default:
-                console.log("could not find color for selected utensil");
+                console.log("could not set color value for selected utensil");
                 break;
         }
     }
@@ -329,7 +351,22 @@ export class InkingToolbar extends LitElement {
             case "eraser" :
                 break;
             default:
-                console.log("could not find color for selected utensil");
+                console.log("could not set color name for selected utensil");
+                break;
+        }
+    }
+    setCurrentStrokeSize() {
+        switch (this.currentTool) {
+            case "pen" :
+                this.selectedPenSize = parseInt(this.slider.value);
+                break;
+            case "highlighter" :
+                this.selectedHighlighterSize = parseInt(this.slider.value);
+                break;
+            case "eraser" :
+                break;
+            default:
+                console.log("could not set stroke size for selected utensil");
                 break;
         }
     }
@@ -464,6 +501,7 @@ export class InkingToolbar extends LitElement {
                 }
                 this.toggleActiveCircles(selectedCircle);
                 this.updateSliderColor(colorName);
+                this.updateSliderSize();
 
             } else if (tool !== lastClickedTool) {
                 if (tool.classList.contains('clicked')) {
@@ -573,12 +611,19 @@ export class InkingToolbar extends LitElement {
             this.slider.classList.add(colorClass);
         }
     }
+    updateSliderSize() {
+        if (this.slider) {
+            this.slider.value = this.getCurrentStrokeSize().toString();
+            this.changeStrokeSize();
+        }
+    }
     changeStrokeSize() {
         if (this.inkingCanvas) {
             if (this.slider.disabled) {
                 this.inkingCanvas.changeStrokeSize(-1); 
             } else  {
-                this.inkingCanvas.changeStrokeSize(parseInt(this.slider.value));
+                this.setCurrentStrokeSize();
+                this.inkingCanvas.changeStrokeSize(this.getCurrentStrokeSize());
                 if (this.sineCanvas) {
                     this.requestDrawSineCanvas();
                 }
