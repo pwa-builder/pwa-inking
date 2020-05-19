@@ -49,7 +49,7 @@ export class InkingCanvas extends LitElement {
 
     firstUpdated() {
 
-        // put this somewhere else later
+        // TODO: put this somewhere else later
         this.deleteCanvasContents();
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
@@ -59,6 +59,9 @@ export class InkingCanvas extends LitElement {
 
         // equip canvas to handle & adapt to external resizing
         window.addEventListener('resize', () => this.requestCanvasResize(), false);
+
+        // refresh canvas when browser tab was switched and is re-engaged
+        window.addEventListener('focus', () => this.requestCanvasResize(), false);
 
         // set up input capture events
         (window as any).requestIdleCallback(async () => {
