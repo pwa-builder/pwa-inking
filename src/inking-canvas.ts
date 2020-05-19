@@ -261,6 +261,18 @@ export class InkingCanvas extends LitElement {
                     let pressure = (pointer.nativePointer as PointerEvent).pressure;
                     // if (pointerType === "pen") console.log("pressure: " + pressure);
 
+                    let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
+                    if (pointerType === "pen") console.log("tiltX: " + tiltX);
+
+                    let tiltY = (pointer.nativePointer as PointerEvent).tiltY;
+                    if (pointerType === "pen") console.log("tiltY: " + tiltY);
+
+                    let twist = (pointer.nativePointer as PointerEvent).twist;
+                    if (pointerType === "pen") console.log("twist: " + twist);
+
+                    let tangentialPressue = (pointer.nativePointer as PointerEvent).tangentialPressure;
+                    if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
+
                     // adjust stroke thickness for each input type if toolbar size slider isn't active
                     if (outerThis.strokeSize === -1) {
                         if (pointerType === 'pen') {
@@ -329,7 +341,14 @@ export class InkingCanvas extends LitElement {
 
                     } else {
 
-                       // apply ink as-is to canvas
+                        // handle pen/stylus erasing
+                        if ((pointer.nativePointer as PointerEvent).buttons === 32 || (pointer.nativePointer as PointerEvent).button === 5) {
+                            console.log("eraser detected");
+                            outerThis.context.strokeStyle = "white";
+                            outerThis.context.globalCompositeOperation = "source-over";
+                        }
+
+                       // apply ink to canvas
                        outerThis.context.stroke();
 
                     }
