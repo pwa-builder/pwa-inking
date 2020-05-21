@@ -15,6 +15,10 @@ export class InkingCanvas extends LitElement {
     // all properties used to manage the canvas object
     @query('canvas') private canvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private context: CanvasRenderingContext2D;
+    private static readonly minCanvasHeight = 300;
+    private static readonly minCanvasWidth = 300;
+    private static readonly minCanvasHeightCSS = css`${InkingCanvas.minCanvasHeight}px`;
+    private static readonly minCanvasWidthCSS = css`${InkingCanvas.minCanvasWidth}px`;
 
     // all properties immediately customizable by developer
     @property({type: Number, attribute: "height"}) canvasHeight: number = -1;
@@ -26,17 +30,19 @@ export class InkingCanvas extends LitElement {
     @property({type: Object}) private currentAspectRatio: {width: number, height: number};
     @property({type: Number}) private scale: number = 1;
     @property({type: Object}) private origin: {x: number, y: number};
+    @property({type: CustomEvent}) private inkingCanvasResizedEvent: CustomEvent = new CustomEvent('inking-canvas-resized');
 
     // all properties used by PointerTracker implementation
     @property({type: Map}) private strokes: Map<number, number>;
     @property({type: PointerTracker}) private tracker: PointerTracker;
 
-    // record most recent stroke size signalled by inking toolbar
+    // record properties set by external influencers (like toolbar)
     @property({type: Number}) private strokeSize: number = -1;
-
-    // default toolbar inking utensil selection
     @property({type: String}) private toolStyle: string = "pen";
     @property({type: String}) private strokeColor: string = "black";
+
+    // notify external influencers (like toolbar) when inking is happening
+    @property({type: CustomEvent}) private inkingStartedEvent: CustomEvent = new CustomEvent('inking-started');
 
     render() {
         return html`
@@ -170,7 +176,6 @@ export class InkingCanvas extends LitElement {
                 const outerThis = this;
                 const canvasContents = await (get('canvasContents') as any);
                 if (canvasContents) {
-                    console.log("loading canvas contents");
                     const tempImage = new Image();
                     tempImage.onload = () => {
                         outerThis.context.drawImage(tempImage, 0, 0);
@@ -179,7 +184,10 @@ export class InkingCanvas extends LitElement {
                 }
             });
 
-            console.log("canvas was resized");
+            // notify external influencers that resizing is happening
+            this.dispatchEvent(this.inkingCanvasResizedEvent);
+
+            // console.log("canvas was resized");
         }
 
         // start & continue canvas resize loop
@@ -234,6 +242,10 @@ export class InkingCanvas extends LitElement {
             start(pointer, event) {
                 // console.log("current start event pressure: " + (pointer.nativePointer as PointerEvent).pressure);
                 event.preventDefault();
+
+                // close any open dropdowns
+                outerThis.dispatchEvent(outerThis.inkingStartedEvent);
+
                 outerThis.strokes.set(pointer.id, (pointer.nativePointer as PointerEvent).width);
                 // console.log("pointer added");
                 return true;          
@@ -265,16 +277,16 @@ export class InkingCanvas extends LitElement {
                     // if (pointerType === "pen") console.log("pressure: " + pressure);
 
                     let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
-                    if (pointerType === "pen") console.log("tiltX: " + tiltX);
+                    // if (pointerType === "pen") console.log("tiltX: " + tiltX);
 
                     let tiltY = (pointer.nativePointer as PointerEvent).tiltY;
-                    if (pointerType === "pen") console.log("tiltY: " + tiltY);
+                    // if (pointerType === "pen") console.log("tiltY: " + tiltY);
 
                     let twist = (pointer.nativePointer as PointerEvent).twist;
-                    if (pointerType === "pen") console.log("twist: " + twist);
+                    // if (pointerType === "pen") console.log("twist: " + twist);
 
                     let tangentialPressue = (pointer.nativePointer as PointerEvent).tangentialPressure;
-                    if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
+                    // if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
 
                     // adjust stroke thickness for each input type if toolbar size slider isn't active
                     if (outerThis.strokeSize === -1) {
@@ -436,8 +448,8 @@ export class InkingCanvas extends LitElement {
                 box-sizing: border-box;
                 border: 2px solid black;
                 position: absolute;
-                min-height: 300px;
-                min-width: 300px;
+                min-height: ${this.minCanvasHeightCSS};
+                min-width: ${this.minCanvasWidthCSS};
                 touch-action: none;
                 display: block;
             }

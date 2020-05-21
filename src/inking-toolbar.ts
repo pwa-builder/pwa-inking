@@ -22,7 +22,7 @@ export class InkingToolbar extends LitElement {
     @query('.highlighter.palette') private highlighterPalette: HTMLElement;
     @query('#slider-checkbox') private sliderCheckbox: HTMLInputElement;
     @query('.slider') private slider: HTMLInputElement;
-    readonly defaultSliderSize = 12; 
+    private readonly defaultSliderSize = 12; 
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
@@ -197,10 +197,23 @@ export class InkingToolbar extends LitElement {
                 this.inkingCanvas = <InkingCanvas>possibleCanvas;
             }
         });
-        if (this.inkingCanvas) this.toolbarContainer.classList.add("show");
 
-        // TODO: find more performant way to watch & respond to canvas resize event
-        window.addEventListener('resize', () => this.requestDrawSineCanvas(), false);
+        if (this.inkingCanvas) {
+
+            // make toolbar appear when connected to an inking canvas
+            this.toolbarContainer.classList.add("show");
+
+            // hide dropdown once inking starts
+            this.inkingCanvas.addEventListener('inking-started', () => {
+                this.hideElementIfVisible(this.inkDropdown);
+            }, false);
+
+            // redraw example stroke with new size when inking canvas resizes
+            this.inkingCanvas.addEventListener('inking-canvas-resized', () => {
+                this.requestDrawSineCanvas();
+            }, false);
+
+        }
     }
 
     setOrientation() {
@@ -363,7 +376,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     async drawSineCanvas() {
-        if (this.isWaitingToDrawSineCanvas) {
+        if (this.isWaitingToDrawSineCanvas && this.sineCanvas.classList.contains("show")) {
 
             // toggle semaphore to prevent unnecessary redraws
             this.isWaitingToDrawSineCanvas = false;
