@@ -115,17 +115,17 @@ export class InkingCanvas extends LitElement {
         });
     }
 
-    // expose change pen color API for toolbar and presenter
+    // expose change pen color API for external influencers
     changeUtensilColor(color: string) {
         if (this.context) this.strokeColor = color;
     }
 
-    // expose change stroke size API for toolbar and presenter
+    // expose change stroke size API for external influencers
     changeStrokeSize(strokeSize: number) {
         if (this.context) this.strokeSize = strokeSize;
     }
 
-    // expose ability to change stroke layering depending on selected utensil
+    // expose change stroke layering API depending on selected utensil for external influencers
     changeToolStyle(toolStyle: string) {
         if (this.context) {
             this.toolStyle = toolStyle;
@@ -234,7 +234,12 @@ export class InkingCanvas extends LitElement {
             this.deleteCanvasContents();
         }); 
     }
-
+    getPosX(pointer: any, rect: DOMRect) {
+        return (pointer.clientX - rect.left - this.origin.x) / this.scale;
+    }
+    getPosY(pointer: any, rect: DOMRect) {
+        return (pointer.clientY - rect.top - this.origin.y) / this.scale;
+    }
     async setUpPointerTrackerEvents() {
         this.strokes = new Map();
         const outerThis = this;     
@@ -243,7 +248,7 @@ export class InkingCanvas extends LitElement {
                 // console.log("current start event pressure: " + (pointer.nativePointer as PointerEvent).pressure);
                 event.preventDefault();
 
-                // close any open dropdowns
+                // notify any connected toolbar to close any open dropdown
                 outerThis.dispatchEvent(outerThis.inkingStartedEvent);
 
                 outerThis.strokes.set(pointer.id, (pointer.nativePointer as PointerEvent).width);
@@ -272,19 +277,15 @@ export class InkingCanvas extends LitElement {
                     outerThis.strokes.set(pointer.id, width);
                     // if (pointerType !== "pen") console.log("width: " + width);
 
-                    // collect pressure for pen strokes
+                    // collect info for pen strokes
                     let pressure = (pointer.nativePointer as PointerEvent).pressure;
                     // if (pointerType === "pen") console.log("pressure: " + pressure);
-
                     let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
                     // if (pointerType === "pen") console.log("tiltX: " + tiltX);
-
                     let tiltY = (pointer.nativePointer as PointerEvent).tiltY;
                     // if (pointerType === "pen") console.log("tiltY: " + tiltY);
-
                     let twist = (pointer.nativePointer as PointerEvent).twist;
                     // if (pointerType === "pen") console.log("twist: " + twist);
-
                     let tangentialPressue = (pointer.nativePointer as PointerEvent).tangentialPressure;
                     // if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
 
@@ -298,18 +299,15 @@ export class InkingCanvas extends LitElement {
                             }else {
                                 let scaledMultiplier = 50 * (pressure - defaultMousePressure);
                                 let adjustedPressure = 1.5 + (scaledMultiplier * (pressure - defaultMousePressure));
-                                // console.log("adjustedPressure: " + adjustedPressure);
                                 outerThis.context.lineWidth = adjustedPressure;
                             }
-                            // console.log("lineWidth for pen: " + outerThis.context.lineWidth);
                         } else {
                             // adjust stroke width for mouse & touch
                             outerThis.context.lineWidth = outerThis.strokes.get(pointer.id);
-                            // console.log("lineWidth for " + pointerType + ": " + outerThis.context.lineWidth);
                         }
                     } else {
+                        // take stroke size defined by external influencer
                         outerThis.context.lineWidth = outerThis.strokeSize;
-                        // console.log("current stroke width defined by slider is: " + outerThis.context.lineWidth);
                     }
 
                     let previousX: number, previousY: number, currentX: number, currentY: number;
@@ -317,30 +315,38 @@ export class InkingCanvas extends LitElement {
                     // translate pointer position if canvas has been resized/scaled & then draw the stroke
                     if (outerThis.origin) {
 
-                        // canvas has been resized so adjust the pointer coordinates
+                        // TODO: find better way to handle pen/pointer events for Firefox
+                        // make pen events in Firefox appear like mouse events since pressure appears 0 and width is super large
+                        if (width > window.innerWidth) {
+                            // console.log(width, pressure);
+                            if (outerThis.strokeSize !== -1) {
+                                outerThis.context.lineWidth = outerThis.strokeSize;
+                            } else {
+                                outerThis.context.lineWidth = 1;
+                            }
+                        }
 
                         let rect = outerThis.canvas.getBoundingClientRect();
-                        previousX = (previous.clientX - rect.left - outerThis.origin.x) / outerThis.scale;
-                        previousY = (previous.clientY - rect.top - outerThis.origin.y) / outerThis.scale;
 
+                        // ensure stroke does not retrace any past data
                         outerThis.context.beginPath();
-                        outerThis.context.moveTo(previousX, previousY);
-                        for (const point of pointer.getCoalesced()) {
-                            currentX = (point.clientX - rect.left - outerThis.origin.x) / outerThis.scale;
-                            currentY = (point.clientY - rect.top - outerThis.origin.y) / outerThis.scale;
-                            outerThis.context.lineTo(currentX, currentY);
-                        }
-                    } else { 
 
-                        // draw the points as-is since the canvas has not been resized yet
-
-                        outerThis.context.beginPath();
-                        previousX = previous.clientX;
-                        previousY = previous.clientY;
+                        // determine location of the stroke's start
+                        previousX = outerThis.getPosX(previous, rect);
+                        previousY = outerThis.getPosY(previous, rect);
                         outerThis.context.moveTo(previousX, previousY);
-                        for (const point of pointer.getCoalesced()) {
-                            currentX = point.clientX;
-                            currentY = point.clientY;
+
+                        // determine location of the stroke's end
+                        if (pointer.getCoalesced().length) {
+                            for (const point of pointer.getCoalesced()) {
+                                currentX = outerThis.getPosX(point, rect);
+                                currentY = outerThis.getPosY(point, rect);
+                                outerThis.context.lineTo(currentX, currentY);
+                            }
+                        } else {
+                            // enable Firefox touch inking
+                            currentX = outerThis.getPosX(pointer, rect);
+                            currentY = outerThis.getPosY(pointer, rect);
                             outerThis.context.lineTo(currentX, currentY);
                         }
                     }
@@ -356,6 +362,7 @@ export class InkingCanvas extends LitElement {
 
                     } else {
 
+                        // TODO: make pen erase work in Firefox (which does not seem to detect the below button states for Surface pen)
                         // handle pen/stylus erasing
                         if ((pointer.nativePointer as PointerEvent).buttons === 32 || (pointer.nativePointer as PointerEvent).button === 5) {
                             console.log("eraser detected");

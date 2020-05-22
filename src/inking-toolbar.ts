@@ -382,7 +382,7 @@ export class InkingToolbar extends LitElement {
             this.isWaitingToDrawSineCanvas = false;
 
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() * 1.5;
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentUtensilColor();
 
@@ -674,6 +674,10 @@ export class InkingToolbar extends LitElement {
             button {
                 position: relative;
             }
+            /* prevent Firefox from adding extra styling on focused button */
+            button::-moz-focus-inner {
+                border: 0;
+            }
             button.toolbar-icon {
                 background-color: ${InkingToolbar.white};
                 outline: none;
@@ -756,15 +760,13 @@ export class InkingToolbar extends LitElement {
             #erase-all {
                 width: 100%;
                 padding: 25px;
-                margin-top: 20px;
-                margin-bottom: 10px;
+                margin-top: 25px;
                 font-family: sans-serif;
                 font-size: 16px;
             }
             .palette {
                 display: none;
-                grid-template-columns: repeat(6, 1fr);
-                grid-gap: 5px;
+                grid-template-columns: repeat(6, 50px);
                 grid-auto-rows: minmax(25px, auto);
                 justify-items: center;
                 align-items: center;
@@ -776,8 +778,8 @@ export class InkingToolbar extends LitElement {
                 display: grid
             }
             .circle {
-                width: 35px;
-                height: 35px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 border: 7px solid ${this.colorPaletteBackground};
             }
@@ -890,8 +892,8 @@ export class InkingToolbar extends LitElement {
                 background-color: ${this.pink};
             }
             .sineCanvas {
-                height: 100px;
-                width: 85%;
+                height: 150px;
+                width: 300px;
                 background-color: transparent;
                 padding-left: 0;
                 padding-right: 0;
@@ -924,24 +926,23 @@ export class InkingToolbar extends LitElement {
             .slider:hover {
                 opacity: 1;
             }
+            /* prevent Firefox from adding extra styling on focused slider */
+            input[type=range]::-moz-focus-outer {
+                border: 0;
+            }
             .slider::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
                 width: 10px;
                 height: 25px;
-                background-color: gray;
                 border-radius: 5px;
                 cursor: pointer;
             }
             .slider::-moz-range-thumb {
                 width: 10px;
                 height: 25px;
-                background-color: gray;
-                border-radius: 5px;
+                border: none;
                 cursor: pointer;
-            }
-            .slider::-moz-range-progress {
-                background: gray;
             }
             .slider.black::-webkit-slider-thumb {
                 background-color: ${this.black};
@@ -964,7 +965,7 @@ export class InkingToolbar extends LitElement {
             .slider.gray::-webkit-slider-thumb {
                 background-color: ${this.gray};
             }               
-            .slider.black::-moz-range-thumb {
+            .slider.gray::-moz-range-thumb {
                 background-color: ${this.gray};
             }
             .slider.dark-gray::-webkit-slider-thumb {
