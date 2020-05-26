@@ -20,7 +20,10 @@ export class InkingToolbar extends LitElement {
     @query('#erase-all') private eraseAllBtn: HTMLButtonElement;
     @query('.pen-pencil.palette') private penPencilPalette: HTMLElement;
     @query('.highlighter.palette') private highlighterPalette: HTMLElement;
-    @query('#slider-checkbox') private sliderCheckbox: HTMLInputElement;
+    @query('#checkbox') private sliderCheckbox: HTMLInputElement;
+    @query('.checkbox-track') private sliderCheckboxTrack: HTMLInputElement;
+    @query('.on-text') private onText: HTMLElement;
+    @query('.off-text') private offText: HTMLElement;
     @query('.slider') private slider: HTMLInputElement;
     private readonly defaultSliderSize = 12; 
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
@@ -135,8 +138,10 @@ export class InkingToolbar extends LitElement {
                             <div class="red-orange circle" @click="${this.clickedColor}"></div>
                             <div class="violet circle" @click="${this.clickedColor}"></div>
                         </div>
-                        <div>
-                            <input type="checkbox" id="slider-checkbox">Use slider size</input>
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="checkbox"></input>
+                            <div class="checkbox-track"><span class="on-text">ON</span><span class="off-text show">OFF</span></div>
+                            <label class="checkbox-label" for="checkbox" name="toggle"><p class="checkbox-label-text">Use slider size</p></label>
                         </div>
                         <canvas class="sineCanvas"></canvas>
                         <div class="slider-container">
@@ -180,6 +185,7 @@ export class InkingToolbar extends LitElement {
 
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
+        this.sliderCheckbox.checked = false;
         this.sliderCheckbox.addEventListener('change', () => this.toggleSliderCheckbox(), false);
 
         // draw example stroke for ink dropdowns
@@ -471,6 +477,8 @@ export class InkingToolbar extends LitElement {
 
         this.updateSliderColor(colorClass);
 
+        this.updateCheckboxColor();
+
         if (this.sineCanvas) {
             this.requestDrawSineCanvas();
         }
@@ -545,6 +553,7 @@ export class InkingToolbar extends LitElement {
                 // update slider appearance to match saved utensil settings
                 this.updateSliderColor(colorName);
                 this.updateSliderSize();
+                this.updateCheckboxColor();
 
             } else if (tool !== lastClickedTool) {
                 if (tool.classList.contains('clicked')) {
@@ -569,9 +578,12 @@ export class InkingToolbar extends LitElement {
         }
     }
     toggleSliderCheckbox() {
+        this.updateCheckboxColor();
         this.slider.disabled = !this.slider.disabled;
         this.sineCanvas.classList.toggle("show");
         this.slider.classList.toggle("show");
+        this.onText.classList.toggle("show");
+        this.offText.classList.toggle("show");
         this.changeStrokeSize();
     }
     togglePalette(old: HTMLElement, current?: HTMLElement) {
@@ -623,6 +635,18 @@ export class InkingToolbar extends LitElement {
                 if (this.sineCanvas) {
                     this.requestDrawSineCanvas();
                 }
+            }
+        }
+    }
+    updateCheckboxColor() {
+        if (this.sliderCheckboxTrack) {
+            let color = this.toDash(this.getCurrentUtensilColorName());
+            if (this.sliderCheckboxTrack.classList.length > 1) {
+                    this.sliderCheckboxTrack.classList.remove(this.sliderCheckboxTrack.classList[1]);
+                    if (this.sliderCheckbox.checked) 
+                        this.sliderCheckboxTrack.classList.add(color);
+            } else if (this.sliderCheckbox.checked) {
+                this.sliderCheckboxTrack.classList.add(color);
             }
         }
     }
@@ -696,6 +720,13 @@ export class InkingToolbar extends LitElement {
                 border: none;
                 outline: none;
                 display: none;
+                width: 100%;
+                min-width: 200px;
+                background-color: ${InkingToolbar.lightGray};
+                padding: 25px;
+                margin-top: 25px;
+                font-family: sans-serif;
+                font-size: 16px;
             }
             button#erase-all.show {
                 display: inline-block;
@@ -757,13 +788,6 @@ export class InkingToolbar extends LitElement {
             .ink-dropdown.show {
                 display: block;
             }
-            #erase-all {
-                width: 100%;
-                padding: 25px;
-                margin-top: 25px;
-                font-family: sans-serif;
-                font-size: 16px;
-            }
             .palette {
                 display: none;
                 grid-template-columns: repeat(6, 50px);
@@ -787,6 +811,7 @@ export class InkingToolbar extends LitElement {
                 width: 40px;
                 height: 40px;
                 border: 2px solid ${this.colorPaletteBackground};
+                transition: all 0.2s ease;
             }
             .circle.clicked {
                 width: 30px;
@@ -794,6 +819,7 @@ export class InkingToolbar extends LitElement {
                 border: 3px solid ${this.colorPaletteBackground};
                 box-shadow: 0px 0px 0px 2px black;
                 border-radius: 50%;
+                transition: all 0.2s ease;
             }
             .circle.black {                
                 background-color: ${this.black};
@@ -903,6 +929,300 @@ export class InkingToolbar extends LitElement {
             }
             .sineCanvas.show {
                 display: block;
+            }
+            .checkbox-label {
+                position: relative;
+                display: block;
+                width: 65px;
+                height: 30px;
+                margin-bottom: 15px;
+            }
+            .checkbox-label input {
+                display: none;
+            }
+            .checkbox-label-text {
+                position: relative;
+                top: 7px;
+                margin-left: 75px;
+                white-space: nowrap;
+            }
+            .checkbox-track {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background: ${InkingToolbar.darkGray};
+                border-radius: 20px;
+                transition: all 0.2s ease;
+                color: ${InkingToolbar.white};
+            }
+            .checkbox-track::after {
+                position: absolute;
+                content: "";
+                width: 20px;
+                height: 20px;
+                background-color: ${InkingToolbar.white};
+                border-radius: 50%;
+                border: 4px solid ${InkingToolbar.darkGray};
+                top: 1px;
+                left: 1px;
+                transition: all 0.2s ease;
+            }
+            input:checked + .checkbox-track.white::after {
+                background-color: ${InkingToolbar.silver};
+                border-color: ${InkingToolbar.white};
+            }
+            .checkbox-track.black::after {
+                border-color: ${InkingToolbar.black};
+            }
+            .checkbox-track.silver::after {
+                border-color: ${InkingToolbar.silver};
+            }
+            .checkbox-track.gray::after {
+                border-color: ${InkingToolbar.gray};
+            }
+            .checkbox-track.dark-gray::after {
+                border-color: ${InkingToolbar.darkGray};
+            }
+            .slider-checkbox-track.charcoal::after {
+                border-color: ${InkingToolbar.charcoal};
+            }
+            .checkbox-track.magenta::after {
+                border-color: ${InkingToolbar.magenta};
+            }
+            .checkbox-track.red::after {
+                border-color: ${InkingToolbar.red};
+            }
+            .checkbox-track.red-orange::after {
+                border-color: ${InkingToolbar.redOrange};
+            }
+            .checkbox-track.orange::after {
+                border-color: ${InkingToolbar.orange};
+            }
+            .checkbox-track.gold::after {
+                border-color: ${InkingToolbar.gold};
+            }
+            .checkbox-track.yellow::after {
+                border-color: ${InkingToolbar.yellow};
+            }
+            .checkbox-track.grass-green::after {
+                border-color: ${InkingToolbar.grassGreen};
+            }
+            .checkbox-track.green::after {
+                border-color: ${InkingToolbar.green};
+            }
+            .checkbox-track.dark-green::after {
+                border-color: ${InkingToolbar.darkGreen};
+            }
+            .checkbox-track.teal::after {
+                border-color: ${InkingToolbar.teal};
+            }
+            .checkbox-track.blue::after {
+                border-color: ${InkingToolbar.blue};
+            }
+            .checkbox-track.indigo::after {
+                border-color: ${InkingToolbar.indigo};
+            }
+            .checkbox-track.purple::after {
+                border-color: ${InkingToolbar.purple};
+            }
+            .checkbox-track.violet::after {
+                border-color: ${InkingToolbar.violet};
+            }
+            .checkbox-track.beige::after {
+                border-color: ${InkingToolbar.beige};
+            }
+            .checkbox-track.light-brown::after {
+                border-color: ${InkingToolbar.lightBrown};
+            }
+            .checkbox-track.brown::after {
+                border-color: ${InkingToolbar.brown};
+            }
+            .checkbox-track.dark-brown::after {
+                border-color: ${InkingToolbar.darkBrown};
+            }
+            .checkbox-track.pastel-pink::after {
+                border-color: ${InkingToolbar.pastelPink};
+            }
+            .checkbox-track.pastel-orange::after {
+                border-color: ${InkingToolbar.pastelOrange};
+            }
+            .checkbox-track.pastel-yellow::after {
+                border-color: ${InkingToolbar.pastelYellow};
+            }
+            .checkbox-track.pastel-green::after {
+                border-color: ${InkingToolbar.pastelGreen};
+            }
+            .checkbox-track.pastel-blue::after {
+                border-color: ${InkingToolbar.pastelBlue};
+            }
+            .checkbox-track.pastel-purple::after {
+                border-color: ${InkingToolbar.pastelPurple};
+            }
+            .checkbox-track.light-blue::after {
+                border-color: ${InkingToolbar.lightBlue};
+            }
+            .checkbox-track.pink::after {
+                border-color: ${InkingToolbar.pink};
+            }
+            input:checked + .checkbox-track {
+                background-color: ${InkingToolbar.darkGreen};
+            }
+            input:checked + .checkbox-track.black {
+                background-color: ${InkingToolbar.black};
+                border-color: ${InkingToolbar.black};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.white {
+                background-color: ${InkingToolbar.white};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.silver {
+                background-color: ${InkingToolbar.silver};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.gray {
+                background-color: ${InkingToolbar.gray};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.dark-gray {
+                background-color: ${InkingToolbar.darkGray};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.charcoal {
+                background-color: ${InkingToolbar.charcoal};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.magenta {
+                background-color: ${InkingToolbar.magenta};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.red {
+                background-color: ${InkingToolbar.red};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.red-orange {
+                background-color: ${InkingToolbar.redOrange};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.orange {
+                background-color: ${InkingToolbar.orange};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.gold {
+                background-color: ${InkingToolbar.gold};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.yellow {
+                background-color: ${InkingToolbar.yellow};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.grass-green {
+                background-color: ${InkingToolbar.grassGreen};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.green {
+                background-color: ${InkingToolbar.green};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.dark-green {
+                background-color: ${InkingToolbar.darkGreen};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.teal {
+                background-color: ${InkingToolbar.teal};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.blue {
+                background-color: ${InkingToolbar.blue};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.indigo {
+                background-color: ${InkingToolbar.indigo};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.purple {
+                background-color: ${InkingToolbar.purple};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.violet {
+                background-color: ${InkingToolbar.violet};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.beige {
+                background-color: ${InkingToolbar.beige};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.light-brown {
+                background-color: ${InkingToolbar.lightBrown};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.brown {
+                background-color: ${InkingToolbar.brown};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.dark-brown {
+                background-color: ${InkingToolbar.darkBrown};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track.pastel-pink {
+                background-color: ${InkingToolbar.pastelPink};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pastel-orange {
+                background-color: ${InkingToolbar.pastelOrange};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pastel-yellow {
+                background-color: ${InkingToolbar.pastelYellow};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pastel-green {
+                background-color: ${InkingToolbar.pastelGreen};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pastel-blue {
+                background-color: ${InkingToolbar.pastelBlue};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pastel-purple {
+                background-color: ${InkingToolbar.pastelPurple};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.light-blue {
+                background-color: ${InkingToolbar.lightBlue};
+                color: ${InkingToolbar.black};
+            }
+            input:checked + .checkbox-track.pink {
+                background-color: ${InkingToolbar.pink};
+                color: ${InkingToolbar.white};
+            }
+            input:checked + .checkbox-track:before {
+                top: 5px;
+            }
+            input:checked + .checkbox-track:after {
+                transform: translateX(35px);
+            }
+            .on-text {
+                position: absolute;
+                top: 9px;
+                left: 12px;
+                font-size: 12px;
+                display: none;
+            }
+            .on-text.show {
+                display: inline;
+            }
+            .off-text {
+                position: absolute;
+                top: 9px;
+                left: 30px;
+                font-size: 12px; 
+                display: none;
+            }
+            .off-text.show {
+                display: inline;
             }
             .slider-container {
                 width: 100%;
