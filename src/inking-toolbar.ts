@@ -12,11 +12,12 @@ export class InkingToolbar extends LitElement {
     @query('#toolbar-container') private toolbarContainer: HTMLElement;
     @query('#tool-container') private toolContainer: HTMLElement;
     @property({type: NodeList}) private tools: NodeListOf<HTMLButtonElement>;
+    @property({type: HTMLButtonElement}) private selectedTool: HTMLButtonElement;
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
-    @property({type: NodeList}) private dropdowns: NodeListOf<HTMLDivElement>;
-    @query('.ink-dropdown') private inkDropdown: HTMLElement;
+    @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
+    @query('.ink-dropdown') private inkDropdown: HTMLDivElement;
     @query('.ink-dropdown .title') private inkDropdownTitle: HTMLElement;
-    @property({type: NodeList}) private circles: NodeListOf<HTMLDivElement>;
+    @property({type: HTMLDivElement}) private selectedCircle: HTMLDivElement;
     @query('#erase-all') private eraseAllBtn: HTMLButtonElement;
     @query('.pen-pencil.palette') private penPencilPalette: HTMLElement;
     @query('.highlighter.palette') private highlighterPalette: HTMLElement;
@@ -29,10 +30,8 @@ export class InkingToolbar extends LitElement {
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
-    @property({type: HTMLButtonElement}) private lastClickedBtn: HTMLButtonElement;
 
     // properties to influence connected inking canvas
-    @property({type: String}) private currentTool = "pen";
     @property({type: CSSResult}) private selectedPenColor: CSSResult = InkingToolbar.black;
     @property({type: CSSResult}) private selectedPenColorName: string = 'black';
     @property({type: Number}) private selectedPenSize: number = this.defaultSliderSize;
@@ -177,12 +176,6 @@ export class InkingToolbar extends LitElement {
         console.log('Low latency is NOT supported for sine wave canvas.');
         }
 
-        // collect reference to all dropdowns
-        this.dropdowns = this.dropdownContainer.querySelectorAll('#dropdown-container > div');
-
-        // collect reference to all color circles
-        this.circles = this.dropdownContainer.querySelectorAll('#dropdown-container div div .circle');
-
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
         this.sliderCheckbox.checked = false;
@@ -282,7 +275,7 @@ export class InkingToolbar extends LitElement {
         this.colors.set('pink', InkingToolbar.pink);
     }
     getCurrentUtensilColor() {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 return this.selectedPenColor.toString();
                 break;
@@ -298,7 +291,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     getCurrentUtensilColorName() {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 return this.selectedPenColorName;
                 break;
@@ -314,7 +307,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     getCurrentStrokeSize() {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 return this.selectedPenSize;
                 break;
@@ -330,7 +323,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     setCurrentUtensilColor(color: CSSResult) {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenColor = color;
                 break;
@@ -346,7 +339,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     setCurrentUtensilColorName(colorName: string) {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenColorName = colorName;
                 break;
@@ -361,7 +354,7 @@ export class InkingToolbar extends LitElement {
         }
     }
     setCurrentStrokeSize() {
-        switch (this.currentTool) {
+        switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenSize = parseInt(this.slider.value);
                 break;
@@ -433,7 +426,7 @@ export class InkingToolbar extends LitElement {
                 this.sineContext.lineTo(x, currentY);
                 previousY = currentY;
 
-                if (this.currentTool === "pencil") {
+                if (this.selectedTool.id === "pencil") {
                     this.inkingCanvas.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
                 } else {
                     this.sineContext.stroke();
@@ -451,23 +444,21 @@ export class InkingToolbar extends LitElement {
     clickedUtensil(e: Event) {
         let utensil = <HTMLButtonElement>e.target;
         console.log(utensil.id + " button clicked!");
-        this.updateCurrentTool(utensil);
+        this.updateSelectedTool(utensil);
     }
     clickedEraseAll(e: Event) {
-        let eraseAllBtn = (<HTMLButtonElement>e.target);
-        console.log(eraseAllBtn.id + " has been clicked!");
-
+        let eraser = (<HTMLButtonElement>e.target);
+        console.log(eraser.id + " has been clicked!");
         (window as any).requestIdleCallback( async () => {
             this.inkingCanvas.eraseAll();
         });
-
-        this.lastClickedBtn = eraseAllBtn;
+        this.selectedTool = eraser;
     }
     clickedColor(event: Event) {
 
         // find clicked color grid element through its class
-        let eventEl = (<HTMLDivElement>event.target);
-        let colorClass = eventEl.className.replace('clicked', '').replace('circle', '').trim();
+        let selectedCircle = (<HTMLDivElement>event.target);
+        let colorClass = selectedCircle.className.replace('clicked', '').replace('circle', '').trim();
 
         // get color string from css color
         let colorName = this.toCamelCase(colorClass);
@@ -483,7 +474,7 @@ export class InkingToolbar extends LitElement {
             this.requestDrawSineCanvas();
         }
 
-        this.toggleActiveCircles(eventEl);
+        this.updateSelectedColor(selectedCircle);
     }
     // clickedCopy() {
     //     if (this.inkingCanvas) {
@@ -493,19 +484,19 @@ export class InkingToolbar extends LitElement {
     //     }
     // }
     isUtensil(tool: string) {
-        return (tool === 'pen' || tool === 'pencil' 
-        || tool === 'highlighter' || tool === 'eraser');
+        return (tool === "pen" || tool === "pencil" 
+        || tool === "highlighter" || tool === "eraser");
     }
-    updateCurrentTool(selectedTool: HTMLButtonElement) {
-        if (selectedTool.id !== this.currentTool) {
-            this.currentTool = selectedTool.id;
-            this.inkingCanvas.changeToolStyle(this.currentTool);
+    updateSelectedTool(selectedTool: HTMLButtonElement) {
+        if (selectedTool !== this.selectedTool) {
             if (this.isUtensil(selectedTool.id)) {
+                this.switchUtensil(selectedTool);
                 this.changeInkingColor();
             }
+            this.inkingCanvas.changeToolStyle(this.selectedTool.id);
+        } else {
+            this.selectedDropdown.classList.toggle("show");
         }
-        // TODO: refactor contents to put function inside above if statement
-        this.switchUtensil(selectedTool);
     }
     switchUtensil(el: HTMLButtonElement) {
         let utensilName = el.id;
@@ -524,56 +515,46 @@ export class InkingToolbar extends LitElement {
             this.togglePalette(this.highlighterPalette, this.penPencilPalette);
             this.hideElementIfVisible(this.eraseAllBtn);
         }
-        this.toggleDropdown(this.inkDropdown, el === this.lastClickedBtn);
-        this.lastClickedBtn = <HTMLButtonElement>el;
-        this.toggleActiveTool(this.lastClickedBtn);
+        this.toggleDropdown(this.inkDropdown, el === this.selectedTool);
+        this.toggleActiveTool(el);
     }
     hideElementIfVisible(el: HTMLElement) {
         if (el.classList.contains("show")) 
             el.classList.remove("show");
     }
     toggleActiveTool(lastClickedTool: HTMLButtonElement) {
-        for (let tool of this.tools) {
-            if (tool === lastClickedTool && this.isUtensil(tool.id) && !tool.classList.contains('clicked')) {              
-                tool.classList.add('clicked');
+        if (this.selectedTool !== lastClickedTool) {
+
+            if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
+
+                // remove the color class which should be the last and 5th class
+                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+
+                this.selectedTool.classList.remove('clicked');
+            }
+
+            this.selectedTool = lastClickedTool;           
+            this.selectedTool.classList.add('clicked');
+        
+            if (this.isUtensil(this.selectedTool.id)) {
 
                 // use the css friendly color class name with dashes
                 let colorName = this.toDash(this.getCurrentUtensilColorName());
 
-                tool.classList.add(colorName);
+                this.selectedTool.classList.add(colorName);
 
                 let selectedCircle: HTMLDivElement;
-                if (this.currentTool === "highlighter") {
+                if (this.selectedTool.id === "highlighter") {
                     selectedCircle = this.inkDropdown.querySelector('.ink-dropdown .highlighter .' + colorName);
                 } else {
                     selectedCircle = this.inkDropdown.querySelector('.ink-dropdown .pen-pencil .' + colorName);
                 }
-                this.toggleActiveCircles(selectedCircle);
+                this.updateSelectedColor(selectedCircle);
 
                 // update slider appearance to match saved utensil settings
                 this.updateSliderColor(colorName);
                 this.updateSliderSize();
                 this.updateCheckboxColor();
-
-            } else if (tool !== lastClickedTool) {
-                if (tool.classList.contains('clicked')) {
-
-                    // remove the color class which should be the last and 5th class
-                    tool.classList.remove(tool.classList[4]);
-
-                    tool.classList.remove('clicked');
-                }
-            }
-        }
-    }
-    toggleActiveCircles(selectedCircle: HTMLDivElement) {
-
-        // make sure this circle looks clicked and others don't
-        for (let circle of this.circles) {
-            if (circle === selectedCircle && !circle.classList.contains("clicked")) {
-                selectedCircle.classList.add("clicked");
-            } else if (circle !== selectedCircle && circle.classList.contains("clicked")){
-                circle.classList.remove("clicked");
             }
         }
     }
@@ -592,18 +573,16 @@ export class InkingToolbar extends LitElement {
             current.classList.add("show");
         }
     }
-    toggleDropdown(selectedDropdown: HTMLElement, isLastElementClicked: boolean) {
-        for (let dropdown of this.dropdowns) {
-            if (dropdown === selectedDropdown) {
-                if (selectedDropdown.classList.contains("show")) {
-                    if (isLastElementClicked)
-                        selectedDropdown.classList.remove("show");
-                } else {
-                    selectedDropdown.classList.add("show");
-                }
+    toggleDropdown(selectedDropdown: HTMLDivElement, isLastElementClicked: boolean) {
+        if (this.selectedDropdown && this.selectedDropdown === selectedDropdown) {
+            if (this.selectedDropdown.classList.contains("show") && isLastElementClicked) {
+                this.selectedDropdown.classList.remove("show");
             } else {
-                this.hideElementIfVisible(dropdown);
+                this.selectedDropdown.classList.add("show");
             }
+        } else {
+            this.selectedDropdown = selectedDropdown;
+            this.selectedDropdown.classList.add("show");
         }
     }
     changeInkingColor(color?: CSSResult, colorName?: string) {
@@ -612,15 +591,15 @@ export class InkingToolbar extends LitElement {
             if (color) this.setCurrentUtensilColor(color);
             if (colorName) this.setCurrentUtensilColorName(colorName);
 
-            if (this.lastClickedBtn && this.lastClickedBtn.classList.contains('clicked')) {
+            if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
                 // remove the color class which should be the last and 5th class
-                this.lastClickedBtn.classList.remove(this.lastClickedBtn.classList[4]);
+                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
 
                 // use the css friendly color class name with dashes
                 let modifiedColorName = this.toDash(this.getCurrentUtensilColorName());
 
-                this.lastClickedBtn.classList.add(modifiedColorName);
+                this.selectedTool.classList.add(modifiedColorName);
             }
             this.inkingCanvas.changeUtensilColor(this.getCurrentUtensilColor());
         }
@@ -636,6 +615,15 @@ export class InkingToolbar extends LitElement {
                     this.requestDrawSineCanvas();
                 }
             }
+        }
+    }
+    updateSelectedColor(selectedCircle: HTMLDivElement) {
+        if (this.selectedCircle !== selectedCircle) {
+            if (this.selectedCircle && this.selectedCircle.classList.contains("clicked")) {
+                this.selectedCircle.classList.remove("clicked");
+            }
+            this.selectedCircle = selectedCircle;
+            this.selectedCircle.classList.add("clicked");
         }
     }
     updateCheckboxColor() {
