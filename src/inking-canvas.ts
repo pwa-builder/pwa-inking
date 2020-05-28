@@ -2,7 +2,8 @@ import {
     LitElement, html, customElement, property, css, query
 } from 'lit-element';
 import { get, set , del } from 'idb-keyval';
-import PointerTracker from 'pointer-tracker';
+// import PointerTracker from 'pointer-tracker';
+import PointerTracker from "./PointerTracker.js";
 
 // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
 const defaultMousePressure: number = 0.5;
