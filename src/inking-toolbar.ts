@@ -26,7 +26,7 @@ export class InkingToolbar extends LitElement {
     @query('.on-text') private onText: HTMLElement;
     @query('.off-text') private offText: HTMLElement;
     @query('.slider') private slider: HTMLInputElement;
-    private readonly defaultSliderSize = 12; 
+    private readonly defaultSliderSize = 24; 
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
@@ -144,7 +144,7 @@ export class InkingToolbar extends LitElement {
                         </div>
                         <canvas class="sineCanvas"></canvas>
                         <div class="slider-container">
-                            <input type="range" min="1" max="24" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
+                            <input type="range" min="1" max="48" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
                         <button id="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
@@ -381,7 +381,7 @@ export class InkingToolbar extends LitElement {
             this.isWaitingToDrawSineCanvas = false;
 
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() / devicePixelRatio;
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentUtensilColor();
 

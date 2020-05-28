@@ -78,20 +78,22 @@ export class InkingCanvas extends LitElement {
     
     async setUpCanvas() {
 
-        // TODO: fix canvas filling parent edge cases
-        if (this.canvasWidth !== -1) {
-            this.canvas.width = this.canvasWidth;
+        if (this.canvasHeight === -1) {
+            this.canvas.style.height = '100%';
         } else {
-            this.canvas.style.width = '100%';
-            this.canvas.width = this.canvas.offsetWidth;
-        }
-
-        if (this.canvasHeight !== -1) {
             this.canvas.height = this.canvasHeight;
         }
-        else {
-            this.canvas.style.height = '100%';
-            this.canvas.height = this.canvas.offsetHeight;
+        if (this.canvasWidth === -1) {
+            this.canvas.style.width = '100%';
+        } else {
+            this.canvas.width = this.canvasWidth;
+        }
+
+        // support HiDPI screens
+        if (this.canvasHeight === -1 || this.canvasWidth === -1) {
+            let rect = this.canvas.getBoundingClientRect();
+            if (this.canvasHeight === -1) this.canvas.height = rect.height * devicePixelRatio;
+            if (this.canvasWidth === -1) this.canvas.width = rect.width * devicePixelRatio;
         }
 
         // record original canvas aspect ratio for resizing
@@ -168,11 +170,10 @@ export class InkingCanvas extends LitElement {
             this.isWaitingToResize = false;
 
             (window as any).requestIdleCallback(async () => {
-                this.clearCanvas();
-            });
 
-            // reload canvas with previous canvas state
-            (window as any).requestIdleCallback(async () => {
+                this.clearCanvas();
+
+                // reload canvas with previous contents
                 const outerThis = this;
                 const canvasContents = await (get('canvasContents') as any);
                 if (canvasContents) {
@@ -198,11 +199,16 @@ export class InkingCanvas extends LitElement {
 
     async clearCanvas() {
 
-        if (this.canvasHeight == -1) {
-            this.canvas.height = this.canvas.offsetHeight;
-        }
-        if (this.canvasWidth == -1) {
-            this.canvas.width = this.canvas.offsetWidth;
+        // support HiDPI screens
+        if (this.canvasHeight === -1 || this.canvasWidth === -1) {
+            let rect = this.canvas.getBoundingClientRect();
+            if (this.canvasHeight === -1) {
+                this.canvas.height = rect.height * devicePixelRatio;
+            }
+            if (this.canvasWidth === -1) {
+                this.canvas.width = rect.width * devicePixelRatio;
+            }
+            this.context.scale(devicePixelRatio, devicePixelRatio);
         }
 
         // determine scale of contents to fit canvas
@@ -235,10 +241,10 @@ export class InkingCanvas extends LitElement {
         }); 
     }
     getPosX(pointer: any, rect: DOMRect) {
-        return (pointer.clientX - rect.left - this.origin.x) / this.scale;
+        return ((pointer.clientX * devicePixelRatio) - (rect.left * devicePixelRatio) - this.origin.x) / this.scale;
     }
     getPosY(pointer: any, rect: DOMRect) {
-        return (pointer.clientY - rect.top - this.origin.y) / this.scale;
+        return ((pointer.clientY * devicePixelRatio) - (rect.top * devicePixelRatio) - this.origin.y) / this.scale;
     }
     async setUpPointerTrackerEvents() {
         this.strokes = new Map();
