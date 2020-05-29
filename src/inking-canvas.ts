@@ -60,7 +60,7 @@ export class InkingCanvas extends LitElement {
         this.deleteCanvasContents();
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
-        (window as any).requestIdleCallback(async () => {
+        this.runAsynchronously( () => { 
             this.setUpCanvas();
         });
 
@@ -71,10 +71,9 @@ export class InkingCanvas extends LitElement {
         window.addEventListener('focus', () => this.requestCanvasResize(), false);
 
         // set up input capture events
-        (window as any).requestIdleCallback(async () => {
+        this.runAsynchronously( () => { 
             this.setUpPointerTrackerEvents();
         });
-
     }
     
     async setUpCanvas() {
@@ -113,7 +112,7 @@ export class InkingCanvas extends LitElement {
         }
     
         this.requestCanvasResize();
-        (window as any).requestIdleCallback( async () => {
+        this.runAsynchronously( () => { 
             this.resizeCanvas();
         });
     }
@@ -170,7 +169,7 @@ export class InkingCanvas extends LitElement {
             // toggle semaphore
             this.isWaitingToResize = false;
 
-            (window as any).requestIdleCallback(async () => {
+            this.runAsynchronously( async() => { 
 
                 this.clearCanvas();
 
@@ -193,7 +192,7 @@ export class InkingCanvas extends LitElement {
         }
 
         // start & continue canvas resize loop
-        (window as any).requestIdleCallback( () => {
+        this.runAsynchronously( () => { 
             requestAnimationFrame( async () => this.resizeCanvas());
         });
     }
@@ -236,10 +235,10 @@ export class InkingCanvas extends LitElement {
     }
 
     eraseAll() {
-        (window as any).requestIdleCallback( () => {
+        this.runAsynchronously( () => { 
             this.clearCanvas()
             this.deleteCanvasContents();
-        }); 
+        });
     }
     getPosX(pointer: any, rect: DOMRect) {
         return ((pointer.clientX * devicePixelRatio) - (rect.left * devicePixelRatio) - this.origin.x) / this.scale;
@@ -344,14 +343,13 @@ export class InkingCanvas extends LitElement {
                         outerThis.context.moveTo(previousX, previousY);
 
                         // determine location of the stroke's end
-                        if (pointer.getCoalesced().length) {
+                        if ('getCoalesced' in pointer.nativePointer) {
                             for (const point of pointer.getCoalesced()) {
                                 currentX = outerThis.getPosX(point, rect);
                                 currentY = outerThis.getPosY(point, rect);
                                 outerThis.context.lineTo(currentX, currentY);
                             }
                         } else {
-                            // enable Firefox touch inking
                             currentX = outerThis.getPosX(pointer, rect);
                             currentY = outerThis.getPosY(pointer, rect);
                             outerThis.context.lineTo(currentX, currentY);
@@ -384,6 +382,18 @@ export class InkingCanvas extends LitElement {
                 }
             }
         });
+    }
+    // TODO: put in helpter class/file
+    runAsynchronously(func: Function) {
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback( () => {
+                func();
+            }); 
+        } else {
+            (async () => { 
+                func();
+            })()
+        }
     }
     // TODO: put in helper class/file
     drawPencilStroke(context: CanvasRenderingContext2D, previousX: number, currentX: number, previousY: number, currentY: number) {
@@ -446,21 +456,21 @@ export class InkingCanvas extends LitElement {
         this.currentAspectRatio.width = this.canvas.width;
         this.currentAspectRatio.height = this.canvas.height;
 
-        (window as any).requestIdleCallback(async () => {
+        this.runAsynchronously( async () => { 
             let canvasContents = this.canvas.toDataURL();
             await set('canvasContents', canvasContents);
         });
     }
     deleteCanvasContents() {
-        (window as any).requestIdleCallback(async () => {
+        this.runAsynchronously( async () => { 
             await del('canvasContents');
-        });  
+        });
     }
     static get styles() {
         return css`
             canvas {
                 box-sizing: border-box;
-                border: 2px solid black;
+                border: 4px solid black;
                 position: absolute;
                 min-height: ${this.minCanvasHeightCSS};
                 min-width: ${this.minCanvasWidthCSS};

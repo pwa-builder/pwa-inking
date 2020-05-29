@@ -183,7 +183,7 @@ export class InkingToolbar extends LitElement {
 
         // draw example stroke for ink dropdowns
         this.isWaitingToDrawSineCanvas = true;
-        (window as any).requestIdleCallback(() => {
+        this.inkingCanvas.runAsynchronously( () => { 
             this.drawSineCanvas();
             console.log("sine canvas drawn for first time");
         });
@@ -437,7 +437,7 @@ export class InkingToolbar extends LitElement {
         }
 
         // start & continue sine wave drawing loop
-        (window as any).requestIdleCallback(() => {
+        this.inkingCanvas.runAsynchronously( () => { 
             requestAnimationFrame(async () => this.drawSineCanvas());
         });
     }
@@ -449,7 +449,7 @@ export class InkingToolbar extends LitElement {
     clickedEraseAll(e: Event) {
         let eraser = (<HTMLButtonElement>e.target);
         console.log(eraser.id + " has been clicked!");
-        (window as any).requestIdleCallback( async () => {
+        this.inkingCanvas.runAsynchronously( () => {
             this.inkingCanvas.eraseAll();
         });
         this.selectedTool = eraser;
@@ -677,11 +677,15 @@ export class InkingToolbar extends LitElement {
             #tool-container {
                 background-color: ${InkingToolbar.white};
                 border: 2px solid ${InkingToolbar.white};
+                border-bottom: 0px solid ${InkingToolbar.white};
+                margin: 2px 2px 0px 2px; /* no gap between bottom of tool and dropdown */
                 display: inline-block;
             }
             #tool-container.vertical-orientation {
-                display: inline-block;
                 vertical-align: top;
+                margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
+                border-bottom: 2px solid ${InkingToolbar.white};
+                border-right: 0px solid ${InkingToolbar.white};
             }
             button {
                 position: relative;
@@ -763,9 +767,21 @@ export class InkingToolbar extends LitElement {
             }
             #dropdown-container {
                 background-color: ${this.colorPaletteBackground};
+                width: 320px;
+                margin-left: 2px;
             }
             #dropdown-container.vertical-orientation {
                 display: inline-block;
+                margin-left: 0px;
+                margin-top: 2px;
+            }
+            @media screen and (max-width: 400px) {
+                #dropdown-container {
+                    width: 270px;
+                }
+                #dropdown-container.vertical-orientation {
+                    width: 220px;
+                }
             }
             .ink-dropdown {
                 display: none;
@@ -778,7 +794,7 @@ export class InkingToolbar extends LitElement {
             }
             .palette {
                 display: none;
-                grid-template-columns: repeat(6, 50px);
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
                 grid-auto-rows: minmax(25px, auto);
                 justify-items: center;
                 align-items: center;
@@ -906,8 +922,8 @@ export class InkingToolbar extends LitElement {
                 background-color: ${this.pink};
             }
             .sineCanvas {
-                height: 150px;
-                width: 300px;
+                height: 50%;
+                width: 100%;
                 background-color: transparent;
                 padding-left: 0;
                 padding-right: 0;
@@ -1244,6 +1260,7 @@ export class InkingToolbar extends LitElement {
                 width: 10px;
                 height: 25px;
                 border-radius: 5px;
+                border: none;
                 cursor: pointer;
             }
             .slider::-moz-range-thumb {
