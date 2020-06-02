@@ -84,21 +84,28 @@ export class InkingCanvas extends LitElement {
         });
     }
 
-    // expose ability to change stroke color
-    changeStrokeColor(color: string) {
+    // expose ability to get/set stroke color, size, & style
+
+    setStrokeColor(color: string) {
         if (this.context) this.strokeColor = color;
     }
 
-    // expose ability to change stroke size
-    changeStrokeSize(strokeSize: number) {
+    getStrokeColor() {
+        return this.strokeColor;
+    }
+
+    setStrokeSize(strokeSize: number) {
         if (this.context) this.strokeSize = strokeSize;
     }
 
-    // expose ability to change stroke layering to match the selected stroke/tool style
-    changeStrokeStyle(toolStyle: string) {
+    getStrokeSize() {
+        return this.strokeSize;
+    }
+
+    setStrokeStyle(toolName: string) {
         if (this.context) {
-            this.toolStyle = toolStyle;
-            switch (toolStyle) {
+            this.toolStyle = toolName;
+            switch (toolName) {
                 case ("pen") :
                     this.context.globalCompositeOperation = "source-over";
                     break;
@@ -116,6 +123,10 @@ export class InkingCanvas extends LitElement {
                     break;
             }
         }
+    }
+
+    getStrokeStyle() {
+        return this.toolStyle;
     }
 
     // expose how canvas has resized since its initialization

@@ -147,7 +147,12 @@ export class InkingToolbar extends LitElement {
         });
     }
 
-    // expose ability to get/set stroke color, size, & style
+    // expose ability to check active tool name
+    getCurrentToolName() {
+        return this.selectedTool.id;
+    }
+
+    // expose ability to get stroke color, size, & style
 
     getCurrentStrokeColor() {
         switch (this.selectedTool.id) {
@@ -200,7 +205,7 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    setCurrentStrokeColor(color: CSSResult) {
+    private setCurrentStrokeColor(color: CSSResult) {
         switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenColor = color;
@@ -217,7 +222,7 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    setCurrentStrokeColorName(colorName: string) {
+    private setCurrentStrokeColorName(colorName: string) {
         switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenColorName = colorName;
@@ -233,7 +238,7 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    setCurrentStrokeSize() {
+    private setCurrentStrokeSize() {
         switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenSize = parseInt(this.slider.value);
@@ -432,7 +437,7 @@ export class InkingToolbar extends LitElement {
                 this.switchUtensil(selectedTool);
                 this.changeInkingColor();
             }
-            this.inkingCanvas.changeStrokeStyle(this.selectedTool.id);
+            this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
         } else {
             this.selectedDropdown.classList.toggle("show");
         }
@@ -542,17 +547,17 @@ export class InkingToolbar extends LitElement {
 
                 this.selectedTool.classList.add(modifiedColorName);
             }
-            this.inkingCanvas.changeStrokeColor(this.getCurrentStrokeColor());
+            this.inkingCanvas.setStrokeColor(this.getCurrentStrokeColor());
         }
     }
 
     private changeStrokeSize() {
         if (this.inkingCanvas) {
             if (this.slider.disabled) {
-                this.inkingCanvas.changeStrokeSize(-1); 
+                this.inkingCanvas.setStrokeSize(-1); 
             } else  {
                 this.setCurrentStrokeSize();
-                this.inkingCanvas.changeStrokeSize(this.getCurrentStrokeSize());
+                this.inkingCanvas.setStrokeSize(this.getCurrentStrokeSize());
                 if (this.sineCanvas) {
                     this.requestDrawSineCanvas();
                 }
