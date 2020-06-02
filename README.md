@@ -49,7 +49,7 @@ By default `<inking-canvas></inking-canvas>` will create ink strokes with a widt
 | `mouse`             | `width`                                     | Always 1 pixel                                            |
 | `touch`             | `width`                                     | Changes with surface area of inking screen pressed        |
 | `pen`               | `pressure`                                  | Changes with downward force applied to inking screen      |
-|
+
 
 If a browser does not provide a value for its pointer event's pressure/width, then the canvas should default to treating this input like a mouse event.
 
@@ -68,7 +68,7 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `name`               | `name`               | Used to connect an inking toolbar                                               | `string`  | `""`                                                |
 | `canvasHeight`       | `height`             | Fills parent by default                                                         | `number`  | `-1`                                                |
 | `canvasWidth`        | `width`              | Fills parent by default                                                         | `number`  | `-1`                                                |
-|
+
 
 ### Methods
 
@@ -82,8 +82,7 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name                             | 
 | `eraseAll()`                              | Deletes all canvas ink                                        |
 | `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
-| `requestCanvasResize()` | Triggers an additional canvas redraw if one is not already queued up
-|
+| `requestCanvasResize()` | Triggers an additional canvas redraw if one is not already queued up |
 
 
 ## inking-toolbar
@@ -94,7 +93,7 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | -------------------- | -------------------- | ------------------------------------------------------------------------------- | --------- | --------------------------------------------------- |
 | `orientation`        | `orientation`        | Toolbar layout direction                                                        | `string`  | `horizontal`                                        |
 | `targetInkingCanvas` | `canvas`             | Connects to canvas whose name matches its value                                 | `string`  | `""`                                                |
-|
+
 
 ### Methods
 
@@ -104,5 +103,4 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `getCurrentStrokeColor()`       | Returns the current toolbar ink color of the active tool                                             |                                     |
 | `getCurrentStrokeColorName()`    | Returns the current stroke color name of the active tool                              | Sets the current stroke color name for the active tool                               |
 | `getCurrentStrokeSize()`      | Returns the current stroke width of the active tool                              
-| `requestDrawSineCanvas()` | Triggers an additional example stroke  redraw if one is not already queued up
-|
+| `requestDrawSineCanvas()` | Triggers an additional example stroke  redraw if one is not already queued up |
