@@ -4,6 +4,7 @@ import {
 import { get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
 import PointerTracker from "./PointerTracker.js";
+import Utils from "./utils";
 
 // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
 const defaultMousePressure: number = 0.5;
@@ -45,22 +46,29 @@ export class InkingCanvas extends LitElement {
     // notify external influencers (like toolbar) when inking is happening
     @property({type: CustomEvent}) private inkingStartedEvent: CustomEvent = new CustomEvent('inking-started');
 
+    // access utility helper functions
+    @property({type: Utils}) private utils: Utils;
+
     render() {
         return html`
             <canvas></canvas>
         `;
     }
+
     constructor() {
         super();
     }
 
     firstUpdated() {
 
+        // initialize helper class
+        this.utils = new Utils();  
+
         // TODO: put this somewhere else later
-        this.deleteCanvasContents();
+        this.deleteCanvasContents();      
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
-        this.runAsynchronously( () => { 
+        this.utils.runAsynchronously( () => { 
             this.setUpCanvas();
         });
 
@@ -71,12 +79,66 @@ export class InkingCanvas extends LitElement {
         window.addEventListener('focus', () => this.requestCanvasResize(), false);
 
         // set up input capture events
-        this.runAsynchronously( () => { 
+        this.utils.runAsynchronously( () => { 
             this.setUpPointerTrackerEvents();
         });
     }
+
+    // expose ability to change stroke color
+    changeStrokeColor(color: string) {
+        if (this.context) this.strokeColor = color;
+    }
+
+    // expose ability to change stroke size
+    changeStrokeSize(strokeSize: number) {
+        if (this.context) this.strokeSize = strokeSize;
+    }
+
+    // expose ability to change stroke layering to match the selected stroke/tool style
+    changeStrokeStyle(toolStyle: string) {
+        if (this.context) {
+            this.toolStyle = toolStyle;
+            switch (toolStyle) {
+                case ("pen") :
+                    this.context.globalCompositeOperation = "source-over";
+                    break;
+                case ("pencil") :
+                    this.context.globalCompositeOperation = "darken";
+                    break;
+                case ("highlighter") :
+                    this.context.globalCompositeOperation = "darken";
+                    break;
+                case ("eraser") :
+                    this.context.globalCompositeOperation = "source-over";
+                    break;
+                default : 
+                    console.log("unknown pen style captured");
+                    break;
+            }
+        }
+    }
+
+    // expose how canvas has resized since its initialization
+    getScale() {
+        return this.scale;
+    }
     
-    async setUpCanvas() {
+    // expose ability to delete canvas contents
+    eraseAll() {
+        this.utils.runAsynchronously( () => { 
+            this.clearCanvas()
+            this.deleteCanvasContents();
+        });
+    }
+
+    // expose ability to trigger additional inking canvas redraws
+    requestCanvasResize() {
+        if (!this.isWaitingToResize) {
+            this.isWaitingToResize = true;
+        }
+    }
+
+    private async setUpCanvas() {
 
         if (this.canvasHeight === -1) {
             this.canvas.style.height = '100%';
@@ -100,76 +162,22 @@ export class InkingCanvas extends LitElement {
         this.currentAspectRatio = {width: this.canvas.width, height: this.canvas.height}; 
 
         // enable low-latency if possible
-        this.context = (this.canvas.getContext('2d', {
-            desynchronized: true
-          }) as CanvasRenderingContext2D);
-    
-        // check for low-latency
-        if ("getContextAttributes" in this.context && (this.context as any).getContextAttributes().desynchronized) {
-        console.log('Low latency is supported for inking canvas.');
-        } else {
-        console.log('Low latency is NOT supported for inking canvas.');
-        }
+        this.context = this.utils.getLowLatencyContext(this.canvas, "inking canvas");
     
         this.requestCanvasResize();
-        this.runAsynchronously( () => { 
+        this.utils.runAsynchronously( () => { 
             this.resizeCanvas();
         });
     }
 
-    // expose change pen color API for external influencers
-    changeUtensilColor(color: string) {
-        if (this.context) this.strokeColor = color;
-    }
-
-    // expose change stroke size API for external influencers
-    changeStrokeSize(strokeSize: number) {
-        if (this.context) this.strokeSize = strokeSize;
-    }
-
-    // expose change stroke layering API depending on selected utensil for external influencers
-    changeToolStyle(toolStyle: string) {
-        if (this.context) {
-            this.toolStyle = toolStyle;
-            switch (toolStyle) {
-                case ("pen") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                case ("pencil") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("highlighter") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("eraser") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                default : 
-                    console.log("unknown pen style captured");
-                    break;
-            }
-        }
-    }
-
-    getScale() {
-        return this.scale;
-    }
-
-    requestCanvasResize() {
-        if (!this.isWaitingToResize) {
-            this.isWaitingToResize = true;
-        }
-    }
-
-    // TODO: find better way to limit calls
-    async resizeCanvas() {
+    private async resizeCanvas() {
 
         if (this.context && this.isWaitingToResize) {
 
             // toggle semaphore
             this.isWaitingToResize = false;
 
-            this.runAsynchronously( async() => { 
+            this.utils.runAsynchronously( async() => { 
 
                 this.clearCanvas();
 
@@ -192,12 +200,12 @@ export class InkingCanvas extends LitElement {
         }
 
         // start & continue canvas resize loop
-        this.runAsynchronously( () => { 
+        this.utils.runAsynchronously( () => { 
             requestAnimationFrame( async () => this.resizeCanvas());
         });
     }
 
-    async clearCanvas() {
+    private async clearCanvas() {
 
         // support HiDPI screens
         if (this.canvasHeight === -1 || this.canvasWidth === -1) {
@@ -234,19 +242,15 @@ export class InkingCanvas extends LitElement {
         this.context.lineJoin = 'round';
     }
 
-    eraseAll() {
-        this.runAsynchronously( () => { 
-            this.clearCanvas()
-            this.deleteCanvasContents();
-        });
-    }
-    getPosX(pointer: any, rect: DOMRect) {
+    private getPosX(pointer: any, rect: DOMRect) {
         return ((pointer.clientX * devicePixelRatio) - (rect.left * devicePixelRatio) - this.origin.x) / this.scale;
     }
-    getPosY(pointer: any, rect: DOMRect) {
+
+    private getPosY(pointer: any, rect: DOMRect) {
         return ((pointer.clientY * devicePixelRatio) - (rect.top * devicePixelRatio) - this.origin.y) / this.scale;
     }
-    async setUpPointerTrackerEvents() {
+
+    private async setUpPointerTrackerEvents() {
         this.strokes = new Map();
         const outerThis = this;     
         this.tracker = new PointerTracker(this.canvas, {
@@ -363,7 +367,7 @@ export class InkingCanvas extends LitElement {
                     if (outerThis.toolStyle === "pencil") {
 
                         // change up the stroke texture
-                        outerThis.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
+                        outerThis.utils.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
 
                     } else {
 
@@ -383,59 +387,7 @@ export class InkingCanvas extends LitElement {
             }
         });
     }
-    // TODO: put in helpter class/file
-    runAsynchronously(func: Function) {
-        if ('requestIdleCallback' in window) {
-            (window as any).requestIdleCallback( () => {
-                func();
-            }); 
-        } else {
-            (async () => { 
-                func();
-            })()
-        }
-    }
-    // TODO: put in helper class/file
-    drawPencilStroke(context: CanvasRenderingContext2D, previousX: number, currentX: number, previousY: number, currentY: number) {
-        
-        // record context properties before modifying
-        let strokeColor = context.strokeStyle;
-        let strokeLayer = context.globalCompositeOperation;
-        let strokeWidth = context.lineWidth;
-        let opacity = context.globalAlpha;
 
-        // use the distance formula to calcuate the line length between the two points on the canvas
-        let distance  = Math.round(Math.sqrt(Math.pow(currentX - previousX, 2)+Math.pow(currentY - previousY, 2)));
-        // console.log("distance: "+ distance);
-
-        // split length into incremental pieces
-        let stepX = (currentX - previousX)/distance;
-        let stepY = (currentY - previousY)/distance;
-        
-        for (let i = 0; i < distance; i++ ) {
-
-            let currentX = previousX + (i * stepX);	
-            let currentY = previousY + (i * stepY);
-            
-            // create light base for whole stroke width as a first layer
-            context.globalAlpha = 0.7;
-            let randomX = currentX + ((Math.random()-0.5) * strokeWidth * 1);			
-            let randomY = currentY + ((Math.random()-0.5) * strokeWidth * 1);
-            context.fillRect(randomX, randomY, Math.random() + 2, Math.random() + 1);
-            
-            // thicken center of stroke with a second more opaque layer
-            context.globalAlpha = 1;
-            randomX = currentX + ((Math.random()-0.5) * strokeWidth * 0.8);			
-            randomY = currentY + ((Math.random()-0.5) * strokeWidth * 0.8);
-            context.fillRect(randomX, randomY, Math.random() + 2, Math.random() +1 );
-        }
-
-        // restore context properties
-        context.fillStyle = strokeColor;
-        context.globalCompositeOperation = strokeLayer;
-        context.lineWidth = strokeWidth;
-        context.globalAlpha = opacity;
-    }
     // async copyCanvasContents() {
     //     this.canvas.toBlob(
     //         async blob => (navigator.clipboard as any).write([
@@ -449,23 +401,26 @@ export class InkingCanvas extends LitElement {
     //         })
     //     );
     // }
-    saveCanvasContents(event) {
+
+    private saveCanvasContents(event) {
         event.preventDefault();
 
         // update the recorded canvas aspect ratio for future resizing
         this.currentAspectRatio.width = this.canvas.width;
         this.currentAspectRatio.height = this.canvas.height;
 
-        this.runAsynchronously( async () => { 
+        this.utils.runAsynchronously( async () => { 
             let canvasContents = this.canvas.toDataURL();
             await set('canvasContents', canvasContents);
         });
     }
-    deleteCanvasContents() {
-        this.runAsynchronously( async () => { 
+
+    private deleteCanvasContents() {
+        this.utils.runAsynchronously( async () => { 
             await del('canvasContents');
         });
     }
+
     static get styles() {
         return css`
             canvas {
