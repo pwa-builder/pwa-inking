@@ -11,7 +11,8 @@ _Built with [lit-element](https://lit-element.polymer-project.org/)_
 ## Supported Browsers
 - Edge
 - Chrome
-- More coming soon!
+- Firefox
+- Safari
 
 ## Using this component
 
@@ -49,7 +50,10 @@ By default `<inking-canvas></inking-canvas>` will create ink strokes with a widt
 | `touch`             | `width`                                     | Changes with surface area of inking screen pressed        |
 | `pen`               | `pressure`                                  | Changes with downward force applied to inking screen      |
 
-For now, the stroke width regardless of pointer event type can be set and fixed through the `<inking-toolbar></inking-toolbar>`.
+
+If a browser does not provide a value for its pointer event's pressure/width, then the canvas should default to treating this input like a mouse event.
+
+The stroke width regardless of pointer event type can be set and fixed through the `<inking-toolbar></inking-toolbar>`.
 
 Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 
@@ -65,15 +69,21 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `canvasHeight`       | `height`             | Fills parent by default                                                         | `number`  | `-1`                                                |
 | `canvasWidth`        | `width`              | Fills parent by default                                                         | `number`  | `-1`                                                |
 
+
 ### Methods
 
 | name                                      | Description                                                   |
 | ---------------                           | --------------------------                                    |
-| `changeUtensilColor(color: string)`       | Changes ink color                                             |
-| `changeStrokeSize(strokeSize: number)`    | Changes ink stroke width                                      |
-| `changeToolStyle(toolStyle: string)`      | Changes active canvas tool                                    | 
+| `getStrokeColor()`       | Returns ink color 
+| `setStrokeColor(color: string)`       | Changes ink color                                             |
+| `getStrokeSize()`    | Returns ink stroke width 
+| `setStrokeSize(strokeSize: number)`    | Changes ink stroke width                                      |
+| `getStrokeStyle()`      | Returns name of active tool defining ink style     
+| `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name                             | 
 | `eraseAll()`                              | Deletes all canvas ink                                        |
-| `getScale()`                              | Returns canvas size relative to its content's aspect ratio    |
+| `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
+| `requestCanvasResize()` | Triggers an additional canvas redraw if one is not already queued up |
+
 
 ## inking-toolbar
 
@@ -84,6 +94,13 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `orientation`        | `orientation`        | Toolbar layout direction                                                        | `string`  | `horizontal`                                        |
 | `targetInkingCanvas` | `canvas`             | Connects to canvas whose name matches its value                                 | `string`  | `""`                                                |
 
+
 ### Methods
 
-None
+| name                                      | Description                                                   |
+| ---------------                           | --------------------------                                    |
+| `getCurrentToolName()`       | Returns the active tool name  
+| `getCurrentStrokeColor()`       | Returns the current toolbar ink color of the active tool                                             |                                     |
+| `getCurrentStrokeColorName()`    | Returns the current stroke color name of the active tool                              | Sets the current stroke color name for the active tool                               |
+| `getCurrentStrokeSize()`      | Returns the current stroke width of the active tool                              
+| `requestDrawSineCanvas()` | Triggers an additional example stroke  redraw if one is not already queued up |
