@@ -31,8 +31,8 @@ export class InkingToolbar extends LitElement {
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
 
-    //access colors used in toolbar
-    @property({type: Map}) private colors: Map<string, CSSResult>;
+    // access colors used in toolbar
+    private static colors: Map<string, CSSResult> = Colors.getColors();
 
     // properties to influence connected inking canvas
     @property({type: CSSResult}) private selectedPenColor: CSSResult = Colors.black;
@@ -123,9 +123,6 @@ export class InkingToolbar extends LitElement {
 
         // set toolbar orientation to developer's choice
         this.setOrientation();
-
-        // get access to js/ts friendly colors
-        this.colors = Colors.getColors();
 
         // enable low-latency if possible
         this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine canvas")
@@ -259,13 +256,14 @@ export class InkingToolbar extends LitElement {
     }
 
     private connectCanvas() {
-        const possibleCanvases = document.querySelectorAll('inking-canvas');
-        possibleCanvases.forEach(possibleCanvas => {
-            if ((<InkingCanvas>possibleCanvas).name === this.targetInkingCanvas) {
-                this.inkingCanvas = <InkingCanvas>possibleCanvas;
-            }
-        });
 
+        // find matching inking canvas
+        const possibleCanvas = this.shadowRoot.host.parentElement;
+        if ((<InkingCanvas>possibleCanvas).name === this.targetInkingCanvas) {
+            this.inkingCanvas = <InkingCanvas>possibleCanvas;
+        }
+
+        // attach events to matching inking canvas
         if (this.inkingCanvas) {
 
             // make toolbar appear when connected to an inking canvas
@@ -399,7 +397,7 @@ export class InkingToolbar extends LitElement {
 
         // get color string from css color
         let colorName = Utils.toCamelCase(colorClass);
-        let backgroundColor = this.colors.get(colorName);
+        let backgroundColor = InkingToolbar.colors.get(colorName);
 
         this.changeInkingColor(backgroundColor, colorName);
 

@@ -49,6 +49,7 @@ export class InkingCanvas extends LitElement {
     render() {
         return html`
             <canvas></canvas>
+            <slot></slot>
         `;
     }
 

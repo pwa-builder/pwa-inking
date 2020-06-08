@@ -1,49 +1,49 @@
 import { css, CSSResult } from 'lit-element';
     
-// toolbar colors defined once, retrieved for css paexport lette display and sending to canvas
-export let black: CSSResult = css`#000000`;
-export let white: CSSResult = css`#ffffff`;
-export let silver: CSSResult = css`#d1d3d4`;
-export let gray: CSSResult = css`#a7a9ac`;
-export let darkGray: CSSResult = css`#808285`;
-export let charcoal: CSSResult = css`#58595b`;
-export let magenta: CSSResult = css`#b31564`;
-export let red: CSSResult = css`#e61b1b`;
-export let redOrange: CSSResult = css`#ff5500`;
-export let orange: CSSResult = css`#ffaa00`;
-export let gold: CSSResult = css`#ffce00`;
-export let yellow: CSSResult = css`#ffe600`;
-export let grassGreen: CSSResult = css`#a2e61b`;
-export let green: CSSResult = css`#26e600`;
-export let darkGreen: CSSResult = css`#008055`;
-export let teal: CSSResult = css`#00aacc`;
-export let blue: CSSResult = css`#004de6`;
-export let indigo: CSSResult = css`#3d00b8`;
-export let violet: CSSResult = css`#6600cc`;
-export let purple: CSSResult = css`#600080`;
-export let beige: CSSResult = css`#f7d7c4`;
-export let lightBrown: CSSResult = css`#bb9167`;
-export let brown: CSSResult = css`#8e562e`;
-export let darkBrown: CSSResult = css`#613d30`;
-export let pastelPink: CSSResult = css`#ff80ff`;
-export let pastelOrange: CSSResult = css`#ffc680`;
-export let pastelYellow: CSSResult = css`#ffff80`;
-export let pastelGreen: CSSResult = css`#80ff9e`;
-export let pastelBlue: CSSResult = css`#80d6ff`;
-export let pastelPurple: CSSResult = css`#bcb3ff`;
-export let colorPaletteBackground: CSSResult = css`#f2f2f2`;
+// toolbar colors defined once, retrieved for css paexport constte display and sending to canvas
+export const black: CSSResult = css`#000000`;
+export const white: CSSResult = css`#ffffff`;
+export const silver: CSSResult = css`#d1d3d4`;
+export const gray: CSSResult = css`#a7a9ac`;
+export const darkGray: CSSResult = css`#808285`;
+export const charcoal: CSSResult = css`#58595b`;
+export const magenta: CSSResult = css`#b31564`;
+export const red: CSSResult = css`#e61b1b`;
+export const redOrange: CSSResult = css`#ff5500`;
+export const orange: CSSResult = css`#ffaa00`;
+export const gold: CSSResult = css`#ffce00`;
+export const yellow: CSSResult = css`#ffe600`;
+export const grassGreen: CSSResult = css`#a2e61b`;
+export const green: CSSResult = css`#26e600`;
+export const darkGreen: CSSResult = css`#008055`;
+export const teal: CSSResult = css`#00aacc`;
+export const blue: CSSResult = css`#004de6`;
+export const indigo: CSSResult = css`#3d00b8`;
+export const violet: CSSResult = css`#6600cc`;
+export const purple: CSSResult = css`#600080`;
+export const beige: CSSResult = css`#f7d7c4`;
+export const lightBrown: CSSResult = css`#bb9167`;
+export const brown: CSSResult = css`#8e562e`;
+export const darkBrown: CSSResult = css`#613d30`;
+export const pastelPink: CSSResult = css`#ff80ff`;
+export const pastelOrange: CSSResult = css`#ffc680`;
+export const pastelYellow: CSSResult = css`#ffff80`;
+export const pastelGreen: CSSResult = css`#80ff9e`;
+export const pastelBlue: CSSResult = css`#80d6ff`;
+export const pastelPurple: CSSResult = css`#bcb3ff`;
+export const colorPaletteBackground: CSSResult = css`#f2f2f2`;
 
 // toolbar colors specific to highlighter
-export let lightBlue: CSSResult = css`#44c8f5`;
-export let pink: CSSResult = css`#ec008c`;
+export const lightBlue: CSSResult = css`#44c8f5`;
+export const pink: CSSResult = css`#ec008c`;
 
 // background color used in toolbar
-export let lightGray: CSSResult = css`#e8e8e8`;
+export const lightGray: CSSResult = css`#e8e8e8`;
 
 // create quick way to retrieve a color value based on its css class
 export function getColors() {
 
-    let colors = new Map<string, CSSResult>();
+    const colors = new Map<string, CSSResult>();
 
     colors.set('black', black);
     colors.set('white', white);
@@ -63,7 +63,7 @@ export function getColors() {
     colors.set('teal', teal);
     colors.set('blue', blue);
     colors.set('indigo', indigo);
-    colors.set('vioexport let', violet);
+    colors.set('violet', violet);
     colors.set('purple', purple);
     colors.set('beige', beige);
     colors.set('lightBrown', lightBrown);
