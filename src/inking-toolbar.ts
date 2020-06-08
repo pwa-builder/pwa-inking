@@ -868,6 +868,7 @@ export class InkingToolbar extends LitElement {
                 padding-right: 0;
                 margin-left: auto;
                 margin-right: auto;
+                margin-bottom: 10px;
                 display: none;
             }
             .sineCanvas.show {
