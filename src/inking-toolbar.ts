@@ -862,6 +862,7 @@ export class InkingToolbar extends LitElement {
             .sineCanvas {
                 height: 50%;
                 width: 100%;
+                max-height: 150px;
                 background-color: transparent;
                 padding-left: 0;
                 padding-right: 0;
