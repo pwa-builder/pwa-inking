@@ -34,7 +34,7 @@ There are two ways to use this component. For simple projects or just to get sta
 ### NPM
 
 - Run `npm install @pwabuilder/pwa-inking`
-- import with `import '@pwabuilder/pwa-inking'`
+- Import with `import '@pwabuilder/pwa-inking'`
 
 ## Adding the component to your code
 
@@ -44,7 +44,7 @@ You can also add the `<inking-toolbar></inking-toolbar>` element within the `<in
 
 By default `<inking-canvas></inking-canvas>` will create ink strokes with a width depending on the active pointer event:
 
-| Pointer Event       | Property influencing ink stroke width       | Notes
+| Pointer event       | Property influencing ink stroke width       | Notes
 | ------------------- | ------------------------------------------- | --------------------------------------------------------- |
 | `mouse`             | `width`                                     | Always 1 pixel                                            |
 | `touch`             | `width`                                     | Changes with surface area of inking screen pressed        |
@@ -72,7 +72,7 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 
 ### Methods
 
-| name                                      | Description                                                   |
+| Name                                      | Description                                                   |
 | ---------------                           | --------------------------                                    |
 | `getStrokeColor()`       | Returns ink color 
 | `setStrokeColor(color: string)`       | Changes ink color                                             |
@@ -97,7 +97,7 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 
 ### Methods
 
-| name                                      | Description                                                   |
+| Name                                      | Description                                                   |
 | ---------------                           | --------------------------                                    |
 | `getCurrentToolName()`       | Returns the active tool name  
 | `getCurrentStrokeColor()`       | Returns the current toolbar ink color of the active tool                                             |                                     |
