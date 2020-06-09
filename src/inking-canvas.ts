@@ -4,7 +4,7 @@ import {
 import { get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
 import PointerTracker from "./PointerTracker.js";
-import Utils from "./utils";
+import * as Utils from './utils';
 
 // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
 const defaultMousePressure: number = 0.5;
@@ -46,12 +46,10 @@ export class InkingCanvas extends LitElement {
     // notify external influencers (like toolbar) when inking is happening
     @property({type: CustomEvent}) private inkingStartedEvent: CustomEvent = new CustomEvent('inking-started');
 
-    // access utility helper functions
-    @property({type: Utils}) private utils: Utils;
-
     render() {
         return html`
             <canvas></canvas>
+            <slot></slot>
         `;
     }
 
@@ -61,14 +59,11 @@ export class InkingCanvas extends LitElement {
 
     firstUpdated() {
 
-        // initialize helper class
-        this.utils = new Utils();  
-
         // TODO: put this somewhere else later
         this.deleteCanvasContents();      
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             this.setUpCanvas();
         });
 
@@ -79,7 +74,7 @@ export class InkingCanvas extends LitElement {
         window.addEventListener('focus', () => this.requestCanvasResize(), false);
 
         // set up input capture events
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             this.setUpPointerTrackerEvents();
         });
     }
@@ -136,7 +131,7 @@ export class InkingCanvas extends LitElement {
     
     // expose ability to delete canvas contents
     eraseAll() {
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             this.clearCanvas()
             this.deleteCanvasContents();
         });
@@ -173,10 +168,10 @@ export class InkingCanvas extends LitElement {
         this.currentAspectRatio = {width: this.canvas.width, height: this.canvas.height}; 
 
         // enable low-latency if possible
-        this.context = this.utils.getLowLatencyContext(this.canvas, "inking canvas");
+        this.context = Utils.getLowLatencyContext(this.canvas, "inking canvas");
     
         this.requestCanvasResize();
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             this.resizeCanvas();
         });
     }
@@ -188,7 +183,7 @@ export class InkingCanvas extends LitElement {
             // toggle semaphore
             this.isWaitingToResize = false;
 
-            this.utils.runAsynchronously( async() => { 
+            Utils.runAsynchronously( async() => { 
 
                 this.clearCanvas();
 
@@ -211,7 +206,7 @@ export class InkingCanvas extends LitElement {
         }
 
         // start & continue canvas resize loop
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             requestAnimationFrame( async () => this.resizeCanvas());
         });
     }
@@ -378,7 +373,7 @@ export class InkingCanvas extends LitElement {
                     if (outerThis.toolStyle === "pencil") {
 
                         // change up the stroke texture
-                        outerThis.utils.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
+                        Utils.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
 
                     } else {
 
@@ -420,14 +415,14 @@ export class InkingCanvas extends LitElement {
         this.currentAspectRatio.width = this.canvas.width;
         this.currentAspectRatio.height = this.canvas.height;
 
-        this.utils.runAsynchronously( async () => { 
+        Utils.runAsynchronously( async () => { 
             let canvasContents = this.canvas.toDataURL();
             await set('canvasContents', canvasContents);
         });
     }
 
     private deleteCanvasContents() {
-        this.utils.runAsynchronously( async () => { 
+        Utils.runAsynchronously( async () => { 
             await del('canvasContents');
         });
     }

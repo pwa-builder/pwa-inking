@@ -2,8 +2,8 @@ import {
     LitElement, html, customElement, property, css, query, CSSResult
 } from 'lit-element';
 import { InkingCanvas } from './inking-canvas';
-import Utils from "./utils";
-import Colors from './colors';
+import * as Colors from './colors';
+import * as Utils from './utils';
 
 @customElement('inking-toolbar')
 export class InkingToolbar extends LitElement {
@@ -31,11 +31,8 @@ export class InkingToolbar extends LitElement {
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
 
-    // access utility helper functions
-    @property({type: Utils}) private utils: Utils;
-
-    //access colors used in toolbar
-    @property({type: Colors}) private colors: Colors;
+    // access colors used in toolbar
+    private static colors: Map<string, CSSResult> = Colors.getColors();
 
     // properties to influence connected inking canvas
     @property({type: CSSResult}) private selectedPenColor: CSSResult = Colors.black;
@@ -127,12 +124,8 @@ export class InkingToolbar extends LitElement {
         // set toolbar orientation to developer's choice
         this.setOrientation();
 
-        // initialize helper classes
-        this.utils = new Utils();
-        this.colors = new Colors();
-
         // enable low-latency if possible
-        this.sineContext = this.utils.getLowLatencyContext(this.sineCanvas, "sine canvas");
+        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine canvas")
 
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
@@ -141,7 +134,7 @@ export class InkingToolbar extends LitElement {
 
         // draw example stroke for ink dropdowns
         this.isWaitingToDrawSineCanvas = true;
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             this.drawSineCanvas();
             console.log("sine canvas drawn for first time");
         });
@@ -263,13 +256,14 @@ export class InkingToolbar extends LitElement {
     }
 
     private connectCanvas() {
-        const possibleCanvases = document.querySelectorAll('inking-canvas');
-        possibleCanvases.forEach(possibleCanvas => {
-            if ((<InkingCanvas>possibleCanvas).name === this.targetInkingCanvas) {
-                this.inkingCanvas = <InkingCanvas>possibleCanvas;
-            }
-        });
 
+        // find matching inking canvas
+        const possibleCanvas = this.shadowRoot.host.parentElement;
+        if ((<InkingCanvas>possibleCanvas).name === this.targetInkingCanvas) {
+            this.inkingCanvas = <InkingCanvas>possibleCanvas;
+        }
+
+        // attach events to matching inking canvas
         if (this.inkingCanvas) {
 
             // make toolbar appear when connected to an inking canvas
@@ -277,7 +271,7 @@ export class InkingToolbar extends LitElement {
 
             // hide dropdown once inking starts
             this.inkingCanvas.addEventListener('inking-started', () => {
-                this.utils.hideElementIfVisible(this.inkDropdown);
+                Utils.hideElementIfVisible(this.inkDropdown);
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
@@ -365,7 +359,7 @@ export class InkingToolbar extends LitElement {
                 previousY = currentY;
 
                 if (this.selectedTool.id === "pencil") {
-                    this.utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
+                    Utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
                 } else {
                     this.sineContext.stroke();
                 }
@@ -375,7 +369,7 @@ export class InkingToolbar extends LitElement {
         }
 
         // start & continue sine wave drawing loop
-        this.utils.runAsynchronously( () => { 
+        Utils.runAsynchronously( () => { 
             requestAnimationFrame(async () => this.drawSineCanvas());
         });
     }
@@ -389,7 +383,7 @@ export class InkingToolbar extends LitElement {
     private clickedEraseAll(e: Event) {
         let eraser = (<HTMLButtonElement>e.target);
         console.log(eraser.id + " has been clicked!");
-        this.utils.runAsynchronously( () => {
+        Utils.runAsynchronously( () => {
             this.inkingCanvas.eraseAll();
         });
         this.selectedTool = eraser;
@@ -402,8 +396,8 @@ export class InkingToolbar extends LitElement {
         let colorClass = selectedCircle.className.replace('clicked', '').replace('circle', '').trim();
 
         // get color string from css color
-        let colorName = this.utils.toCamelCase(colorClass);
-        let backgroundColor = this.colors.colors.get(colorName);
+        let colorName = Utils.toCamelCase(colorClass);
+        let backgroundColor = InkingToolbar.colors.get(colorName);
 
         this.changeInkingColor(backgroundColor, colorName);
 
@@ -448,17 +442,17 @@ export class InkingToolbar extends LitElement {
         if (utensilName === "highlighter") {
             this.inkDropdownTitle.classList.add("show");            
             this.togglePalette(this.penPencilPalette, this.highlighterPalette);
-            this.utils.hideElementIfVisible(this.eraseAllBtn);
+            Utils.hideElementIfVisible(this.eraseAllBtn);
         } else if (utensilName === "eraser") {
-            this.utils.hideElementIfVisible(this.inkDropdownTitle);                
-            this.utils.hideElementIfVisible(this.penPencilPalette);
-            this.utils.hideElementIfVisible(this.highlighterPalette);
+            Utils.hideElementIfVisible(this.inkDropdownTitle);                
+            Utils.hideElementIfVisible(this.penPencilPalette);
+            Utils.hideElementIfVisible(this.highlighterPalette);
             if (!this.eraseAllBtn.classList.contains("show")) 
                 this.eraseAllBtn.classList.add("show");
         } else  {  // must be pen or pencil
             this.inkDropdownTitle.classList.add("show");            
             this.togglePalette(this.highlighterPalette, this.penPencilPalette);
-            this.utils.hideElementIfVisible(this.eraseAllBtn);
+            Utils.hideElementIfVisible(this.eraseAllBtn);
         }
         this.toggleDropdown(this.inkDropdown, el === this.selectedTool);
         this.toggleActiveTool(el);
@@ -481,7 +475,7 @@ export class InkingToolbar extends LitElement {
             if (this.isUtensil(this.selectedTool.id)) {
 
                 // use the css friendly color class name with dashes
-                let colorName = this.utils.toDash(this.getCurrentStrokeColorName());
+                let colorName = Utils.toDash(this.getCurrentStrokeColorName());
 
                 this.selectedTool.classList.add(colorName);
 
@@ -512,7 +506,7 @@ export class InkingToolbar extends LitElement {
     }
 
     private togglePalette(old: HTMLElement, current?: HTMLElement) {
-        this.utils.hideElementIfVisible(old);
+        Utils.hideElementIfVisible(old);
         if (current && !current.classList.contains("show")) {
             current.classList.add("show");
         }
@@ -543,7 +537,7 @@ export class InkingToolbar extends LitElement {
                 this.selectedTool.classList.remove(this.selectedTool.classList[4]);
 
                 // use the css friendly color class name with dashes
-                let modifiedColorName = this.utils.toDash(this.getCurrentStrokeColorName());
+                let modifiedColorName = Utils.toDash(this.getCurrentStrokeColorName());
 
                 this.selectedTool.classList.add(modifiedColorName);
             }
@@ -577,7 +571,7 @@ export class InkingToolbar extends LitElement {
 
     private updateCheckboxColor() {
         if (this.sliderCheckboxTrack) {
-            let color = this.utils.toDash(this.getCurrentStrokeColorName());
+            let color = Utils.toDash(this.getCurrentStrokeColorName());
             if (this.sliderCheckboxTrack.classList.length > 1) {
                     this.sliderCheckboxTrack.classList.remove(this.sliderCheckboxTrack.classList[1]);
                     if (this.sliderCheckbox.checked) 
@@ -868,11 +862,13 @@ export class InkingToolbar extends LitElement {
             .sineCanvas {
                 height: 50%;
                 width: 100%;
+                max-height: 150px;
                 background-color: transparent;
                 padding-left: 0;
                 padding-right: 0;
                 margin-left: auto;
                 margin-right: auto;
+                margin-bottom: 10px;
                 display: none;
             }
             .sineCanvas.show {

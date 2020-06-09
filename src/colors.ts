@@ -1,85 +1,82 @@
 import { css, CSSResult } from 'lit-element';
-
-export default class Colors {
-
-    constructor() {
-        this.mapColors();
-    }
     
-    // toolbar colors defined once, retrieved for css palette display and sending to canvas
-    readonly colors = new Map<string, CSSResult>();
-    static readonly black = css`#000000`;
-    static readonly white = css`#ffffff`;
-    static readonly silver = css`#d1d3d4`;
-    static readonly gray = css`#a7a9ac`;
-    static readonly darkGray = css`#808285`;
-    static readonly charcoal = css`#58595b`;
-    static readonly magenta = css`#b31564`;
-    static readonly red = css`#e61b1b`;
-    static readonly redOrange = css`#ff5500`;
-    static readonly orange = css`#ffaa00`;
-    static readonly gold = css`#ffce00`;
-    static readonly yellow = css`#ffe600`;
-    static readonly grassGreen = css`#a2e61b`;
-    static readonly green = css`#26e600`;
-    static readonly darkGreen = css`#008055`;
-    static readonly teal = css`#00aacc`;
-    static readonly blue = css`#004de6`;
-    static readonly indigo = css`#3d00b8`;
-    static readonly violet = css`#6600cc`;
-    static readonly purple = css`#600080`;
-    static readonly beige = css`#f7d7c4`;
-    static readonly lightBrown = css`#bb9167`;
-    static readonly brown = css`#8e562e`;
-    static readonly darkBrown = css`#613d30`;
-    static readonly pastelPink = css`#ff80ff`;
-    static readonly pastelOrange = css`#ffc680`;
-    static readonly pastelYellow = css`#ffff80`;
-    static readonly pastelGreen = css`#80ff9e`;
-    static readonly pastelBlue = css`#80d6ff`;
-    static readonly pastelPurple = css`#bcb3ff`;
-    static readonly colorPaletteBackground = css`#f2f2f2`;
+// toolbar colors defined once, retrieved for css paexport constte display and sending to canvas
+export const black: CSSResult = css`#000000`;
+export const white: CSSResult = css`#ffffff`;
+export const silver: CSSResult = css`#d1d3d4`;
+export const gray: CSSResult = css`#a7a9ac`;
+export const darkGray: CSSResult = css`#808285`;
+export const charcoal: CSSResult = css`#58595b`;
+export const magenta: CSSResult = css`#b31564`;
+export const red: CSSResult = css`#e61b1b`;
+export const redOrange: CSSResult = css`#ff5500`;
+export const orange: CSSResult = css`#ffaa00`;
+export const gold: CSSResult = css`#ffce00`;
+export const yellow: CSSResult = css`#ffe600`;
+export const grassGreen: CSSResult = css`#a2e61b`;
+export const green: CSSResult = css`#26e600`;
+export const darkGreen: CSSResult = css`#008055`;
+export const teal: CSSResult = css`#00aacc`;
+export const blue: CSSResult = css`#004de6`;
+export const indigo: CSSResult = css`#3d00b8`;
+export const violet: CSSResult = css`#6600cc`;
+export const purple: CSSResult = css`#600080`;
+export const beige: CSSResult = css`#f7d7c4`;
+export const lightBrown: CSSResult = css`#bb9167`;
+export const brown: CSSResult = css`#8e562e`;
+export const darkBrown: CSSResult = css`#613d30`;
+export const pastelPink: CSSResult = css`#ff80ff`;
+export const pastelOrange: CSSResult = css`#ffc680`;
+export const pastelYellow: CSSResult = css`#ffff80`;
+export const pastelGreen: CSSResult = css`#80ff9e`;
+export const pastelBlue: CSSResult = css`#80d6ff`;
+export const pastelPurple: CSSResult = css`#bcb3ff`;
+export const colorPaletteBackground: CSSResult = css`#f2f2f2`;
 
-    // toolbar colors specific to highlighter
-    static readonly lightBlue = css`#44c8f5`;
-    static readonly pink = css`#ec008c`;
+// toolbar colors specific to highlighter
+export const lightBlue: CSSResult = css`#44c8f5`;
+export const pink: CSSResult = css`#ec008c`;
 
-    // background color used in toolbar
-    static readonly lightGray = css`#e8e8e8`;
+// background color used in toolbar
+export const lightGray: CSSResult = css`#e8e8e8`;
 
-    // create quick way to retrieve a color value based on its css class
-    private mapColors() {
-        this.colors.set('black', Colors.black);
-        this.colors.set('white', Colors.white);
-        this.colors.set('silver', Colors.silver);
-        this.colors.set('gray', Colors.gray);
-        this.colors.set('darkGray', Colors.darkGray);
-        this.colors.set('charcoal', Colors.charcoal);
-        this.colors.set('magenta', Colors.magenta);
-        this.colors.set('red', Colors.red);
-        this.colors.set('redOrange', Colors.redOrange);
-        this.colors.set('orange', Colors.orange);
-        this.colors.set('gold', Colors.gold);
-        this.colors.set('yellow', Colors.yellow);
-        this.colors.set('grassGreen', Colors.grassGreen);
-        this.colors.set('green', Colors.green);
-        this.colors.set('darkGreen', Colors.darkGreen);
-        this.colors.set('teal', Colors.teal);
-        this.colors.set('blue', Colors.blue);
-        this.colors.set('indigo', Colors.indigo);
-        this.colors.set('violet', Colors.violet);
-        this.colors.set('purple', Colors.purple);
-        this.colors.set('beige', Colors.beige);
-        this.colors.set('lightBrown', Colors.lightBrown);
-        this.colors.set('brown', Colors.brown);
-        this.colors.set('darkBrown', Colors.darkBrown);
-        this.colors.set('pastelPink', Colors.pastelPink);
-        this.colors.set('pastelOrange', Colors.pastelOrange);
-        this.colors.set('pastelYellow', Colors.pastelYellow);
-        this.colors.set('pastelGreen', Colors.pastelGreen);
-        this.colors.set('pastelBlue', Colors.pastelBlue);
-        this.colors.set('pastelPurple', Colors.pastelPurple);
-        this.colors.set('lightBlue',  Colors.lightBlue);
-        this.colors.set('pink', Colors.pink);
-    }
+// create quick way to retrieve a color value based on its css class
+export function getColors() {
+
+    const colors = new Map<string, CSSResult>();
+
+    colors.set('black', black);
+    colors.set('white', white);
+    colors.set('silver', silver);
+    colors.set('gray', gray);
+    colors.set('darkGray', darkGray);
+    colors.set('charcoal', charcoal);
+    colors.set('magenta', magenta);
+    colors.set('red', red);
+    colors.set('redOrange', redOrange);
+    colors.set('orange', orange);
+    colors.set('gold', gold);
+    colors.set('yellow', yellow);
+    colors.set('grassGreen', grassGreen);
+    colors.set('green', green);
+    colors.set('darkGreen', darkGreen);
+    colors.set('teal', teal);
+    colors.set('blue', blue);
+    colors.set('indigo', indigo);
+    colors.set('violet', violet);
+    colors.set('purple', purple);
+    colors.set('beige', beige);
+    colors.set('lightBrown', lightBrown);
+    colors.set('brown', brown);
+    colors.set('darkBrown', darkBrown);
+    colors.set('pastelPink', pastelPink);
+    colors.set('pastelOrange', pastelOrange);
+    colors.set('pastelYellow', pastelYellow);
+    colors.set('pastelGreen', pastelGreen);
+    colors.set('pastelBlue', pastelBlue);
+    colors.set('pastelPurple', pastelPurple);
+    colors.set('lightBlue',  lightBlue);
+    colors.set('pink', pink);
+
+    return colors;
 }
