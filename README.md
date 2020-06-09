@@ -40,7 +40,7 @@ There are two ways to use this component. For simple projects or just to get sta
 
 You can use the element `<inking-canvas></inking-canvas>` anywhere in your template, JSX, html etc. By itself, you will get a blank, bordered canvas which you can control through its APIs (see table for details).
 
-You can also add the `<inking-toolbar></inking-toolbar>` element beneath the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match.
+You can also add the `<inking-toolbar></inking-toolbar>` element within the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match.
 
 By default `<inking-canvas></inking-canvas>` will create ink strokes with a width depending on the active pointer event:
 
@@ -103,4 +103,4 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | `getCurrentStrokeColor()`       | Returns the current toolbar ink color of the active tool                                             |                                     |
 | `getCurrentStrokeColorName()`    | Returns the current stroke color name of the active tool                              | Sets the current stroke color name for the active tool                               |
 | `getCurrentStrokeSize()`      | Returns the current stroke width of the active tool                              
-| `requestDrawSineCanvas()` | Triggers an additional example stroke  redraw if one is not already queued up |
+| `requestDrawSineCanvas()` | Triggers an additional example stroke redraw if one is not already queued up |
