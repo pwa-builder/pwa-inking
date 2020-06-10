@@ -38,6 +38,9 @@ export class InkingToolbar extends LitElement {
     @property({type: CSSResult}) private selectedPenColor: CSSResult = Colors.black;
     @property({type: CSSResult}) private selectedPenColorName: string = 'black';
     @property({type: Number}) private selectedPenSize: number = this.defaultSliderSize;
+    @property({type: CSSResult}) private selectedPencilColor: CSSResult = Colors.black;
+    @property({type: CSSResult}) private selectedPencilColorName: string = 'black';
+    @property({type: Number}) private selectedPencilSize: number = this.defaultSliderSize;
     @property({type: CSSResult}) private selectedHighlighterColor: CSSResult = Colors.yellow;
     @property({type: CSSResult}) private selectedHighlighterColorName: string = 'yellow';
     @property({type: Number}) private selectedHighlighterSize: number = this.defaultSliderSize;
@@ -54,6 +57,7 @@ export class InkingToolbar extends LitElement {
             <div id="toolbar-container">
                 <div id="tool-container">
                     <button id="pen" class="toolbar-icon pen-icon" @click="${this.clickedUtensil}"></button>
+                    <button id="pencil" class="toolbar-icon pencil-icon" @click="${this.clickedUtensil}"></button>
                     <button id="highlighter" class="toolbar-icon highlighter-icon" @click="${this.clickedUtensil}"></button>
                     <button id="eraser" class="toolbar-icon eraser-icon" @click="${this.clickedUtensil}"></button>
                 </div>
@@ -224,6 +228,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 return this.selectedPenColor.toString();
                 break;
+            case "pencil" :
+                return this.selectedPencilColor.toString();
+                break;
             case "highlighter" :
                 return this.selectedHighlighterColor.toString();
                 break;
@@ -240,6 +247,9 @@ export class InkingToolbar extends LitElement {
         switch (this.selectedTool.id) {
             case "pen" :
                 return this.selectedPenColorName;
+                break;
+            case "pencil" :
+                return this.selectedPencilColorName;
                 break;
             case "highlighter" :
                 return this.selectedHighlighterColorName;
@@ -258,6 +268,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 return this.selectedPenSize;
                 break;
+            case "pencil" :
+                return this.selectedPencilSize;
+                break;
             case "highlighter" :
                 return this.selectedHighlighterSize;
                 break;
@@ -274,6 +287,9 @@ export class InkingToolbar extends LitElement {
         switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenColor = color;
+                break;
+            case "pencil" :
+                this.selectedPencilColor = color;
                 break;
             case "highlighter" :
                 this.selectedHighlighterColor = color;
@@ -292,6 +308,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 this.selectedPenColorName = colorName;
                 break;
+            case "pencil" :
+                this.selectedPencilColorName = colorName;
+                break;
             case "highlighter" :
                 this.selectedHighlighterColorName = colorName;
                 break;
@@ -307,6 +326,9 @@ export class InkingToolbar extends LitElement {
         switch (this.selectedTool.id) {
             case "pen" :
                 this.selectedPenSize = parseInt(this.slider.value);
+                break;
+            case "pencil" :
+                this.selectedPencilSize = parseInt(this.slider.value);
                 break;
             case "highlighter" :
                 this.selectedHighlighterSize = parseInt(this.slider.value);
@@ -384,8 +406,13 @@ export class InkingToolbar extends LitElement {
             // toggle semaphore to prevent unnecessary redraws
             this.isWaitingToDrawSineCanvas = false;
 
+            // resize sine canvas with high resolution
+            let rect = this.sineCanvas.getBoundingClientRect();
+            this.sineCanvas.height = rect.height * devicePixelRatio;
+            this.sineCanvas.width = rect.width * devicePixelRatio;
+
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() / devicePixelRatio;
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentStrokeColor();
 
@@ -1639,7 +1666,7 @@ export class InkingToolbar extends LitElement {
             }      
             button.clicked.gold.horizontal-orientation {
                 border-bottom-color: ${Colors.gold};
-                box-shadow: 0 3px 0px 0px ${Colors.orange};
+                box-shadow: 0 3px 0px 0px ${Colors.gold};
             }      
             button.clicked.yellow.horizontal-orientation {
                 border-bottom-color: ${Colors.yellow};
