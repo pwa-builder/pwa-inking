@@ -61,44 +61,116 @@ export class InkingToolbar extends LitElement {
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
                         <div class="pen-pencil palette">
-                            <div class="black circle" @click="${this.clickedColor}"></div>
-                            <div class="white circle" @click="${this.clickedColor}"></div>
-                            <div class="silver circle" @click="${this.clickedColor}"></div>
-                            <div class="gray circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-gray circle" @click="${this.clickedColor}"></div>
-                            <div class="charcoal circle" @click="${this.clickedColor}"></div>
-                            <div class="magenta circle" @click="${this.clickedColor}"></div>
-                            <div class="red circle" @click="${this.clickedColor}"></div>
-                            <div class="red-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="orange circle" @click="${this.clickedColor}"></div>
-                            <div class="gold circle" @click="${this.clickedColor}"></div>
-                            <div class="yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="grass-green circle" @click="${this.clickedColor}"></div>
-                            <div class="green circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-green circle" @click="${this.clickedColor}"></div>
-                            <div class="teal circle" @click="${this.clickedColor}"></div>
-                            <div class="blue circle" @click="${this.clickedColor}"></div>
-                            <div class="indigo circle" @click="${this.clickedColor}"></div>
-                            <div class="violet circle" @click="${this.clickedColor}"></div>
-                            <div class="purple circle" @click="${this.clickedColor}"></div>
-                            <div class="beige circle" @click="${this.clickedColor}"></div>
-                            <div class="light-brown circle" @click="${this.clickedColor}"></div>
-                            <div class="brown circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-brown circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-pink circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-green circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-blue circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-purple circle" @click="${this.clickedColor}"></div>
+                            <div class="black circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Black</span>
+                            </div>
+                            <div class="white circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">White</span>
+                            </div>
+                            <div class="silver circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Silver</span> 
+                            </div>
+                            <div class="gray circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Gray</span> 
+                            </div>
+                            <div class="dark-gray circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark gray</span> 
+                            </div>
+                            <div class="charcoal circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Charcoal</span> 
+                            </div>
+                            <div class="magenta circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Magenta</span> 
+                            </div>
+                            <div class="red circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red</span> 
+                            </div>
+                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red-orange</span> 
+                            </div>
+                            <div class="orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Orange</span> 
+                            </div>
+                            <div class="gold circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Gold</span> 
+                            </div>
+                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Yellow</span> 
+                            </div>
+                            <div class="grass-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Grass green</span> 
+                            </div>
+                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Green</span> 
+                            </div>
+                            <div class="dark-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark green</span> 
+                            </div>
+                            <div class="teal circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Teal</span> 
+                            </div>
+                            <div class="blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Blue</span> 
+                            </div>
+                            <div class="indigo circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Indigo</span> 
+                            </div>
+                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Violet</span> 
+                            </div>
+                            <div class="purple circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Purple</span> 
+                            </div>
+                            <div class="beige circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Beige</span> 
+                            </div>
+                            <div class="light-brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Light brown</span> 
+                            </div>
+                            <div class="brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Brown</span> 
+                            </div>
+                            <div class="dark-brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark brown</span>
+                            </div>
+                            <div class="pastel-pink circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel pink</span> 
+                            </div>
+                            <div class="pastel-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel orange</span> 
+                            </div>
+                            <div class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel yellow</span> 
+                            </div>
+                            <div class="pastel-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel green</span> 
+                            </div>
+                            <div class="pastel-blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel blue</span> 
+                            </div>
+                            <div class="pastel-purple circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel purple</span> 
+                            </div>
                         </div>
                         <div class="highlighter palette">
-                            <div class="yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="green circle" @click="${this.clickedColor}"></div>
-                            <div class="light-blue circle" @click="${this.clickedColor}"></div>
-                            <div class="pink circle" @click="${this.clickedColor}"></div>
-                            <div class="red-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="violet circle" @click="${this.clickedColor}"></div>
+                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Yellow</span> 
+                            </div>
+                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Green</span> 
+                            </div>
+                            <div class="light-blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Light blue</span> 
+                            </div>
+                            <div class="pink circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pink</span> 
+                            </div>
+                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red-orange</span> 
+                            </div>
+                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Violet</span> 
+                            </div>
                         </div>
                         <div class="checkbox-label">
                             <input type="checkbox" id="checkbox"></input>
@@ -393,7 +465,7 @@ export class InkingToolbar extends LitElement {
 
         // find clicked color grid element through its class
         let selectedCircle = (<HTMLDivElement>event.target);
-        let colorClass = selectedCircle.className.replace('clicked', '').replace('circle', '').trim();
+        let colorClass = selectedCircle.className.replace("clicked", "").replace("circle", "").replace("tooltip", "").trim();
 
         // get color string from css color
         let colorName = Utils.toCamelCase(colorClass);
@@ -738,29 +810,147 @@ export class InkingToolbar extends LitElement {
                 align-items: center;
                 justify-content: center;
                 align-content: center;
-                padding-bottom: 15px;
             }
             .palette.show {
                 display: grid
             }
-            .circle {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                border: 7px solid ${Colors.colorPaletteBackground};
+            .tooltip {
+                position: relative;
+                display: inline-block;
             }
-            .circle:hover, .circle:active {
+            .tooltip-text {
+                visibility: hidden;
+                background-color: ${Colors.colorPaletteBackground};
+                color: ${Colors.black};
+                border: 1px solid ${Colors.silver};
+                text-align: center;
+                font-size: 14px;
+                white-space: nowrap;
+                padding: 5px;
+                border-radius: 5px;
+                position: absolute;
+                z-index: 1;
+                bottom: 125%;
+                left: 50%;
+                transform: translateX(-50%);
+                transition: none;
+            }
+            .tooltip:hover .tooltip-text {
+                visibility: visible;
+                transition: visibility 0.3s ease-out 0.6s;
+            }
+            .circle {
                 width: 40px;
                 height: 40px;
-                border: 2px solid ${Colors.colorPaletteBackground};
-                transition: all 0.2s ease;
-            }
-            .circle.clicked {
-                width: 30px;
-                height: 30px;
-                border: 3px solid ${Colors.colorPaletteBackground};
-                box-shadow: 0px 0px 0px 2px black;
                 border-radius: 50%;
+                box-sizing: border-box;
+                border: 2px solid ${Colors.colorPaletteBackground};
+                margin: 7px;
+                transition: all 0.1s ease;
+            }
+            .circle:hover {
+                border: 2px solid ${Colors.red}; /* this color should be overridden by proper color class below */
+                transition: all 0.1s ease;
+            }
+            .circle:hover.black {
+                border-color: ${Colors.black};
+            }
+            .circle:hover.white {
+                border-color: ${Colors.white};
+            }
+            .circle:hover.silver {
+                border-color: ${Colors.silver};
+            }
+            .circle:hover.gray {
+                border-color: ${Colors.gray};
+            }
+            .circle:hover.dark-gray {
+                border-color: ${Colors.darkGray};
+            }
+            .circle:hover.charcoal {
+                border-color: ${Colors.charcoal};
+            }
+            .circle:hover.magenta {
+                border-color: ${Colors.magenta};
+            }
+            .circle:hover.red {
+                border-color: ${Colors.red};
+            }
+            .circle:hover.red-orange {
+                border-color: ${Colors.redOrange};
+            }
+            .circle:hover.orange {
+                border-color: ${Colors.orange};
+            }
+            .circle:hover.gold {
+                border-color: ${Colors.gold};
+            }
+            .circle:hover.yellow {
+                border-color: ${Colors.yellow};
+            }
+            .circle:hover.grass-green {
+                border-color: ${Colors.grassGreen};
+            }
+            .circle:hover.green {
+                border-color: ${Colors.green};
+            }
+            .circle:hover.dark-green {
+                border-color: ${Colors.darkGreen};
+            }
+            .circle:hover.teal {
+                border-color: ${Colors.teal};
+            }
+            .circle:hover.blue {
+                border-color: ${Colors.blue};
+            }
+            .circle:hover.indigo {
+                border-color: ${Colors.indigo};
+            }
+            .circle:hover.violet {
+                border-color: ${Colors.violet};
+            }
+            .circle:hover.purple {
+                border-color: ${Colors.purple};
+            }
+            .circle:hover.beige {
+                border-color: ${Colors.beige};
+            }
+            .circle:hover.light-brown {
+                border-color: ${Colors.lightBrown};
+            }
+            .circle:hover.brown {
+                border-color: ${Colors.brown};
+            }
+            .circle:hover.dark-brown {
+                border-color: ${Colors.darkBrown};
+            }
+            .circle:hover.pastel-pink {
+                border-color: ${Colors.pastelPink};
+            }
+            .circle:hover.pastel-orange {
+                border-color: ${Colors.pastelOrange};
+            }
+            .circle:hover.pastel-yellow {
+                border-color: ${Colors.pastelYellow};
+            }
+            .circle:hover.pastel-green {
+                border-color: ${Colors.pastelGreen};
+            }
+            .circle:hover.pastel-blue {
+                border-color: ${Colors.pastelBlue};
+            }
+            .circle:hover.pastel-purple {
+                border-color: ${Colors.pastelPurple};
+            }
+            .circle:hover.light-blue {
+                border-color: ${Colors.lightBlue};
+            }
+            .circle:hover.pink {
+                border-color: ${Colors.pink};
+            }
+            .circle.clicked, .circle.clicked:hover {
+                border: 2px solid ${Colors.colorPaletteBackground};
+                box-shadow: 0px 0px 0px 2px black;
                 transition: all 0.2s ease;
             }
             .circle.black {                
@@ -879,7 +1069,6 @@ export class InkingToolbar extends LitElement {
                 display: block;
                 width: 65px;
                 height: 30px;
-                margin-bottom: 15px;
             }
             .checkbox-label input {
                 display: none;
@@ -1168,8 +1357,12 @@ export class InkingToolbar extends LitElement {
             .off-text.show {
                 display: inline;
             }
+            input[type="range" i] {
+                margin: auto;
+            }
             .slider-container {
                 width: 100%;
+                padding-bottom: 8px;
             }
             .slider {
                 -webkit-appearance: none;
