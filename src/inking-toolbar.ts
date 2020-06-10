@@ -810,7 +810,6 @@ export class InkingToolbar extends LitElement {
                 align-items: center;
                 justify-content: center;
                 align-content: center;
-                padding-bottom: 15px;
             }
             .palette.show {
                 display: grid
@@ -1070,7 +1069,6 @@ export class InkingToolbar extends LitElement {
                 display: block;
                 width: 65px;
                 height: 30px;
-                margin-bottom: 15px;
             }
             .checkbox-label input {
                 display: none;
@@ -1359,8 +1357,12 @@ export class InkingToolbar extends LitElement {
             .off-text.show {
                 display: inline;
             }
+            input[type="range" i] {
+                margin: auto;
+            }
             .slider-container {
                 width: 100%;
+                padding-bottom: 8px;
             }
             .slider {
                 -webkit-appearance: none;
