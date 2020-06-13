@@ -92,7 +92,10 @@ Check out a [live demo](https://pwa-inking.glitch.me) of pwa-inking!
 | Property             | Attribute            | Description                                                                     | Type      | Default                                             |
 | -------------------- | -------------------- | ------------------------------------------------------------------------------- | --------- | --------------------------------------------------- |
 | `orientation`        | `orientation`        | Toolbar layout direction                                                        | `string`  | `horizontal`                                        |
-| `targetInkingCanvas` | `canvas`             | Connects to canvas whose name matches its value                                 | `string`  | `""`                                                |
+| `verticalAlignment`        | `vertical`        | Toolbar layout vertical alignment                                                  | `string`  | `top`                                        |
+| `horizontalAlignment`        | `horizontal`        | Toolbar layout horizontal alignment                                                     | `string`  | `left`                                        |
+| `targetInkingCanvas` | `canvas`             | Connects toolbar to canvas whose name matches this value                                 | `string`  | `""`                                                |
+
 
 
 ### Methods
