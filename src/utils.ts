@@ -38,7 +38,6 @@ export function drawPencilStroke(context: CanvasRenderingContext2D, previousX: n
 
     // use the distance formula to calcuate the line length between the two points on the canvas
     let distance  = Math.round(Math.sqrt(Math.pow(currentX - previousX, 2)+Math.pow(currentY - previousY, 2)));
-    // console.log("distance: "+ distance);
 
     // split length into incremental pieces
     let stepX = (currentX - previousX)/distance;
@@ -46,20 +45,26 @@ export function drawPencilStroke(context: CanvasRenderingContext2D, previousX: n
     
     for (let i = 0; i < distance; i++ ) {
 
+        // find the next coordinate to ink
         let currentX = previousX + (i * stepX);	
         let currentY = previousY + (i * stepY);
-        
-        // create light base for whole stroke width as a first layer
-        context.globalAlpha = 0.7;
-        let randomX = currentX + ((Math.random()-0.5) * strokeWidth * 1);			
-        let randomY = currentY + ((Math.random()-0.5) * strokeWidth * 1);
-        context.fillRect(randomX, randomY, Math.random() + 2, Math.random() + 1);
-        
-        // thicken center of stroke with a second more opaque layer
-        context.globalAlpha = 1;
-        randomX = currentX + ((Math.random()-0.5) * strokeWidth * 0.8);			
-        randomY = currentY + ((Math.random()-0.5) * strokeWidth * 0.8);
-        context.fillRect(randomX, randomY, Math.random() + 2, Math.random() +1 );
+
+        // introduce slight randomization where the ink is actually placed
+
+        let numLayers = (strokeWidth/10) + 1  // scale number of ink layers to maintain texture across different stroke sizes
+        let opacity = 0.5; // fade ink layers lighter toward the edge (to mimic outlier flecks in pencil strokes)
+        let layerWidth = 1; // how wide the ink can potentially be applied
+
+        // draw layers of randomized ink (rectangles) and make the stroke darker and thinner as it approaches the center
+        for (numLayers; numLayers > 0; numLayers--) {
+            context.globalAlpha = opacity;
+            let randomX = currentX + ((Math.random()-0.5) * strokeWidth * layerWidth);			
+            let randomY = currentY + ((Math.random()-0.5) * strokeWidth * layerWidth);
+            context.fillRect(randomX, randomY, Math.random() + 2, Math.random() + 1);
+            opacity += 0.05;
+            layerWidth -= 0.05;
+        }
+
     }
 
     // restore context properties

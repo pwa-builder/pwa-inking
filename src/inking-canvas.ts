@@ -257,6 +257,10 @@ export class InkingCanvas extends LitElement {
         return ((pointer.clientY * devicePixelRatio) - (rect.top * devicePixelRatio) - this.origin.y) / this.scale;
     }
 
+    private isStylusEraserActive(pointer: any) {
+        return ((pointer.nativePointer as PointerEvent).buttons === 32 || (pointer.nativePointer as PointerEvent).button === 5);
+    }
+
     private async setUpPointerTrackerEvents() {
         this.strokes = new Map();
         const outerThis = this;     
@@ -367,20 +371,22 @@ export class InkingCanvas extends LitElement {
                         }
                     }
 
-                    // confirm the stroke color is correct
-                    outerThis.context.strokeStyle = outerThis.strokeColor;
+                    if (outerThis.toolStyle === "pencil" && !outerThis.isStylusEraserActive(pointer)) {
 
-                    // TODO: figure out why stroke starts as previous color and then corrects itself
-                    if (outerThis.toolStyle === "pencil") {
+                        // update the inking texture with the correct color
+                        outerThis.context.fillStyle = outerThis.strokeColor;
 
                         // change up the stroke texture
                         Utils.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
 
                     } else {
 
-                        // TODO: make pen erase work in Firefox (which does not seem to detect the below button states for Surface pen)
+                        // update the stroke color (for no added texture)
+                        outerThis.context.strokeStyle = outerThis.strokeColor;
+
+                        // TODO: make stylus erase work in Firefox (which does not seem to detect the below button states for stylus input)
                         // handle pen/stylus erasing
-                        if ((pointer.nativePointer as PointerEvent).buttons === 32 || (pointer.nativePointer as PointerEvent).button === 5) {
+                        if (outerThis.isStylusEraserActive(pointer)) {
                             console.log("eraser detected");
                             outerThis.context.strokeStyle = "white";
                             outerThis.context.globalCompositeOperation = "source-over";
