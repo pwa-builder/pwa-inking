@@ -51,18 +51,18 @@ export function drawPencilStroke(context: CanvasRenderingContext2D, previousX: n
 
         // introduce slight randomization where the ink is actually placed
 
-        let opacity = 0.5; // how visible the ink layer is (to mimic outlier flecks in pencil strokes)
+        let numLayers = (strokeWidth/10) + 1  // scale number of ink layers to maintain texture across different stroke sizes
+        let opacity = 0.5; // fade ink layers lighter toward the edge (to mimic outlier flecks in pencil strokes)
         let layerWidth = 1; // how wide the ink can potentially be applied
 
-        // draw layers of randomized ink (rectangles) and make the stroke darker and thinner as it approaches the center,
-        // taking care not to draw too many layers for smaller stroke widths
-        for (let numLayers = (strokeWidth/10) + 1; numLayers > 0; numLayers--) {
+        // draw layers of randomized ink (rectangles) and make the stroke darker and thinner as it approaches the center
+        for (numLayers; numLayers > 0; numLayers--) {
             context.globalAlpha = opacity;
             let randomX = currentX + ((Math.random()-0.5) * strokeWidth * layerWidth);			
             let randomY = currentY + ((Math.random()-0.5) * strokeWidth * layerWidth);
             context.fillRect(randomX, randomY, Math.random() + 2, Math.random() + 1);
-            opacity = opacity + 0.05;
-            layerWidth = layerWidth - 0.05;
+            opacity += 0.05;
+            layerWidth -= 0.05;
         }
 
     }
