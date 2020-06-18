@@ -33,6 +33,7 @@ export class InkingToolbar extends LitElement {
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
+    @query("#snackbar") private snackbar: HTMLDivElement;
 
     // access colors used in toolbar
     private static colors: Map<string, CSSResult> = Colors.getColors();
@@ -56,9 +57,21 @@ export class InkingToolbar extends LitElement {
         return html `
             <div id="toolbar-container">
                 <div id="tool-container">
-                    <button id="pen" class="toolbar-icon pen-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="highlighter" class="toolbar-icon highlighter-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="eraser" class="toolbar-icon eraser-icon" @click="${this.clickedUtensil}"></button>
+                    <button id="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Pen</span>
+                    </button>
+                    <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Highlighter</span>
+                    </button>
+                    <button id="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Eraser</span>
+                    </button>
+                    <button id-"copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                        <span class="tooltip-text">Copy</span>
+                    </button>
+                    <button id-"save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                        <span class="tooltip-text">Save</span>
+                    </button>
                 </div>
                 <div id="dropdown-container">
                     <div class="ink-dropdown">
@@ -187,6 +200,7 @@ export class InkingToolbar extends LitElement {
                         <button id="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
+                <div id="snackbar"></div>
             </div>
         `;
     }
@@ -202,7 +216,7 @@ export class InkingToolbar extends LitElement {
         this.setHorizontalAlignment();
 
         // enable low-latency if possible
-        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine canvas")
+        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine")
 
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
@@ -213,7 +227,7 @@ export class InkingToolbar extends LitElement {
         this.isWaitingToDrawSineCanvas = true;
         Utils.runAsynchronously( () => { 
             this.drawSineCanvas();
-            console.log("sine canvas drawn for first time");
+            console.log("Sine canvas drawn for first time");
         });
     }
 
@@ -236,7 +250,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white.toString();
                 break;
             default:
-                console.log("could not find color value for selected utensil");
+                console.log("Could not find color value for selected utensil");
                 break;
         }
     }
@@ -253,7 +267,7 @@ export class InkingToolbar extends LitElement {
                 return "white";
                 break;
             default:
-                console.log("could not find color name for selected utensil");
+                console.log("Could not find color name for selected utensil");
                 break;
         }
     }
@@ -270,7 +284,7 @@ export class InkingToolbar extends LitElement {
                 return this.eraserSize;
                 break;
             default:
-                console.log("could not find stroke size for selected utensil");
+                console.log("Could not find stroke size for selected utensil");
                 break;
         }
     }
@@ -287,7 +301,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white;
                 break;
             default:
-                console.log("could not set color value for selected utensil");
+                console.log("Could not set color value for selected utensil");
                 break;
         }
     }
@@ -303,7 +317,7 @@ export class InkingToolbar extends LitElement {
             case "eraser" :
                 break;
             default:
-                console.log("could not set color name for selected utensil");
+                console.log("Could not set color name for selected utensil");
                 break;
         }
     }
@@ -320,7 +334,7 @@ export class InkingToolbar extends LitElement {
                 this.eraserSize = parseInt(this.slider.value);
                 break;
             default:
-                console.log("could not set stroke size for selected utensil");
+                console.log("Could not set stroke size for selected utensil");
                 break;
         }
     }
@@ -356,6 +370,11 @@ export class InkingToolbar extends LitElement {
                 this.requestDrawSineCanvas();
             }, false);
 
+            // provide visual status of copy clicks
+            this.inkingCanvas.addEventListener('inking-canvas-copied', ( e: CustomEvent ) => {
+                this.flashSnackbar(e.detail.message);
+            }, false);
+
         }
     }
 
@@ -389,6 +408,8 @@ export class InkingToolbar extends LitElement {
         // default choice/setting is "top"
 
         switch (this.verticalAlignment) {
+            case "":
+                break;
             case "top":
                 break;
             case "center":
@@ -400,7 +421,7 @@ export class InkingToolbar extends LitElement {
                 this.dropdownContainer.classList.add("bottom");
                 break;
             default:
-                console.log("could not set vertical toolbar alignment");
+                console.log("Could not set vertical toolbar alignment");
         }
     }
 
@@ -409,6 +430,11 @@ export class InkingToolbar extends LitElement {
         // default choice/setting is "left"
 
         switch (this.horizontalAlignment) {
+            case "":
+                this.tools.forEach(tool => {
+                    tool.classList.add("left");
+                });
+                break;
             case "left":
                 this.tools.forEach(tool => {
                     tool.classList.add("left");
@@ -429,7 +455,7 @@ export class InkingToolbar extends LitElement {
                 });
                 break;
             default:
-                console.log("could not set horizontal toolbar alignment");
+                console.log("Could not set horizontal toolbar alignment");
         }
     }
 
@@ -539,13 +565,38 @@ export class InkingToolbar extends LitElement {
         this.updateSelectedColor(selectedCircle);
     }
 
-    // clickedCopy() {
-    //     if (this.inkingCanvas) {
-    //         this.inkingCanvas.copyCanvasContents();
-    //     } else {
-    //         console.log("cannot copy - inking canvas not connected");
-    //     }
-    // }
+    private clickedCopy() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.copyCanvasContents();
+            } else {
+                console.error("Cannot copy - inking canvas not connected");
+                this.flashSnackbar("Could not copy canvas to clipboard :(");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private clickedSave() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.downloadCanvasContents();
+            } else {
+                console.error("Cannot save - inking canvas not connected");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private flashSnackbar(message: string) {
+        this.snackbar.textContent = message;
+        this.snackbar.classList.add("show");
+        setTimeout(() => { 
+            this.snackbar.classList.remove("show");
+        }, 3000);
+    }
 
     private isUtensil(tool: string) {
         return (tool === "pen" || tool === "pencil" 
@@ -590,8 +641,8 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 5th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+                // remove the color class which should be the last and 6th class
+                this.selectedTool.classList.remove(this.selectedTool.classList[5]);
 
                 this.selectedTool.classList.remove('clicked');
             }
@@ -661,10 +712,10 @@ export class InkingToolbar extends LitElement {
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
                 // remove the color class
-                if (this.selectedTool.classList[4] !== "clicked") {
-                    this.selectedTool.classList.remove(this.selectedTool.classList[4]);
-                } else {
+                if (this.selectedTool.classList[5] !== "clicked") {
                     this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                } else {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[6]);
                 }
 
                 // use the css friendly color class name with dashes
@@ -906,7 +957,7 @@ export class InkingToolbar extends LitElement {
                 align-content: center;
             }
             .palette.show {
-                display: grid
+                display: grid;
             }
             .tooltip {
                 position: relative;
@@ -2078,6 +2129,44 @@ export class InkingToolbar extends LitElement {
             button.clicked.pink.vertical-orientation.right {
                 border-left-color: ${Colors.pink};
                 box-shadow: -3px 0px 0px 0px ${Colors.pink};
+            }
+
+            #snackbar {
+                visibility: hidden;
+                min-width: 250px;
+                margin-left: -125px; /* Divide value of min-width by 2 */
+                background-color: ${Colors.colorPaletteBackground};
+                color: ${Colors.black};
+                font-size: 16px;
+                font-family: sans-serif;
+                text-align: center;
+                border-radius: 2px;
+                padding: 16px;
+                position: fixed;
+                z-index: 1;
+                left: 50%;
+                bottom: 30px;
+            }          
+            #snackbar.show {
+                visibility: visible;
+                -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+                animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            }
+            @-webkit-keyframes fadein {
+                from {bottom: 0; opacity: 0;}
+                to {bottom: 30px; opacity: 1;}
+            }
+            @keyframes fadein {
+                from {bottom: 0; opacity: 0;}
+                to {bottom: 30px; opacity: 1;}
+            }
+            @-webkit-keyframes fadeout {
+                from {bottom: 30px; opacity: 1;}
+                to {bottom: 0; opacity: 0;}
+            }
+            @keyframes fadeout {
+                from {bottom: 30px; opacity: 1;}
+                to {bottom: 0; opacity: 0;}
             }
         `;
     }
