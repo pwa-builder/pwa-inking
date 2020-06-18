@@ -4,6 +4,7 @@ import {
 import { get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
 import PointerTracker from "./PointerTracker.js";
+import { fileSave } from 'browser-nativefs';
 import * as Utils from './utils';
 
 // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
@@ -168,7 +169,7 @@ export class InkingCanvas extends LitElement {
         this.currentAspectRatio = {width: this.canvas.width, height: this.canvas.height}; 
 
         // enable low-latency if possible
-        this.context = Utils.getLowLatencyContext(this.canvas, "inking canvas");
+        this.context = Utils.getLowLatencyContext(this.canvas, "inking");
     
         this.requestCanvasResize();
         Utils.runAsynchronously( () => { 
@@ -400,19 +401,73 @@ export class InkingCanvas extends LitElement {
         });
     }
 
-    // async copyCanvasContents() {
-    //     this.canvas.toBlob(
-    //         async blob => (navigator.clipboard as any).write([
-    //             new ClipboardItem({
-    //                 [blob.type] : blob
-    //             })
-    //         ]).then( function() {
-    //             console.log("canvas contents copied successfully!");
-    //         }, function (err) {
-    //             console.error("could not copy " + this.name + " canvas contents, " + err);
-    //         })
-    //     );
-    // }
+    async copyCanvasContents() {
+        try {
+            if (!navigator.clipboard) {
+                console.error("This browser does not yet support copying an image to the clipboard (cannot find navigator.clipboard)");
+                this.dispatchEvent(this.getCanvasCopiedFailedEvent());
+                return;
+            }
+            if ("ClipboardItem" in window) {
+                const outerThis = this;
+                this.canvas.toBlob(
+                    async blob => { await (navigator.clipboard as any).write([
+                        new (ClipboardItem as any)({
+                            "image/png": blob
+                        })
+                    ]).then(function() {
+                        console.log("Canvas contents copied successfully!");
+                        let inkingCanvasCopied = new CustomEvent("inking-canvas-copied", { 
+                            detail: { message: "Copied canvas to clipboard!" },
+                            bubbles: true, 
+                            composed: true });
+                            outerThis.dispatchEvent(inkingCanvasCopied);
+                    }, function (err) {
+                        console.error("Could not copy " + outerThis.name + " canvas contents, " + err);
+                        outerThis.dispatchEvent(outerThis.getCanvasCopiedFailedEvent());
+                    })
+                });
+            } else {
+                console.error("This browser does not yet support copying an image to the clipboard (using ClipboardItem in the Clipboard API)");
+                this.dispatchEvent(this.getCanvasCopiedFailedEvent());
+            }
+        } catch (err) {
+            console.error("This browser does not yet support copying an image to the clipboard. Error: " + err);
+            this.dispatchEvent(this.getCanvasCopiedFailedEvent());
+        }
+    }
+
+    async downloadCanvasContents() {
+
+        const options = {
+            fileName: "InkingCanvasDrawing.png",
+             // List of allowed MIME types, defaults to `*/*`.
+            mimeTypes: ['image/*'],
+            // List of allowed file extensions, defaults to `''`.
+            extensions: ['png', 'jpg', 'jpeg'],
+            // Set to `true` for allowing multiple files, defaults to `false`.
+            multiple: true,
+            description: 'Inking canvas image files',
+        };
+
+        this.canvas.toBlob(
+            async blob => { 
+                await fileSave(blob, options
+            ).then( function() {
+                console.log("Canvas contents downloaded successfully!");
+            }, function (err) {
+                console.error("Could not download " + this.name + " canvas contents, " + err);
+            })}
+        );
+
+    }
+
+    private getCanvasCopiedFailedEvent() {
+        return new CustomEvent("inking-canvas-copied", { 
+            detail: { message: "Could not copy canvas to clipboard :(" },
+            bubbles: true, 
+            composed: true });
+    }
 
     private saveCanvasContents(event) {
         event.preventDefault();

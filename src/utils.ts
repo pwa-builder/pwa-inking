@@ -4,13 +4,13 @@ export function getLowLatencyContext(canvas: HTMLCanvasElement, canvasName: stri
 
     let context = (canvas.getContext('2d', {
         desynchronized: true
-        }) as CanvasRenderingContext2D);
+    }) as CanvasRenderingContext2D);
 
     // check for low-latency
     if ("getContextAttributes" in context && (context as any).getContextAttributes().desynchronized) {
-    console.log("Low latency is supported for " + canvasName + " canvas.");
+        console.log("Low latency is supported for " + canvasName + " canvas");
     } else {
-    console.log("Low latency is NOT supported for " + canvasName + " canvas.");
+        console.log("Low latency is NOT supported for " + canvasName + " canvas");
     }
 
     return context;

@@ -10,8 +10,11 @@ export class InkingToolbar extends LitElement {
 
     // properties for toolbar and its dropdowns
     @property({type: String}) orientation: string = "";
+    @property({type: String, attribute: "vertical"}) verticalAlignment: string = "";
+    @property({type: String, attribute: "horizontal"}) horizontalAlignment: string = "";
     @query('#toolbar-container') private toolbarContainer: HTMLElement;
     @query('#tool-container') private toolContainer: HTMLElement;
+    @property({type: NodeList}) private tools: NodeListOf<HTMLButtonElement>;
     @property({type: HTMLButtonElement}) private selectedTool: HTMLButtonElement;
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
     @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
@@ -30,6 +33,7 @@ export class InkingToolbar extends LitElement {
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
+    @query("#snackbar") private snackbar: HTMLDivElement;
 
     // access colors used in toolbar
     private static colors: Map<string, CSSResult> = Colors.getColors();
@@ -56,10 +60,24 @@ export class InkingToolbar extends LitElement {
         return html `
             <div id="toolbar-container">
                 <div id="tool-container">
-                    <button id="pen" class="toolbar-icon pen-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="pencil" class="toolbar-icon pencil-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="highlighter" class="toolbar-icon highlighter-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="eraser" class="toolbar-icon eraser-icon" @click="${this.clickedUtensil}"></button>
+                    <button id="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Pen</span>
+                    </button>
+                    <button id="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Pencil</span>
+                    </button>
+                    <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Highlighter</span>
+                    </button>
+                    <button id="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                        <span class="tooltip-text">Eraser</span>
+                    </button>
+                    <button id-"copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                        <span class="tooltip-text">Copy</span>
+                    </button>
+                    <button id-"save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                        <span class="tooltip-text">Save</span>
+                    </button>
                 </div>
                 <div id="dropdown-container">
                     <div class="ink-dropdown">
@@ -188,6 +206,7 @@ export class InkingToolbar extends LitElement {
                         <button id="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
+                <div id="snackbar"></div>
             </div>
         `;
     }
@@ -197,11 +216,13 @@ export class InkingToolbar extends LitElement {
         // add any (last) detected inking canvas with matching name (TODO: handle multiple)
         this.connectCanvas();
 
-        // set toolbar orientation to developer's choice
+        // set toolbar layout to developer's choice
         this.setOrientation();
+        this.setVerticalAlignment();
+        this.setHorizontalAlignment();
 
         // enable low-latency if possible
-        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine canvas")
+        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine")
 
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
@@ -212,7 +233,7 @@ export class InkingToolbar extends LitElement {
         this.isWaitingToDrawSineCanvas = true;
         Utils.runAsynchronously( () => { 
             this.drawSineCanvas();
-            console.log("sine canvas drawn for first time");
+            console.log("Sine canvas drawn for first time");
         });
     }
 
@@ -238,7 +259,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white.toString();
                 break;
             default:
-                console.log("could not find color value for selected utensil");
+                console.log("Could not find color value for selected utensil");
                 break;
         }
     }
@@ -258,7 +279,7 @@ export class InkingToolbar extends LitElement {
                 return "white";
                 break;
             default:
-                console.log("could not find color name for selected utensil");
+                console.log("Could not find color name for selected utensil");
                 break;
         }
     }
@@ -278,7 +299,7 @@ export class InkingToolbar extends LitElement {
                 return this.eraserSize;
                 break;
             default:
-                console.log("could not find stroke size for selected utensil");
+                console.log("Could not find stroke size for selected utensil");
                 break;
         }
     }
@@ -298,7 +319,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white;
                 break;
             default:
-                console.log("could not set color value for selected utensil");
+                console.log("Could not set color value for selected utensil");
                 break;
         }
     }
@@ -317,7 +338,7 @@ export class InkingToolbar extends LitElement {
             case "eraser" :
                 break;
             default:
-                console.log("could not set color name for selected utensil");
+                console.log("Could not set color name for selected utensil");
                 break;
         }
     }
@@ -337,7 +358,7 @@ export class InkingToolbar extends LitElement {
                 this.eraserSize = parseInt(this.slider.value);
                 break;
             default:
-                console.log("could not set stroke size for selected utensil");
+                console.log("Could not set stroke size for selected utensil");
                 break;
         }
     }
@@ -373,6 +394,11 @@ export class InkingToolbar extends LitElement {
                 this.requestDrawSineCanvas();
             }, false);
 
+            // provide visual status of copy clicks
+            this.inkingCanvas.addEventListener('inking-canvas-copied', ( e: CustomEvent ) => {
+                this.flashSnackbar(e.detail.message);
+            }, false);
+
         }
     }
 
@@ -380,13 +406,14 @@ export class InkingToolbar extends LitElement {
 
         // default choice is "horizontal"
 
-        let tools = this.toolContainer.querySelectorAll('button');
+        this.tools = this.toolContainer.querySelectorAll('button');
         if (this.orientation === "vertical") {
             
+            this.toolbarContainer.classList.add("vertical-orientation");
             this.toolContainer.classList.add("vertical-orientation");
             this.dropdownContainer.classList.add("vertical-orientation");
  
-            tools.forEach(tool => {
+            this.tools.forEach(tool => {
                 tool.classList.add('vertical-orientation');
             });
             
@@ -394,9 +421,65 @@ export class InkingToolbar extends LitElement {
             lastTool.classList.add("vertical-orientation");
         }
         else {
-            tools.forEach(tool => {
+            this.tools.forEach(tool => {
                 tool.classList.add('horizontal-orientation');
             });
+        }
+    }
+
+    private setVerticalAlignment() {
+
+        // default choice/setting is "top"
+
+        switch (this.verticalAlignment) {
+            case "":
+                break;
+            case "top":
+                break;
+            case "center":
+                this.toolbarContainer.classList.add("vertical-center");
+                this.dropdownContainer.classList.add("vertical-center");
+                break;
+            case "bottom":
+                this.toolbarContainer.classList.add("bottom");
+                this.dropdownContainer.classList.add("bottom");
+                break;
+            default:
+                console.log("Could not set vertical toolbar alignment");
+        }
+    }
+
+    private setHorizontalAlignment() {
+
+        // default choice/setting is "left"
+
+        switch (this.horizontalAlignment) {
+            case "":
+                this.tools.forEach(tool => {
+                    tool.classList.add("left");
+                });
+                break;
+            case "left":
+                this.tools.forEach(tool => {
+                    tool.classList.add("left");
+                });
+                break;
+            case "center":
+                this.toolbarContainer.classList.add("horizontal-center");
+                this.dropdownContainer.classList.add("horizontal-center");
+                this.tools.forEach(tool => {
+                    tool.classList.add("center");
+                });
+                break;
+            case "right":
+                this.toolbarContainer.classList.add("right");
+                this.dropdownContainer.classList.add("right");
+                this.tools.forEach(tool => {
+                    tool.classList.add("right");
+                });
+                break;
+            default:
+                console.log("Could not set horizontal toolbar alignment");
         }
     }
 
@@ -511,13 +594,38 @@ export class InkingToolbar extends LitElement {
         this.updateSelectedColor(selectedCircle);
     }
 
-    // clickedCopy() {
-    //     if (this.inkingCanvas) {
-    //         this.inkingCanvas.copyCanvasContents();
-    //     } else {
-    //         console.log("cannot copy - inking canvas not connected");
-    //     }
-    // }
+    private clickedCopy() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.copyCanvasContents();
+            } else {
+                console.error("Cannot copy - inking canvas not connected");
+                this.flashSnackbar("Could not copy canvas to clipboard :(");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private clickedSave() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.downloadCanvasContents();
+            } else {
+                console.error("Cannot save - inking canvas not connected");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private flashSnackbar(message: string) {
+        this.snackbar.textContent = message;
+        this.snackbar.classList.add("show");
+        setTimeout(() => { 
+            this.snackbar.classList.remove("show");
+        }, 3000);
+    }
 
     private isUtensil(tool: string) {
         return (tool === "pen" || tool === "pencil" 
@@ -562,8 +670,8 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 5th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+                // remove the color class which should be the last and 6th class
+                this.selectedTool.classList.remove(this.selectedTool.classList[5]);
 
                 this.selectedTool.classList.remove('clicked');
             }
@@ -632,8 +740,12 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 5th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+                // remove the color class
+                if (this.selectedTool.classList[5] !== "clicked") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                } else {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[6]);
+                }
 
                 // use the css friendly color class name with dashes
                 let modifiedColorName = Utils.toDash(this.getCurrentStrokeColorName());
@@ -704,18 +816,33 @@ export class InkingToolbar extends LitElement {
     static get styles() {
         return css `
             #toolbar-container {
-                position: relative;
+                position: absolute;
                 display: none;
-                margin: 2px;
+                margin: 6px;
             }
             #toolbar-container.show {
                 display: inline-block;
+            }
+            #toolbar-container.vertical-center {
+                bottom: 50%;
+            }
+            #toolbar-container.bottom {
+                bottom: 0;
+                margin-bottom: 8px; // TODO: update to fit dev specified canvas border width
+            }
+            #toolbar-container.horizontal-center {
+                right: 50%;
+            }
+            #toolbar-container.right {
+                right: 0;
+            }
+            #toolbar-container.vertical-orientation.right {
+                margin-right: 7px; // TODO: update to fit dev specified canvas border width
             }
             #tool-container {
                 background-color: ${Colors.white};
                 border: 2px solid ${Colors.white};
                 border-bottom: 0px solid ${Colors.white};
-                margin: 2px;
                 display: inline-block;
             }
             #tool-container.vertical-orientation {
@@ -742,7 +869,6 @@ export class InkingToolbar extends LitElement {
                 margin-bottom: 4px;
             }
             button:last-child.vertical-orientation {
-                display: block;
                 margin-bottom: 0px;
             }
             button#erase-all {
@@ -753,7 +879,7 @@ export class InkingToolbar extends LitElement {
                 min-width: 200px;
                 background-color: ${Colors.lightGray};
                 padding: 25px;
-                margin-top: 25px;
+                margin-top: 15px;
                 font-family: sans-serif;
                 font-size: 16px;
             }
@@ -805,12 +931,33 @@ export class InkingToolbar extends LitElement {
             #dropdown-container {
                 background-color: ${Colors.colorPaletteBackground};
                 width: 320px;
-                margin-left: 2px;
+                margin-top: 2px;
+                position: absolute;
             }
             #dropdown-container.vertical-orientation {
                 display: inline-block;
-                margin-left: 0px;
-                margin-top: 2px;
+                margin-left: 3px;
+            }
+            #dropdown-container.right {
+                right: 0;
+                margin-right: 2px; // TODO: update to fit dev specified canvas border width
+            }
+            #dropdown-container.vertical-orientation.right {
+                margin-right: 57px; // TODO: update to fit dev specified canvas border width
+            }
+            #dropdown-container.vertical-center {
+                top: 100%;
+            }
+            #dropdown-container.vertical-orientation.vertical-center {
+                top: 0;
+            }
+            #dropdown-container.bottom {
+                bottom: 0;
+                margin-top: 0;
+                margin-bottom: 56px; // TODO: update to fit dev specified canvas border width
+            }
+            #dropdown-container.vertical-orientation.bottom {
+                margin-bottom: 2px;
             }
             @media screen and (max-width: 400px) {
                 #dropdown-container {
@@ -839,7 +986,7 @@ export class InkingToolbar extends LitElement {
                 align-content: center;
             }
             .palette.show {
-                display: grid
+                display: grid;
             }
             .tooltip {
                 position: relative;
@@ -1755,133 +1902,300 @@ export class InkingToolbar extends LitElement {
 
             /* change tool color on selection (vertical orientation) */
 
-            button.clicked.black.vertical-orientation {
+            button.clicked.black.vertical-orientation.left, button.clicked.black.vertical-orientation.center {
                 border-right-color: ${Colors.black};
                 box-shadow: 3px 0px 0px 0px ${Colors.black};
             }  
-            button.clicked.white.vertical-orientation {
+            button.clicked.white.vertical-orientation.left, button.clicked.white.vertical-orientation.center {
                 border-right-color: ${Colors.white};
                 box-shadow: 3px 0px 0px 0px ${Colors.white};
             }        
-            button.clicked.silver.vertical-orientation {
+            button.clicked.silver.vertical-orientation.left, button.clicked.silver.vertical-orientation.center {
                 border-right-color: ${Colors.silver};
                 box-shadow: 3px 0px 0px 0px ${Colors.silver};
             }             
-            button.clicked.gray.vertical-orientation {
+            button.clicked.gray.vertical-orientation.left, button.clicked.gray.vertical-orientation.center {
                 border-right-color: ${Colors.gray};
                 box-shadow: 3px 0px 0px 0px ${Colors.gray};
             }               
-            button.clicked.dark-gray.vertical-orientation {
+            button.clicked.dark-gray.vertical-orientation.left, button.clicked.gray.vertical-orientation.center {
                 border-right-color: ${Colors.darkGray};
                 box-shadow: 3px 0px 0px 0px ${Colors.darkGray};
             }              
-            button.clicked.charcoal.vertical-orientation {
+            button.clicked.charcoal.vertical-orientation.left, button.clicked.charcoal.vertical-orientation.center {
                 border-right-color: ${Colors.charcoal};
                 box-shadow: 3px 0px 0px 0px ${Colors.charcoal};
             }      
-            button.clicked.magenta.vertical-orientation {
+            button.clicked.magenta.vertical-orientation.left, button.clicked.magenta.vertical-orientation.center {
                 border-right-color: ${Colors.magenta};
                 box-shadow: 3px 0px 0px 0px ${Colors.magenta};
             }    
-            button.clicked.red.vertical-orientation {
+            button.clicked.red.vertical-orientation.left, button.clicked.red.vertical-orientation.center {
                 border-right-color: ${Colors.red};
                 box-shadow: 3px 0px 0px 0px ${Colors.red};
             }    
-            button.clicked.red-orange.vertical-orientation {
+            button.clicked.red-orange.vertical-orientation.left, button.clicked.red-orange.vertical-orientation.center {
                 border-right-color: ${Colors.redOrange};
                 box-shadow: 3px 0px 0px 0px ${Colors.redOrange};
             }            
-            button.clicked.orange.vertical-orientation {
+            button.clicked.orange.vertical-orientation.left, button.clicked.orange.vertical-orientation.center {
                 border-right-color: ${Colors.orange};
                 box-shadow: 3px 0px 0px 0px ${Colors.orange};
             }      
-            button.clicked.gold.vertical-orientation {
+            button.clicked.gold.vertical-orientation.left, button.clicked.gold.vertical-orientation.center {
                 border-right-color: ${Colors.gold};
                 box-shadow: 3px 0px 0px 0px ${Colors.gold};
             }      
-            button.clicked.yellow.vertical-orientation {
+            button.clicked.yellow.vertical-orientation.left, button.clicked.yellow.vertical-orientation.center {
                 border-right-color: ${Colors.yellow};
                 box-shadow: 3px 0px 0px 0px ${Colors.yellow};
             }      
-            button.clicked.grass-green.vertical-orientation {
+            button.clicked.grass-green.vertical-orientation.left, button.clicked.grass-green.vertical-orientation.center {
                 border-right-color: ${Colors.grassGreen};
                 box-shadow: 3px 0px 0px 0px ${Colors.grassGreen};
             }               
-            button.clicked.green.vertical-orientation {
+            button.clicked.green.vertical-orientation.left, button.clicked.green.vertical-orientation.center {
                 border-right-color: ${Colors.green};
                 box-shadow: 3px 0px 0px 0px ${Colors.green};
             }                
-            button.clicked.dark-green.vertical-orientation {
+            button.clicked.dark-green.vertical-orientation.left, button.clicked.dark-green.vertical-orientation.center {
                 border-right-color: ${Colors.darkGreen};
                 box-shadow: 3px 0px 0px 0px ${Colors.darkGreen};
             }                
-            button.clicked.teal.vertical-orientation {
+            button.clicked.teal.vertical-orientation.left, button.clicked.teal.vertical-orientation.center {
                 border-right-color: ${Colors.teal};
                 box-shadow: 3px 0px 0px 0px ${Colors.teal};
             }                 
-            button.clicked.blue.vertical-orientation {
+            button.clicked.blue.vertical-orientation.left, button.clicked.blue.vertical-orientation.center {
                 border-right-color: ${Colors.blue};
                 box-shadow: 3px 0px 0px 0px ${Colors.blue};
             }                 
-            button.clicked.indigo.vertical-orientation {
+            button.clicked.indigo.vertical-orientation.left, button.clicked.indigo.vertical-orientation.center {
                 border-right-color: ${Colors.indigo};
                 box-shadow: 3px 0px 0px 0px ${Colors.indigo};
             }      
-            button.clicked.violet.vertical-orientation {
+            button.clicked.violet.vertical-orientation.left, button.clicked.violet.vertical-orientation.center {
                 border-right-color: ${Colors.violet};
                 box-shadow: 3px 0px 0px 0px ${Colors.violet};
             }      
-            button.clicked.purple.vertical-orientation {
+            button.clicked.purple.vertical-orientation.left, button.clicked.purple.vertical-orientation.center {
                 border-right-color: ${Colors.purple};
                 box-shadow: 3px 0px 0px 0px ${Colors.purple};
             }      
-            button.clicked.beige.vertical-orientation {
+            button.clicked.beige.vertical-orientation.left, button.clicked.beige.vertical-orientation.center {
                 border-right-color: ${Colors.beige};
                 box-shadow: 3px 0px 0px 0px ${Colors.beige};
             }      
-            button.clicked.light-brown.vertical-orientation {
+            button.clicked.light-brown.vertical-orientation.left, button.clicked.light-brown.vertical-orientation.center {
                 border-right-color: ${Colors.lightBrown};
                 box-shadow: 3px 0px 0px 0px ${Colors.lightBrown};
             }      
-            button.clicked.brown.vertical-orientation {
+            button.clicked.brown.vertical-orientation.left, button.clicked.brown.vertical-orientation.center {
                 border-right-color: ${Colors.brown};
                 box-shadow: 3px 0px 0px 0px ${Colors.brown};
             }      
-            button.clicked.dark-brown.vertical-orientation {
+            button.clicked.dark-brown.vertical-orientation.left, button.clicked.dark-brown.vertical-orientation.center  {
                 border-right-color: ${Colors.darkBrown};
                 box-shadow: 3px 0px 0px 0px ${Colors.darkBrown};
             }      
-            button.clicked.pastel-pink.vertical-orientation {
+            button.clicked.pastel-pink.vertical-orientation.left, button.clicked.pastel-pink.vertical-orientation.center {
                 border-right-color: ${Colors.pastelPink};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelPink};
             }      
-            button.clicked.pastel-orange.vertical-orientation {
+            button.clicked.pastel-orange.vertical-orientation.left, button.clicked.pastel-orange.vertical-orientation.center {
                 border-right-color: ${Colors.pastelOrange};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelOrange};
             }      
-            button.clicked.pastel-yellow.vertical-orientation {
+            button.clicked.pastel-yellow.vertical-orientation.left, button.clicked.pastel-yellow.vertical-orientation.center {
                 border-right-color: ${Colors.pastelYellow};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelYellow};
             }      
-            button.clicked.pastel-green.vertical-orientation {
+            button.clicked.pastel-green.vertical-orientation.left, button.clicked.pastel-green.vertical-orientation.center {
                 border-right-color: ${Colors.pastelGreen};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelGreen};
             }      
-            button.clicked.pastel-blue.vertical-orientation {
+            button.clicked.pastel-blue.vertical-orientation.left, button.clicked.pastel-blue.vertical-orientation.center {
                 border-right-color: ${Colors.pastelBlue};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelBlue};
             }      
-            button.clicked.pastel-purple.vertical-orientation {
+            button.clicked.pastel-purple.vertical-orientation.left, button.clicked.pastel-purple.vertical-orientation.center {
                 border-right-color: ${Colors.pastelPurple};
                 box-shadow: 3px 0px 0px 0px ${Colors.pastelPurple};
             }         
-            button.clicked.light-blue.vertical-orientation {
+            button.clicked.light-blue.vertical-orientation.left, button.clicked.light-blue.vertical-orientation.center {
                 border-right-color: ${Colors.lightBlue};
                 box-shadow: 3px 0px 0px 0px ${Colors.lightBlue};
             }      
-            button.clicked.pink.vertical-orientation {
+            button.clicked.pink.vertical-orientation.left, button.clicked.pink.vertical-orientation.center {
                 border-right-color: ${Colors.pink};
                 box-shadow: 3px 0px 0px 0px ${Colors.pink};
+            }
+
+            button.clicked.black.vertical-orientation.right {
+                border-left-color: ${Colors.black};
+                box-shadow: -3px 0px 0px 0px ${Colors.black};
+            }  
+            button.clicked.white.vertical-orientation.right {
+                border-left-color: ${Colors.white};
+                box-shadow: -3px 0px 0px 0px ${Colors.white};
+            }        
+            button.clicked.silver.vertical-orientation.right {
+                border-left-color: ${Colors.silver};
+                box-shadow: -3px 0px 0px 0px ${Colors.silver};
+            }             
+            button.clicked.gray.vertical-orientation.right {
+                border-left-color: ${Colors.gray};
+                box-shadow: -3px 0px 0px 0px ${Colors.gray};
+            }               
+            button.clicked.dark-gray.vertical-orientation.right {
+                border-left-color: ${Colors.darkGray};
+                box-shadow: -3px 0px 0px 0px ${Colors.darkGray};
+            }              
+            button.clicked.charcoal.vertical-orientation.right {
+                border-left-color: ${Colors.charcoal};
+                box-shadow: -3px 0px 0px 0px ${Colors.charcoal};
+            }      
+            button.clicked.magenta.vertical-orientation.right {
+                border-left-color: ${Colors.magenta};
+                box-shadow: -3px 0px 0px 0px ${Colors.magenta};
+            }    
+            button.clicked.red.vertical-orientation.right {
+                border-left-color: ${Colors.red};
+                box-shadow: -3px 0px 0px 0px ${Colors.red};
+            }    
+            button.clicked.red-orange.vertical-orientation.right {
+                border-left-color: ${Colors.redOrange};
+                box-shadow: -3px 0px 0px 0px ${Colors.redOrange};
+            }            
+            button.clicked.orange.vertical-orientation.right {
+                border-left-color: ${Colors.orange};
+                box-shadow: -3px 0px 0px 0px ${Colors.orange};
+            }      
+            button.clicked.gold.vertical-orientation.right {
+                border-left-color: ${Colors.gold};
+                box-shadow: -3px 0px 0px 0px ${Colors.gold};
+            }      
+            button.clicked.yellow.vertical-orientation.right {
+                border-left-color: ${Colors.yellow};
+                box-shadow: -3px 0px 0px 0px ${Colors.yellow};
+            }      
+            button.clicked.grass-green.vertical-orientation.right {
+                border-left-color: ${Colors.grassGreen};
+                box-shadow: -3px 0px 0px 0px ${Colors.grassGreen};
+            }               
+            button.clicked.green.vertical-orientation.right {
+                border-left-color: ${Colors.green};
+                box-shadow: -3px 0px 0px 0px ${Colors.green};
+            }                
+            button.clicked.dark-green.vertical-orientation.right {
+                border-left-color: ${Colors.darkGreen};
+                box-shadow: -3px 0px 0px 0px ${Colors.darkGreen};
+            }                
+            button.clicked.teal.vertical-orientation.right {
+                border-left-color: ${Colors.teal};
+                box-shadow: -3px 0px 0px 0px ${Colors.teal};
+            }                 
+            button.clicked.blue.vertical-orientation.right {
+                border-left-color: ${Colors.blue};
+                box-shadow: -3px 0px 0px 0px ${Colors.blue};
+            }                 
+            button.clicked.indigo.vertical-orientation.right {
+                border-left-color: ${Colors.indigo};
+                box-shadow: -3px 0px 0px 0px ${Colors.indigo};
+            }      
+            button.clicked.violet.vertical-orientation.right {
+                border-left-color: ${Colors.violet};
+                box-shadow: -3px 0px 0px 0px ${Colors.violet};
+            }      
+            button.clicked.purple.vertical-orientation.right {
+                border-left-color: ${Colors.purple};
+                box-shadow: -3px 0px 0px 0px ${Colors.purple};
+            }      
+            button.clicked.beige.vertical-orientation.right {
+                border-left-color: ${Colors.beige};
+                box-shadow: -3px 0px 0px 0px ${Colors.beige};
+            }      
+            button.clicked.light-brown.vertical-orientation.right {
+                border-left-color: ${Colors.lightBrown};
+                box-shadow: -3px 0px 0px 0px ${Colors.lightBrown};
+            }      
+            button.clicked.brown.vertical-orientation.right {
+                border-left-color: ${Colors.brown};
+                box-shadow: -3px 0px 0px 0px ${Colors.brown};
+            }      
+            button.clicked.dark-brown.vertical-orientation.right {
+                border-left-color: ${Colors.darkBrown};
+                box-shadow: -3px 0px 0px 0px ${Colors.darkBrown};
+            }      
+            button.clicked.pastel-pink.vertical-orientation.right {
+                border-left-color: ${Colors.pastelPink};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelPink};
+            }      
+            button.clicked.pastel-orange.vertical-orientation.right {
+                border-left-color: ${Colors.pastelOrange};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelOrange};
+            }      
+            button.clicked.pastel-yellow.vertical-orientation.right {
+                border-left-color: ${Colors.pastelYellow};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelYellow};
+            }      
+            button.clicked.pastel-green.vertical-orientation.right {
+                border-left-color: ${Colors.pastelGreen};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelGreen};
+            }      
+            button.clicked.pastel-blue.vertical-orientation.right {
+                border-left-color: ${Colors.pastelBlue};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelBlue};
+            }      
+            button.clicked.pastel-purple.vertical-orientation.right {
+                border-left-color: ${Colors.pastelPurple};
+                box-shadow: -3px 0px 0px 0px ${Colors.pastelPurple};
+            }         
+            button.clicked.light-blue.vertical-orientation.right {
+                border-left-color: ${Colors.lightBlue};
+                box-shadow: -3px 0px 0px 0px ${Colors.lightBlue};
+            }      
+            button.clicked.pink.vertical-orientation.right {
+                border-left-color: ${Colors.pink};
+                box-shadow: -3px 0px 0px 0px ${Colors.pink};
+            }
+
+            #snackbar {
+                visibility: hidden;
+                min-width: 250px;
+                margin-left: -125px; /* Divide value of min-width by 2 */
+                background-color: ${Colors.colorPaletteBackground};
+                color: ${Colors.black};
+                font-size: 16px;
+                font-family: sans-serif;
+                text-align: center;
+                border-radius: 2px;
+                padding: 16px;
+                position: fixed;
+                z-index: 1;
+                left: 50%;
+                bottom: 30px;
+            }          
+            #snackbar.show {
+                visibility: visible;
+                -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+                animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            }
+            @-webkit-keyframes fadein {
+                from {bottom: 0; opacity: 0;}
+                to {bottom: 30px; opacity: 1;}
+            }
+            @keyframes fadein {
+                from {bottom: 0; opacity: 0;}
+                to {bottom: 30px; opacity: 1;}
+            }
+            @-webkit-keyframes fadeout {
+                from {bottom: 30px; opacity: 1;}
+                to {bottom: 0; opacity: 0;}
+            }
+            @keyframes fadeout {
+                from {bottom: 30px; opacity: 1;}
+                to {bottom: 0; opacity: 0;}
             }
         `;
     }
