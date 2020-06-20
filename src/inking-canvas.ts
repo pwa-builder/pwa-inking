@@ -49,7 +49,7 @@ export class InkingCanvas extends LitElement {
 
     render() {
         return html`
-            <canvas></canvas>
+            <canvas part="canvas"></canvas>
             <slot></slot>
         `;
     }
@@ -450,13 +450,14 @@ export class InkingCanvas extends LitElement {
             description: 'Inking canvas image files',
         };
 
+        const outerThis = this;
         this.canvas.toBlob(
             async blob => { 
                 await fileSave(blob, options
             ).then( function() {
                 console.log("Canvas contents downloaded successfully!");
             }, function (err) {
-                console.error("Could not download " + this.name + " canvas contents, " + err);
+                console.error("Could not download " + outerThis.name + " canvas contents, " + err);
             })}
         );
 

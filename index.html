@@ -6,13 +6,21 @@
         <title>inking web component</title>
         <script type="module" src="./build/inking-canvas.js"></script>
         <script type="module" src="./build/inking-toolbar.js"></script>
+        <script type="module" src="./build/inking-toolbar-tools.js"></script>
     </head>
     <body>
         <div class="parent">
             <div class="child1"></div>
             <div class="child2">
                 <inking-canvas name="myCanvas">
-                    <inking-toolbar canvas="myCanvas" orientation="" vertical="" horizontal=""></inking-toolbar>
+                    <inking-toolbar canvas="myCanvas" orientation="" vertical="" horizontal="">
+                        <inking-toolbar-pen></inking-toolbar-pen>
+                        <inking-toolbar-pencil></inking-toolbar-pencil>
+                        <inking-toolbar-highlighter></inking-toolbar-highlighter>
+                        <inking-toolbar-eraser></inking-toolbar-eraser>
+                        <inking-toolbar-copy></inking-toolbar-copy>
+                        <inking-toolbar-save></inking-toolbar-save>
+                    </inking-toolbar>
                 </inking-canvas>
             </div>
         </div>
@@ -43,5 +51,26 @@
             margin-left: 100px;
             /* margin-right: 100px; */
         }
+        inking-canvas::part(canvas) {
+            border: none;
+        }
+        /* inking-toolbar-pen::part(button) {
+            background-color: red;
+        }
+        inking-toolbar-pencil::part(button) {
+            background-color: orange;
+        }
+        inking-toolbar-highlighter::part(button) {
+            background-color: yellow;
+        }
+        inking-toolbar-eraser::part(button) {
+            background-color: green;
+        }
+        inking-toolbar-copy::part(button) {
+            background-color: blue;
+        }
+        inking-toolbar-save::part(button) {
+            background-color: purple;
+        } */
     </style>
 </html>
