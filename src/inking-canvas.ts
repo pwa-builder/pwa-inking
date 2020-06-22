@@ -125,6 +125,11 @@ export class InkingCanvas extends LitElement {
         return this.toolStyle;
     }
 
+    // expose canvas object for advanced use cases
+    getCanvas() {
+        return this.canvas;
+    }
+
     // expose how canvas has resized since its initialization
     getScale() {
         return this.scale;
