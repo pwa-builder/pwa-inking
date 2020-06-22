@@ -24,6 +24,14 @@
                 </inking-canvas>
             </div>
         </div>
+        <script type="module">
+            let myCanvas = document.querySelector("inking-canvas");
+            if (myCanvas) {
+                console.log(myCanvas);
+                let canvas = myCanvas.getCanvas();
+                console.log(canvas);
+            }
+        </script>
     </body>
     <style type="text/css" media="screen">
         html, body {
