@@ -38,6 +38,7 @@ export function drawPencilStroke(context: CanvasRenderingContext2D, previousX: n
 
     // make sure the smallest pencil strokes don't appear obviously bigger than other strokes of the same size
     if (strokeWidth < 4) {
+        context.strokeStyle = context.fillStyle;
         context.stroke();
         return;
     }

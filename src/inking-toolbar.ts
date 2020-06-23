@@ -570,23 +570,43 @@ export class InkingToolbar extends LitElement {
             let previousY = h - (a * Math.sin(2 * Math.PI * f/w * x));
             let currentY: number;
 
+            // calibrate sine wave rotation calcuations to center results in canvas
+            let rotationDegrees = 354;
+            let offsetY = a/2 + (360 - rotationDegrees);
+            let offsetX = -4 * devicePixelRatio;
+
             let strokesDrawn = 0;
 
             // draw the sine wave until just before the canvas ends to avoid clipping off end
             for(let i = strokeWidth/2; i < w - strokeWidth/2; i++){
-                this.sineContext.beginPath();    
-                this.sineContext.moveTo(x,previousY);
-                x = i;
-                currentY = h - (a * Math.sin(2 * Math.PI * f/w * x));      
-                this.sineContext.lineTo(x, currentY);
-                previousY = currentY;
 
-                if (this.selectedTool.id === "pencil") {
-                    Utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
-                } else {
-                    this.sineContext.stroke();
-                }
-                strokesDrawn++;
+                this.sineContext.beginPath(); 
+            
+                let rotatedX1 = (x * Math.cos(rotationDegrees * Math.PI/180)) - (previousY * Math.sin(rotationDegrees * Math.PI/180));
+                let rotatedY1 = (previousY * Math.cos(rotationDegrees * Math.PI/180)) + (x * Math.sin(rotationDegrees * Math.PI/180));
+
+                // this.sineContext.moveTo(x,previousY);
+                this.sineContext.moveTo(rotatedX1 + offsetX, rotatedY1 + offsetY);
+
+                x = i;
+                currentY = h - (a * Math.sin(2 * Math.PI * f/w * x));
+                
+                let rotatedX2 = (x * Math.cos(rotationDegrees * Math.PI/180)) - (currentY * Math.sin(rotationDegrees * Math.PI/180));
+                let rotatedY2 = (currentY * Math.cos(rotationDegrees * Math.PI/180)) + (x * Math.sin(rotationDegrees * Math.PI/180));
+
+                // this.sineContext.lineTo(x, currentY);
+                this.sineContext.lineTo(rotatedX2 + offsetX, rotatedY2 + offsetY);
+
+                previousY = currentY;
+
+                if (this.selectedTool.id === "pencil") {
+                    this.sineContext.fillStyle = this.sineContext.strokeStyle;
+                    // Utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
+                    Utils.drawPencilStroke(this.sineContext, rotatedX1 + offsetX, rotatedX2 + offsetX, rotatedY1 + offsetY, rotatedY2 + offsetY);
+                } else {
+                    this.sineContext.stroke();
+                }
+                strokesDrawn++;
             }
             // console.log("sineCanvas strokes drawn: " + strokesDrawn);
         }
@@ -952,6 +972,7 @@ export class InkingToolbar extends LitElement {
                 .ink-dropdown {
                     display: none;
                     padding: 10px;
+                    padding-bottom: 15px;
                     font-family: sans-serif;
                     font-size: 16px;
                 }
@@ -1182,7 +1203,7 @@ export class InkingToolbar extends LitElement {
                     background-color: ${Colors.pink};
                 }
                 .sineCanvas {
-                    height: 50%;
+                    height: 100px;
                     width: 100%;
                     max-height: 150px;
                     background-color: transparent;
