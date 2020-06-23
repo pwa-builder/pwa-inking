@@ -36,6 +36,12 @@ export function drawPencilStroke(context: CanvasRenderingContext2D, previousX: n
     let strokeWidth = context.lineWidth;
     let opacity = context.globalAlpha;
 
+    // make sure the smallest pencil strokes don't appear obviously bigger than other strokes of the same size
+    if (strokeWidth < 4) {
+        context.stroke();
+        return;
+    }
+
     // use the distance formula to calcuate the line length between the two points on the canvas
     let distance  = Math.round(Math.sqrt(Math.pow(currentX - previousX, 2)+Math.pow(currentY - previousY, 2)));
 

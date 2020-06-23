@@ -42,11 +42,14 @@ export const InkingToolbarButtonStyles = css`
         background-color: ${Colors.silver};
     }  
     .toolbar-icon {
-        height: 53px;
-        width: 53px;
-        background-size: 50px 50px;
+        height: 50px;
+        width: 50px;
+        background-size: 47px 47px;
         background-repeat: no-repeat;
         background-position: 0px 0px;
+    }
+    .toolbar-icon.pencil-icon {
+        background-position: 1px 0px;
     }
     .title {
         display: none;

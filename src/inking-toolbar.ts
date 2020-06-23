@@ -530,8 +530,10 @@ export class InkingToolbar extends LitElement {
 
             // resize sine canvas with high resolution
             let rect = this.sineCanvas.getBoundingClientRect();
-            this.sineCanvas.height = rect.height * devicePixelRatio;
-            this.sineCanvas.width = rect.width * devicePixelRatio;
+            if (rect.height !== 0 && rect.width !== 0 ) {
+                this.sineCanvas.height = rect.height * devicePixelRatio;
+                this.sineCanvas.width = rect.width * devicePixelRatio;
+            }
 
             // define stroke size and pen color for new sine wave
             let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
@@ -571,7 +573,7 @@ export class InkingToolbar extends LitElement {
             let strokesDrawn = 0;
 
             // draw the sine wave until just before the canvas ends to avoid clipping off end
-            for(let i = strokeWidth; i < w - strokeWidth; i++){
+            for(let i = strokeWidth/2; i < w - strokeWidth/2; i++){
                 this.sineContext.beginPath();    
                 this.sineContext.moveTo(x,previousY);
                 x = i;
@@ -911,7 +913,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container {
                     background-color: ${Colors.colorPaletteBackground};
                     width: 320px;
-                    margin-top: 2px;
+                    margin-top: 3px;
                     position: absolute;
                 }
                 #dropdown-container.vertical-orientation {
@@ -939,14 +941,14 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container.vertical-orientation.bottom {
                     margin-bottom: 2px;
                 }
-                @media screen and (max-width: 400px) {
-                    #dropdown-container {
-                        width: 270px;
-                    }
-                    #dropdown-container.vertical-orientation {
-                        width: 220px;
-                    }
-                }
+                // @media screen and (max-width: 400px) {
+                //     #dropdown-container {
+                //         width: 270px;
+                //     }
+                //     #dropdown-container.vertical-orientation {
+                //         width: 220px;
+                //     }
+                // }
                 .ink-dropdown {
                     display: none;
                     padding: 10px;
@@ -958,12 +960,13 @@ export class InkingToolbar extends LitElement {
                 }
                 .palette {
                     display: none;
-                    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
                     grid-auto-rows: minmax(25px, auto);
                     justify-items: center;
                     align-items: center;
                     justify-content: center;
                     align-content: center;
+                    border: 5px solid transparent;
                 }
                 .palette.show {
                     display: grid;
@@ -1187,7 +1190,6 @@ export class InkingToolbar extends LitElement {
                     padding-right: 0;
                     margin-left: auto;
                     margin-right: auto;
-                    margin-bottom: 10px;
                     display: none;
                 }
                 .sineCanvas.show {
