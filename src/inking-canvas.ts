@@ -4,7 +4,10 @@ import {
 import { get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
 import PointerTracker from "./PointerTracker.js";
-import { fileSave } from 'browser-nativefs';
+// import { fileSave } from 'browser-nativefs';
+
+// @ts-ignore
+import { fileSave } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
 import * as Utils from './utils';
 
 // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
