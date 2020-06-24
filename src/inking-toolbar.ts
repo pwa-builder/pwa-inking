@@ -1210,6 +1210,7 @@ export class InkingToolbar extends LitElement {
                     background-color: transparent;
                     padding-left: 0;
                     padding-right: 0;
+                    padding-bottom: 17px; /* TODO: find better to prevent slider cutoff */
                     margin-left: auto;
                     margin-right: auto;
                     display: none;
