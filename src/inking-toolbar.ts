@@ -400,7 +400,7 @@ export class InkingToolbar extends LitElement {
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
-            this.inkingCanvas.addEventListener('inking-canvas-resized', () => {
+            this.inkingCanvas.addEventListener('inking-canvas-drawn', () => {
                 this.requestDrawSineCanvas();
             }, false);
 
@@ -681,7 +681,7 @@ export class InkingToolbar extends LitElement {
     private clickedSave() {
         try {
             if (this.inkingCanvas) {
-                this.inkingCanvas.downloadCanvasContents();
+                this.inkingCanvas.saveCanvasContents();
             } else {
                 console.error("Cannot save - inking canvas not connected");
             }
@@ -933,6 +933,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container {
                     background-color: ${Colors.colorPaletteBackground};
                     width: 320px;
+                    margin: 1px;
                     margin-top: 3px;
                     position: absolute;
                 }
@@ -945,7 +946,7 @@ export class InkingToolbar extends LitElement {
                     margin-right: 2px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.right {
-                    margin-right: 57px; // TODO: update to fit dev specified canvas border width
+                    margin-right: 54px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-center {
                     top: 100%;
@@ -959,7 +960,7 @@ export class InkingToolbar extends LitElement {
                     margin-bottom: 56px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.bottom {
-                    margin-bottom: 2px;
+                    margin-bottom: 4px;
                 }
                 // @media screen and (max-width: 400px) {
                 //     #dropdown-container {
