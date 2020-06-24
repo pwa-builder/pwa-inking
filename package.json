@@ -1,6 +1,6 @@
 {
   "name": "@pwabuilder/pwa-inking",
-  "version": "0.5.9",
+  "version": "0.9.0",
   "description": "",
   "main": "dist/index.js",
   "module": "dist/index.js",
