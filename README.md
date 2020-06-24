@@ -1,6 +1,6 @@
 # pwa-inking
 
-`pwa-inking` is a [web component](https://meowni.ca/posts/web-components-with-otters/) from the [PWABuilder](https://pwabuilder.com) team that allows you to quickly add a 2D inking canvas (with an optional toolbar) to your Progressive Web App!
+A [web component](https://meowni.ca/posts/web-components-with-otters/) from the [PWABuilder](https://pwabuilder.com) team that allows you to quickly add a 2D inking canvas (with an optional toolbar) to your Progressive Web App 🎨 ✨
 
 _Built with [lit-element](https://lit-element.polymer-project.org/)_
 
@@ -22,7 +22,7 @@ There are two ways to use this component. For simple projects or just to get sta
 
 ### Script tag
 
-- Add this script tag in the head of your index.html:
+1. Add this script tag in the head of your index.html:
 
 ```html
 <script
@@ -33,8 +33,15 @@ There are two ways to use this component. For simple projects or just to get sta
 
 ### NPM
 
-1. `npm install @pwabuilder/pwa-inking`
-2. `import @pwabuilder/pwa-inking`
+1. Run this command in your project directory:
+```shell
+npm install @pwabuilder/pwa-inking
+```
+
+2. Add this import statement to your script file:
+```js
+import @pwabuilder/pwa-inking
+```
 
 ## Adding the component to your code
 
@@ -50,7 +57,7 @@ Try it: [live](https://pwa-inking-canvas-only.glitch.me/) | [code](https://glitc
 
 ### Canvas with default toolbar
 
-You can also add the `<inking-toolbar></inking-toolbar>` element within the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match.
+You can also add the `<inking-toolbar></inking-toolbar>` element within the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match. The default toolbar contains all 6 tools in the following order: pen, pencil, highlighter, eraser, copy, and save.
 
 ```html
     <inking-canvas name="myInkingCanvas">
@@ -131,7 +138,7 @@ The stroke width regardless of pointer event type can be set and fixed through t
 | `getStrokeSize()`    | Returns ink stroke width 
 | `setStrokeSize(strokeSize: number)`    | Changes ink stroke width                                      |
 | `getStrokeStyle()`      | Returns name of active tool defining ink style     
-| `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, or highlighter)                            | 
+| `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, highlighter, or eraser)                            | 
 | `copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
 | `saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
 | `eraseAll()`                              | Deletes all visible and cached canvas ink                                        |
