@@ -29,11 +29,11 @@ export class InkingCanvas extends LitElement {
     @property({type: String, attribute: "name"}) name: string = "";
 
     // all properties used to manage canvas resizing
-    @property({type: Object}) private isWaitingToResize: boolean = false;
+    @property({type: Object}) private isWaitingToDraw: boolean = false;
     @property({type: Object}) private currentAspectRatio: {width: number, height: number};
     @property({type: Number}) private scale: number = 1;
     @property({type: Object}) private origin: {x: number, y: number};
-    @property({type: CustomEvent}) private inkingCanvasResizedEvent: CustomEvent = new CustomEvent('inking-canvas-resized');
+    @property({type: CustomEvent}) private inkingCanvasDrawnEvent: CustomEvent = new CustomEvent('inking-canvas-drawn');
 
     // all properties used by PointerTracker implementation
     @property({type: Map}) private strokes: Map<number, number>;
@@ -69,10 +69,10 @@ export class InkingCanvas extends LitElement {
         });
 
         // equip canvas to handle & adapt to external resizing
-        window.addEventListener('resize', () => this.requestCanvasResize(), false);
+        window.addEventListener('resize', () => this.requestDrawCanvas(), false);
 
         // refresh canvas when browser tab was switched and is re-engaged
-        window.addEventListener('focus', () => this.requestCanvasResize(), false);
+        window.addEventListener('focus', () => this.requestDrawCanvas(), false);
 
         // set up input capture events
         Utils.runAsynchronously( () => { 
@@ -144,9 +144,9 @@ export class InkingCanvas extends LitElement {
     }
 
     // expose ability to trigger additional inking canvas redraws
-    requestCanvasResize() {
-        if (!this.isWaitingToResize) {
-            this.isWaitingToResize = true;
+    requestDrawCanvas() {
+        if (!this.isWaitingToDraw) {
+            this.isWaitingToDraw = true;
         }
     }
 
@@ -176,18 +176,18 @@ export class InkingCanvas extends LitElement {
         // enable low-latency if possible
         this.context = Utils.getLowLatencyContext(this.canvas, "inking");
     
-        this.requestCanvasResize();
+        this.requestDrawCanvas();
         Utils.runAsynchronously( () => { 
-            this.resizeCanvas();
+            this.drawCanvas();
         });
     }
 
-    private async resizeCanvas() {
+    private async drawCanvas() {
 
-        if (this.context && this.isWaitingToResize) {
+        if (this.context && this.isWaitingToDraw) {
 
             // toggle semaphore
-            this.isWaitingToResize = false;
+            this.isWaitingToDraw = false;
 
             Utils.runAsynchronously( async() => { 
 
@@ -205,15 +205,15 @@ export class InkingCanvas extends LitElement {
                 }
             });
 
-            // notify external influencers that resizing is happening
-            this.dispatchEvent(this.inkingCanvasResizedEvent);
+            // notify external influencers that drawing happened
+            this.dispatchEvent(this.inkingCanvasDrawnEvent);
 
             // console.log("canvas was resized");
         }
 
-        // start & continue canvas resize loop
+        // start & continue canvas redraw loop
         Utils.runAsynchronously( () => { 
-            requestAnimationFrame( async () => this.resizeCanvas());
+            requestAnimationFrame( async () => this.drawCanvas());
         });
     }
 
@@ -286,7 +286,7 @@ export class InkingCanvas extends LitElement {
                 // console.log("pointer deleted");
 
                 // save snapshot of canvas to redraw if window resizes/refreshes
-                outerThis.saveCanvasContents(event);
+                outerThis.cacheCanvasContents(event);
             },
             move(previousPointers, changedPointers, event) {
                 for (const pointer of changedPointers) {
@@ -303,7 +303,7 @@ export class InkingCanvas extends LitElement {
                     outerThis.strokes.set(pointer.id, width);
                     // if (pointerType !== "pen") console.log("width: " + width);
 
-                    // collect info for pen strokes
+                    // collect info for pen/stylus strokes
                     let pressure = (pointer.nativePointer as PointerEvent).pressure;
                     // if (pointerType === "pen") console.log("pressure: " + pressure);
                     let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
@@ -442,7 +442,7 @@ export class InkingCanvas extends LitElement {
         }
     }
 
-    async downloadCanvasContents() {
+    async saveCanvasContents() {
 
         const options = {
             fileName: "InkingCanvasDrawing.png",
@@ -475,7 +475,7 @@ export class InkingCanvas extends LitElement {
             composed: true });
     }
 
-    private saveCanvasContents(event) {
+    private cacheCanvasContents(event) {
         event.preventDefault();
 
         // update the recorded canvas aspect ratio for future resizing

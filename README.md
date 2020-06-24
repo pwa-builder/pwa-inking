@@ -133,11 +133,11 @@ The stroke width regardless of pointer event type can be set and fixed through t
 | `getStrokeStyle()`      | Returns name of active tool defining ink style     
 | `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, or highlighter)                            | 
 | `copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
-| `downloadCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
-| `eraseAll()`                              | Deletes all canvas ink                                        |
+| `saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
+| `eraseAll()`                              | Deletes all visible and cached canvas ink                                        |
 | `getCanvas()` | Returns inner html canvas object for advanced use cases |
 | `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
-| `requestCanvasResize()` | Triggers an additional canvas redraw if one is not already queued up |
+| `requestDrawCanvas()` | Triggers an additional canvas redraw if one is not already queued up |
 
 
 ## inking-toolbar
