@@ -2,6 +2,7 @@ import {
     LitElement, html, customElement, property, css, query, CSSResult
 } from 'lit-element';
 import { InkingCanvas } from './inking-canvas';
+import { InkingToolbarButtonStyles } from './inking-toolbar-button-styles';
 import * as Colors from './colors';
 import * as Utils from './utils';
 
@@ -10,9 +11,13 @@ export class InkingToolbar extends LitElement {
 
     // properties for toolbar and its dropdowns
     @property({type: String}) orientation: string = "";
+    @property({type: String, attribute: "vertical"}) verticalAlignment: string = "";
+    @property({type: String, attribute: "horizontal"}) horizontalAlignment: string = "";
     @query('#toolbar-container') private toolbarContainer: HTMLElement;
     @query('#tool-container') private toolContainer: HTMLElement;
-    @property({type: HTMLButtonElement}) private selectedTool: HTMLButtonElement;
+    @property({type: NodeList}) private tools: Array<HTMLButtonElement>;
+    @query("#default-toolbar-selection") private defaultToolbarSelection: HTMLDivElement;
+    @property({type: HTMLButtonElement}) private selectedTool: Element;
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
     @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
     @query('.ink-dropdown') private inkDropdown: HTMLDivElement;
@@ -30,6 +35,7 @@ export class InkingToolbar extends LitElement {
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
+    @query("#snackbar") private snackbar: HTMLDivElement;
 
     // access colors used in toolbar
     private static colors: Map<string, CSSResult> = Colors.getColors();
@@ -38,6 +44,9 @@ export class InkingToolbar extends LitElement {
     @property({type: CSSResult}) private selectedPenColor: CSSResult = Colors.black;
     @property({type: CSSResult}) private selectedPenColorName: string = 'black';
     @property({type: Number}) private selectedPenSize: number = this.defaultSliderSize;
+    @property({type: CSSResult}) private selectedPencilColor: CSSResult = Colors.black;
+    @property({type: CSSResult}) private selectedPencilColorName: string = 'black';
+    @property({type: Number}) private selectedPencilSize: number = this.defaultSliderSize;
     @property({type: CSSResult}) private selectedHighlighterColor: CSSResult = Colors.yellow;
     @property({type: CSSResult}) private selectedHighlighterColorName: string = 'yellow';
     @property({type: Number}) private selectedHighlighterSize: number = this.defaultSliderSize;
@@ -53,52 +62,147 @@ export class InkingToolbar extends LitElement {
         return html `
             <div id="toolbar-container">
                 <div id="tool-container">
-                    <button id="pen" class="toolbar-icon pen-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="highlighter" class="toolbar-icon highlighter-icon" @click="${this.clickedUtensil}"></button>
-                    <button id="eraser" class="toolbar-icon eraser-icon" @click="${this.clickedUtensil}"></button>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <slot @click="${this.clickedUtensil}"></slot>
+                    <div id="default-toolbar-selection">
+                        <button id="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                            <span class="tooltip-text">Pen</span>
+                        </button>
+                        <button id="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
+                            <span class="tooltip-text">Pencil</span>
+                        </button>
+                        <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                            <span class="tooltip-text">Highlighter</span>
+                        </button>
+                        <button id="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                            <span class="tooltip-text">Eraser</span>
+                        </button>
+                        <button id-"copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                            <span class="tooltip-text">Copy</span>
+                        </button>
+                        <button id-"save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                            <span class="tooltip-text">Save</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="dropdown-container">
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
                         <div class="pen-pencil palette">
-                            <div class="black circle" @click="${this.clickedColor}"></div>
-                            <div class="white circle" @click="${this.clickedColor}"></div>
-                            <div class="silver circle" @click="${this.clickedColor}"></div>
-                            <div class="gray circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-gray circle" @click="${this.clickedColor}"></div>
-                            <div class="charcoal circle" @click="${this.clickedColor}"></div>
-                            <div class="magenta circle" @click="${this.clickedColor}"></div>
-                            <div class="red circle" @click="${this.clickedColor}"></div>
-                            <div class="red-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="orange circle" @click="${this.clickedColor}"></div>
-                            <div class="gold circle" @click="${this.clickedColor}"></div>
-                            <div class="yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="grass-green circle" @click="${this.clickedColor}"></div>
-                            <div class="green circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-green circle" @click="${this.clickedColor}"></div>
-                            <div class="teal circle" @click="${this.clickedColor}"></div>
-                            <div class="blue circle" @click="${this.clickedColor}"></div>
-                            <div class="indigo circle" @click="${this.clickedColor}"></div>
-                            <div class="violet circle" @click="${this.clickedColor}"></div>
-                            <div class="purple circle" @click="${this.clickedColor}"></div>
-                            <div class="beige circle" @click="${this.clickedColor}"></div>
-                            <div class="light-brown circle" @click="${this.clickedColor}"></div>
-                            <div class="brown circle" @click="${this.clickedColor}"></div>
-                            <div class="dark-brown circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-pink circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-green circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-blue circle" @click="${this.clickedColor}"></div>
-                            <div class="pastel-purple circle" @click="${this.clickedColor}"></div>
+                            <div class="black circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Black</span>
+                            </div>
+                            <div class="white circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">White</span>
+                            </div>
+                            <div class="silver circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Silver</span> 
+                            </div>
+                            <div class="gray circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Gray</span> 
+                            </div>
+                            <div class="dark-gray circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark gray</span> 
+                            </div>
+                            <div class="charcoal circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Charcoal</span> 
+                            </div>
+                            <div class="magenta circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Magenta</span> 
+                            </div>
+                            <div class="red circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red</span> 
+                            </div>
+                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red-orange</span> 
+                            </div>
+                            <div class="orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Orange</span> 
+                            </div>
+                            <div class="gold circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Gold</span> 
+                            </div>
+                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Yellow</span> 
+                            </div>
+                            <div class="grass-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Grass green</span> 
+                            </div>
+                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Green</span> 
+                            </div>
+                            <div class="dark-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark green</span> 
+                            </div>
+                            <div class="teal circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Teal</span> 
+                            </div>
+                            <div class="blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Blue</span> 
+                            </div>
+                            <div class="indigo circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Indigo</span> 
+                            </div>
+                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Violet</span> 
+                            </div>
+                            <div class="purple circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Purple</span> 
+                            </div>
+                            <div class="beige circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Beige</span> 
+                            </div>
+                            <div class="light-brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Light brown</span> 
+                            </div>
+                            <div class="brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Brown</span> 
+                            </div>
+                            <div class="dark-brown circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Dark brown</span>
+                            </div>
+                            <div class="pastel-pink circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel pink</span> 
+                            </div>
+                            <div class="pastel-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel orange</span> 
+                            </div>
+                            <div class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel yellow</span> 
+                            </div>
+                            <div class="pastel-green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel green</span> 
+                            </div>
+                            <div class="pastel-blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel blue</span> 
+                            </div>
+                            <div class="pastel-purple circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pastel purple</span> 
+                            </div>
                         </div>
                         <div class="highlighter palette">
-                            <div class="yellow circle" @click="${this.clickedColor}"></div>
-                            <div class="green circle" @click="${this.clickedColor}"></div>
-                            <div class="light-blue circle" @click="${this.clickedColor}"></div>
-                            <div class="pink circle" @click="${this.clickedColor}"></div>
-                            <div class="red-orange circle" @click="${this.clickedColor}"></div>
-                            <div class="violet circle" @click="${this.clickedColor}"></div>
+                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Yellow</span> 
+                            </div>
+                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Green</span> 
+                            </div>
+                            <div class="light-blue circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Light blue</span> 
+                            </div>
+                            <div class="pink circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Pink</span> 
+                            </div>
+                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Red-orange</span> 
+                            </div>
+                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                                <span class="tooltip-text">Violet</span> 
+                            </div>
                         </div>
                         <div class="checkbox-label">
                             <input type="checkbox" id="checkbox"></input>
@@ -112,6 +216,7 @@ export class InkingToolbar extends LitElement {
                         <button id="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
+                <div id="snackbar"></div>
             </div>
         `;
     }
@@ -121,11 +226,13 @@ export class InkingToolbar extends LitElement {
         // add any (last) detected inking canvas with matching name (TODO: handle multiple)
         this.connectCanvas();
 
-        // set toolbar orientation to developer's choice
+        // set toolbar layout to developer's choice
         this.setOrientation();
+        this.setVerticalAlignment();
+        this.setHorizontalAlignment();
 
         // enable low-latency if possible
-        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine canvas")
+        this.sineContext = Utils.getLowLatencyContext(this.sineCanvas, "sine")
 
         // set canvas to use pointer event sizing by default
         this.slider.disabled = true;
@@ -136,7 +243,7 @@ export class InkingToolbar extends LitElement {
         this.isWaitingToDrawSineCanvas = true;
         Utils.runAsynchronously( () => { 
             this.drawSineCanvas();
-            console.log("sine canvas drawn for first time");
+            console.log("Sine canvas drawn for first time");
         });
     }
 
@@ -152,6 +259,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 return this.selectedPenColor.toString();
                 break;
+            case "pencil" :
+                return this.selectedPencilColor.toString();
+                break;
             case "highlighter" :
                 return this.selectedHighlighterColor.toString();
                 break;
@@ -159,7 +269,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white.toString();
                 break;
             default:
-                console.log("could not find color value for selected utensil");
+                console.log("Could not find color value for selected utensil");
                 break;
         }
     }
@@ -169,6 +279,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 return this.selectedPenColorName;
                 break;
+            case "pencil" :
+                return this.selectedPencilColorName;
+                break;
             case "highlighter" :
                 return this.selectedHighlighterColorName;
                 break;
@@ -176,7 +289,7 @@ export class InkingToolbar extends LitElement {
                 return "white";
                 break;
             default:
-                console.log("could not find color name for selected utensil");
+                console.log("Could not find color name for selected utensil");
                 break;
         }
     }
@@ -186,6 +299,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 return this.selectedPenSize;
                 break;
+            case "pencil" :
+                return this.selectedPencilSize;
+                break;
             case "highlighter" :
                 return this.selectedHighlighterSize;
                 break;
@@ -193,7 +309,7 @@ export class InkingToolbar extends LitElement {
                 return this.eraserSize;
                 break;
             default:
-                console.log("could not find stroke size for selected utensil");
+                console.log("Could not find stroke size for selected utensil");
                 break;
         }
     }
@@ -203,6 +319,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 this.selectedPenColor = color;
                 break;
+            case "pencil" :
+                this.selectedPencilColor = color;
+                break;
             case "highlighter" :
                 this.selectedHighlighterColor = color;
                 break;
@@ -210,7 +329,7 @@ export class InkingToolbar extends LitElement {
                 return Colors.white;
                 break;
             default:
-                console.log("could not set color value for selected utensil");
+                console.log("Could not set color value for selected utensil");
                 break;
         }
     }
@@ -220,13 +339,16 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 this.selectedPenColorName = colorName;
                 break;
+            case "pencil" :
+                this.selectedPencilColorName = colorName;
+                break;
             case "highlighter" :
                 this.selectedHighlighterColorName = colorName;
                 break;
             case "eraser" :
                 break;
             default:
-                console.log("could not set color name for selected utensil");
+                console.log("Could not set color name for selected utensil");
                 break;
         }
     }
@@ -236,6 +358,9 @@ export class InkingToolbar extends LitElement {
             case "pen" :
                 this.selectedPenSize = parseInt(this.slider.value);
                 break;
+            case "pencil" :
+                this.selectedPencilSize = parseInt(this.slider.value);
+                break;
             case "highlighter" :
                 this.selectedHighlighterSize = parseInt(this.slider.value);
                 break;
@@ -243,7 +368,7 @@ export class InkingToolbar extends LitElement {
                 this.eraserSize = parseInt(this.slider.value);
                 break;
             default:
-                console.log("could not set stroke size for selected utensil");
+                console.log("Could not set stroke size for selected utensil");
                 break;
         }
     }
@@ -275,10 +400,38 @@ export class InkingToolbar extends LitElement {
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
-            this.inkingCanvas.addEventListener('inking-canvas-resized', () => {
+            this.inkingCanvas.addEventListener('inking-canvas-drawn', () => {
                 this.requestDrawSineCanvas();
             }, false);
 
+            // provide visual status of copy clicks
+            this.inkingCanvas.addEventListener('inking-canvas-copied', ( e: CustomEvent ) => {
+                this.flashSnackbar(e.detail.message);
+            }, false);
+
+            // set up default toolbar if no tool selection was specified
+            if (!this.tools && this.children.length === 0) {
+                this.tools = Array.from(this.toolContainer.querySelectorAll("button"));
+                this.defaultToolbarSelection.classList.add("show");
+            }
+        }
+    }
+
+    // expose method to children tools so they can add themselves to the toolbar once they load
+    addToolbarButton(inkingToolbarButton: any, customElementName: string) {
+        inkingToolbarButton = this.querySelector(customElementName);
+        if (inkingToolbarButton) {
+            let tool = inkingToolbarButton.shadowRoot.querySelector("button");
+            if (tool) {
+                if (!this.tools) this.tools = new Array<HTMLButtonElement>();
+                this.tools.push(tool);
+                if (this.children.length === this.tools.length) {
+                    // done welcoming last tool, so set toolbar layout to developer's choice
+                    this.setOrientation();
+                    this.setVerticalAlignment();
+                    this.setHorizontalAlignment();  
+                }
+            }
         }
     }
 
@@ -286,23 +439,86 @@ export class InkingToolbar extends LitElement {
 
         // default choice is "horizontal"
 
-        let tools = this.toolContainer.querySelectorAll('button');
         if (this.orientation === "vertical") {
             
-            this.toolContainer.classList.add("vertical-orientation");
-            this.dropdownContainer.classList.add("vertical-orientation");
+            if (this.toolbarContainer) this.toolbarContainer.classList.add("vertical-orientation");
+            if (this.toolContainer) this.toolContainer.classList.add("vertical-orientation");
+            if (this.dropdownContainer) this.dropdownContainer.classList.add("vertical-orientation");
  
-            tools.forEach(tool => {
-                tool.classList.add('vertical-orientation');
-            });
-            
-            const lastTool = this.toolContainer.querySelector("button:last-child");
-            lastTool.classList.add("vertical-orientation");
+            if (this.tools) {
+                this.tools.forEach(tool => {
+                    tool.classList.add('vertical-orientation');
+                });
+            }
         }
         else {
-            tools.forEach(tool => {
-                tool.classList.add('horizontal-orientation');
-            });
+            if (this.tools) {
+                this.tools.forEach(tool => {
+                    tool.classList.add('horizontal-orientation');
+                });
+            }
+        }
+    }
+
+    private setVerticalAlignment() {
+
+        // default choice/setting is "top"
+
+        switch (this.verticalAlignment) {
+            case "":
+                break;
+            case "top":
+                break;
+            case "center":
+                if (this.toolbarContainer) this.toolbarContainer.classList.add("vertical-center");
+                if (this.dropdownContainer) this.dropdownContainer.classList.add("vertical-center");
+                break;
+            case "bottom":
+                if (this.toolbarContainer) this.toolbarContainer.classList.add("bottom");
+                if (this.dropdownContainer) this.dropdownContainer.classList.add("bottom");
+                break;
+            default:
+                console.log("Could not set vertical toolbar alignment");
+        }
+    }
+
+    private setHorizontalAlignment() {
+
+        // default choice/setting is "left"
+
+        switch (this.horizontalAlignment) {
+            case "":
+                if (this.tools) {
+                    this.tools.forEach(tool => {
+                        tool.classList.add("left");
+                    });
+                }
+                break;
+            case "left":
+                this.tools.forEach(tool => {
+                    tool.classList.add("left");
+                });
+                break;
+            case "center":
+                if (this.toolbarContainer) this.toolbarContainer.classList.add("horizontal-center");
+                if (this.dropdownContainer) this.dropdownContainer.classList.add("horizontal-center");
+                if (this.tools) {
+                    this.tools.forEach(tool => {
+                        tool.classList.add("center");
+                    });
+                }
+                break;
+            case "right":
+                if (this.toolbarContainer) this.toolbarContainer.classList.add("right");
+                if (this.dropdownContainer)this.dropdownContainer.classList.add("right");
+                if (this.tools) {
+                    this.tools.forEach(tool => {
+                        tool.classList.add("right");
+                    });
+                }
+                break;
+            default:
+                console.log("Could not set horizontal toolbar alignment");
         }
     }
 
@@ -312,8 +528,15 @@ export class InkingToolbar extends LitElement {
             // toggle semaphore to prevent unnecessary redraws
             this.isWaitingToDrawSineCanvas = false;
 
+            // resize sine canvas with high resolution
+            let rect = this.sineCanvas.getBoundingClientRect();
+            if (rect.height !== 0 && rect.width !== 0 ) {
+                this.sineCanvas.height = rect.height * devicePixelRatio;
+                this.sineCanvas.width = rect.width * devicePixelRatio;
+            }
+
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() / devicePixelRatio;
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentStrokeColor();
 
@@ -347,23 +570,43 @@ export class InkingToolbar extends LitElement {
             let previousY = h - (a * Math.sin(2 * Math.PI * f/w * x));
             let currentY: number;
 
+            // calibrate sine wave rotation calcuations to center results in canvas
+            let rotationDegrees = 354;
+            let offsetY = a/2 + (360 - rotationDegrees);
+            let offsetX = -4 * devicePixelRatio;
+
             let strokesDrawn = 0;
 
             // draw the sine wave until just before the canvas ends to avoid clipping off end
-            for(let i = strokeWidth; i < w - strokeWidth; i++){
-                this.sineContext.beginPath();    
-                this.sineContext.moveTo(x,previousY);
-                x = i;
-                currentY = h - (a * Math.sin(2 * Math.PI * f/w * x));      
-                this.sineContext.lineTo(x, currentY);
-                previousY = currentY;
+            for(let i = strokeWidth/2; i < w - strokeWidth/2; i++){
 
-                if (this.selectedTool.id === "pencil") {
-                    Utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
-                } else {
-                    this.sineContext.stroke();
-                }
-                strokesDrawn++;
+                this.sineContext.beginPath(); 
+            
+                let rotatedX1 = (x * Math.cos(rotationDegrees * Math.PI/180)) - (previousY * Math.sin(rotationDegrees * Math.PI/180));
+                let rotatedY1 = (previousY * Math.cos(rotationDegrees * Math.PI/180)) + (x * Math.sin(rotationDegrees * Math.PI/180));
+
+                // this.sineContext.moveTo(x,previousY);
+                this.sineContext.moveTo(rotatedX1 + offsetX, rotatedY1 + offsetY);
+
+                x = i;
+                currentY = h - (a * Math.sin(2 * Math.PI * f/w * x));
+                
+                let rotatedX2 = (x * Math.cos(rotationDegrees * Math.PI/180)) - (currentY * Math.sin(rotationDegrees * Math.PI/180));
+                let rotatedY2 = (currentY * Math.cos(rotationDegrees * Math.PI/180)) + (x * Math.sin(rotationDegrees * Math.PI/180));
+
+                // this.sineContext.lineTo(x, currentY);
+                this.sineContext.lineTo(rotatedX2 + offsetX, rotatedY2 + offsetY);
+
+                previousY = currentY;
+
+                if (this.selectedTool.id === "pencil") {
+                    this.sineContext.fillStyle = this.sineContext.strokeStyle;
+                    // Utils.drawPencilStroke(this.sineContext, x-1, x, previousY, currentY);
+                    Utils.drawPencilStroke(this.sineContext, rotatedX1 + offsetX, rotatedX2 + offsetX, rotatedY1 + offsetY, rotatedY2 + offsetY);
+                } else {
+                    this.sineContext.stroke();
+                }
+                strokesDrawn++;
             }
             // console.log("sineCanvas strokes drawn: " + strokesDrawn);
         }
@@ -375,7 +618,17 @@ export class InkingToolbar extends LitElement {
     }
 
     private clickedUtensil(e: Event) {
-        let utensil = <HTMLButtonElement>e.target;
+        let utensil = <Element>e.target;
+        if (utensil.id === "") {
+            utensil = utensil.shadowRoot.firstElementChild;
+            if (utensil.classList.contains("copy-icon")) {
+                this.clickedCopy();
+                return;
+            } else if (utensil.classList.contains("save-icon")) {
+                this.clickedSave();
+                return;
+            }
+        }
         console.log(utensil.id + " button clicked!");
         this.updateSelectedTool(utensil);
     }
@@ -393,7 +646,7 @@ export class InkingToolbar extends LitElement {
 
         // find clicked color grid element through its class
         let selectedCircle = (<HTMLDivElement>event.target);
-        let colorClass = selectedCircle.className.replace('clicked', '').replace('circle', '').trim();
+        let colorClass = selectedCircle.className.replace("clicked", "").replace("circle", "").replace("tooltip", "").trim();
 
         // get color string from css color
         let colorName = Utils.toCamelCase(colorClass);
@@ -412,20 +665,45 @@ export class InkingToolbar extends LitElement {
         this.updateSelectedColor(selectedCircle);
     }
 
-    // clickedCopy() {
-    //     if (this.inkingCanvas) {
-    //         this.inkingCanvas.copyCanvasContents();
-    //     } else {
-    //         console.log("cannot copy - inking canvas not connected");
-    //     }
-    // }
+    private clickedCopy() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.copyCanvasContents();
+            } else {
+                console.error("Cannot copy - inking canvas not connected");
+                this.flashSnackbar("Could not copy canvas to clipboard :(");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private clickedSave() {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.saveCanvasContents();
+            } else {
+                console.error("Cannot save - inking canvas not connected");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    private flashSnackbar(message: string) {
+        this.snackbar.textContent = message;
+        this.snackbar.classList.add("show");
+        setTimeout(() => { 
+            this.snackbar.classList.remove("show");
+        }, 3000);
+    }
 
     private isUtensil(tool: string) {
         return (tool === "pen" || tool === "pencil" 
         || tool === "highlighter" || tool === "eraser");
     }
 
-    private updateSelectedTool(selectedTool: HTMLButtonElement) {
+    private updateSelectedTool(selectedTool: Element) {
         if (selectedTool !== this.selectedTool) {
             if (this.isUtensil(selectedTool.id)) {
                 this.switchUtensil(selectedTool);
@@ -437,7 +715,7 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    private switchUtensil(el: HTMLButtonElement) {
+    private switchUtensil(el: Element) {
         let utensilName = el.id;
         if (utensilName === "highlighter") {
             this.inkDropdownTitle.classList.add("show");            
@@ -458,13 +736,13 @@ export class InkingToolbar extends LitElement {
         this.toggleActiveTool(el);
     }
 
-    private toggleActiveTool(lastClickedTool: HTMLButtonElement) {
+    private toggleActiveTool(lastClickedTool: Element) {
         if (this.selectedTool !== lastClickedTool) {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 5th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+                // remove the color class which should be the last and 6th class
+                this.selectedTool.classList.remove(this.selectedTool.classList[5]);
 
                 this.selectedTool.classList.remove('clicked');
             }
@@ -533,8 +811,12 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 5th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[4]);
+                // remove the color class
+                if (this.selectedTool.classList[5] !== "clicked") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                } else {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[6]);
+                }
 
                 // use the css friendly color class name with dashes
                 let modifiedColorName = Utils.toDash(this.getCurrentStrokeColorName());
@@ -603,1066 +885,908 @@ export class InkingToolbar extends LitElement {
     }
 
     static get styles() {
-        return css `
-            #toolbar-container {
-                position: relative;
-                display: none;
-                margin: 2px;
-            }
-            #toolbar-container.show {
-                display: inline-block;
-            }
-            #tool-container {
-                background-color: ${Colors.white};
-                border: 2px solid ${Colors.white};
-                border-bottom: 0px solid ${Colors.white};
-                margin: 2px;
-                display: inline-block;
-            }
-            #tool-container.vertical-orientation {
-                vertical-align: top;
-                margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
-                border-bottom: 2px solid ${Colors.white};
-                border-right: 0px solid ${Colors.white};
-            }
-            button {
-                position: relative;
-            }
-            /* prevent Firefox from adding extra styling on focused button */
-            button::-moz-focus-inner {
-                border: 0;
-            }
-            button.toolbar-icon {
-                background-color: ${Colors.white};
-                outline: none;
-                border: 2px solid ${Colors.white};
-                border-radius: 0px;
-            }
-            button.vertical-orientation {
-                display: block;
-                margin-bottom: 4px;
-            }
-            button:last-child.vertical-orientation {
-                display: block;
-                margin-bottom: 0px;
-            }
-            button#erase-all {
-                border: none;
-                outline: none;
-                display: none;
-                width: 100%;
-                min-width: 200px;
-                background-color: ${Colors.lightGray};
-                padding: 25px;
-                margin-top: 25px;
-                font-family: sans-serif;
-                font-size: 16px;
-            }
-            button#erase-all.show {
-                display: inline-block;
-            }
-            button:hover.toolbar-icon {
-                border-color: ${Colors.gray};
-                background-color: ${Colors.lightGray};
-            }
-            button:hover#erase-all {
-                background-color: ${Colors.silver};
-            }  
-            .toolbar-icon {
-                height: 53px;
-                width: 53px;
-                background-size: 50px 50px;
-                background-repeat: no-repeat;
-                background-position: 0px 0px;
-            }
-            .title {
-                display: none;
-                padding-bottom: 10px;
-            }
-            .title.show {
-                display: block;
-            }
-            .pen-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_pen.svg");
-            }
-            .pencil-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_pencil.svg");
-            }
-            .highlighter-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_highlighter.svg");
-            }
-            .eraser-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_eraser.svg");
-            }
-            .ruler-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_ruler.svg");
-            }
-            .copy-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_copy.svg");
-            }
-            .save-icon {
-                background-image: url("https://raw.githubusercontent.com/pwa-builder/pwa-inking/master/assets/icons/toolbar_icons/v1/ic_save.svg");
-            }
-            #dropdown-container {
-                background-color: ${Colors.colorPaletteBackground};
-                width: 320px;
-                margin-left: 2px;
-            }
-            #dropdown-container.vertical-orientation {
-                display: inline-block;
-                margin-left: 0px;
-                margin-top: 2px;
-            }
-            @media screen and (max-width: 400px) {
+        return  [
+            InkingToolbarButtonStyles,
+            css `
+                #toolbar-container {
+                    position: absolute;
+                    display: none;
+                    margin: 6px;
+                }
+                #toolbar-container.show {
+                    display: inline-block;
+                }
+                #toolbar-container.vertical-center {
+                    bottom: 50%;
+                }
+                #toolbar-container.bottom {
+                    bottom: 0;
+                    margin-bottom: 8px; // TODO: update to fit dev specified canvas border width
+                }
+                #toolbar-container.horizontal-center {
+                    right: 50%;
+                }
+                #toolbar-container.right {
+                    right: 0;
+                }
+                #toolbar-container.vertical-orientation.right {
+                    margin-right: 7px; // TODO: update to fit dev specified canvas border width
+                }
+                #tool-container {
+                    background-color: ${Colors.white};
+                    border: 2px solid ${Colors.white};
+                    border-bottom: 0px solid ${Colors.white};
+                    display: inline-block;
+                }
+                #tool-container.vertical-orientation {
+                    vertical-align: top;
+                    margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
+                    border-bottom: 2px solid ${Colors.white};
+                    border-right: 0px solid ${Colors.white};
+                }
+                #default-toolbar-selection {
+                    display: none;
+                }
+                #default-toolbar-selection.show {
+                    display: block;
+                }
                 #dropdown-container {
-                    width: 270px;
+                    background-color: ${Colors.colorPaletteBackground};
+                    width: 320px;
+                    margin: 1px;
+                    margin-top: 3px;
+                    position: absolute;
                 }
                 #dropdown-container.vertical-orientation {
-                    width: 220px;
+                    display: inline-block;
+                    margin-left: 3px;
                 }
-            }
-            .ink-dropdown {
-                display: none;
-                padding: 10px;
-                font-family: sans-serif;
-                font-size: 16px;
-            }
-            .ink-dropdown.show {
-                display: block;
-            }
-            .palette {
-                display: none;
-                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-                grid-auto-rows: minmax(25px, auto);
-                justify-items: center;
-                align-items: center;
-                justify-content: center;
-                align-content: center;
-                padding-bottom: 15px;
-            }
-            .palette.show {
-                display: grid
-            }
-            .circle {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                border: 7px solid ${Colors.colorPaletteBackground};
-            }
-            .circle:hover, .circle:active {
-                width: 40px;
-                height: 40px;
-                border: 2px solid ${Colors.colorPaletteBackground};
-                transition: all 0.2s ease;
-            }
-            .circle.clicked {
-                width: 30px;
-                height: 30px;
-                border: 3px solid ${Colors.colorPaletteBackground};
-                box-shadow: 0px 0px 0px 2px black;
-                border-radius: 50%;
-                transition: all 0.2s ease;
-            }
-            .circle.black {                
-                background-color: ${Colors.black};
-            }            
-            .circle.white {              
-                background-color: ${Colors.white};
-            }
-            .circle.silver {            
-                background-color: ${Colors.silver};
-            }
-            .circle.gray {            
-                background-color: ${Colors.gray};
-            }
-            .circle.dark-gray {               
-                background-color: ${Colors.darkGray};
-            }
-            .circle.charcoal {               
-                background-color: ${Colors.charcoal};
-            }
-            .circle.magenta {              
-                background-color: ${Colors.magenta};
-            }
-            .circle.red {
-                background-color: ${Colors.red};
-            }
-            .circle.red-orange {
-                background-color: ${Colors.redOrange};
-            }
-            .circle.orange {
-                background-color: ${Colors.orange};
-            }
-            .circle.gold {
-                background-color: ${Colors.gold};
-            }
-            .circle.yellow {
-                background-color: ${Colors.yellow};
-            }
-            .circle.grass-green {
-                background-color: ${Colors.grassGreen};
-            }
-            .circle.green {
-                background-color: ${Colors.green};
-            }
-            .circle.dark-green {
-                background-color: ${Colors.darkGreen};
-            }
-            .circle.teal {
-                background-color: ${Colors.teal};
-            }
-            .circle.blue {
-                background-color: ${Colors.blue};
-            }
-            .circle.indigo {
-                background-color: ${Colors.indigo};
-            }
-            .circle.violet {
-                background-color: ${Colors.violet};
-            }
-            .circle.purple {
-                background-color: ${Colors.purple};
-            }
-            .circle.beige {
-                background-color: ${Colors.beige};
-            }
-            .circle.light-brown {
-                background-color: ${Colors.lightBrown};
-            }
-            .circle.brown {
-                background-color: ${Colors.brown};
-            }
-            .circle.dark-brown {
-                background-color: ${Colors.darkBrown};
-            }
-            .circle.pastel-pink {
-                background-color: ${Colors.pastelPink};
-            }
-            .circle.pastel-orange {
-                background-color: ${Colors.pastelOrange};
-            }
-            .circle.pastel-yellow {
-                background-color: ${Colors.pastelYellow};
-            }
-            .circle.pastel-green {
-                background-color: ${Colors.pastelGreen};
-            }
-            .circle.pastel-blue {
-                background-color: ${Colors.pastelBlue};
-            }
-            .circle.pastel-purple {
-                background-color: ${Colors.pastelPurple};
-            }
-            .circle.light-blue {
-                background-color: ${Colors.lightBlue};
-            }
-            .circle.pink {
-                background-color: ${Colors.pink};
-            }
-            .sineCanvas {
-                height: 50%;
-                width: 100%;
-                max-height: 150px;
-                background-color: transparent;
-                padding-left: 0;
-                padding-right: 0;
-                margin-left: auto;
-                margin-right: auto;
-                margin-bottom: 10px;
-                display: none;
-            }
-            .sineCanvas.show {
-                display: block;
-            }
-            .checkbox-label {
-                position: relative;
-                display: block;
-                width: 65px;
-                height: 30px;
-                margin-bottom: 15px;
-            }
-            .checkbox-label input {
-                display: none;
-            }
-            .checkbox-label-text {
-                position: relative;
-                top: 7px;
-                margin-left: 75px;
-                white-space: nowrap;
-            }
-            .checkbox-track {
-                position: absolute;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                background: ${Colors.darkGray};
-                border-radius: 20px;
-                transition: all 0.2s ease;
-                color: ${Colors.white};
-            }
-            .checkbox-track::after {
-                position: absolute;
-                content: "";
-                width: 20px;
-                height: 20px;
-                background-color: ${Colors.white};
-                border-radius: 50%;
-                border: 4px solid ${Colors.darkGray};
-                top: 1px;
-                left: 1px;
-                transition: all 0.2s ease;
-            }
-            input:checked + .checkbox-track.white::after {
-                background-color: ${Colors.silver};
-                border-color: ${Colors.white};
-            }
-            .checkbox-track.black::after {
-                border-color: ${Colors.black};
-            }
-            .checkbox-track.silver::after {
-                border-color: ${Colors.silver};
-            }
-            .checkbox-track.gray::after {
-                border-color: ${Colors.gray};
-            }
-            .checkbox-track.dark-gray::after {
-                border-color: ${Colors.darkGray};
-            }
-            .slider-checkbox-track.charcoal::after {
-                border-color: ${Colors.charcoal};
-            }
-            .checkbox-track.magenta::after {
-                border-color: ${Colors.magenta};
-            }
-            .checkbox-track.red::after {
-                border-color: ${Colors.red};
-            }
-            .checkbox-track.red-orange::after {
-                border-color: ${Colors.redOrange};
-            }
-            .checkbox-track.orange::after {
-                border-color: ${Colors.orange};
-            }
-            .checkbox-track.gold::after {
-                border-color: ${Colors.gold};
-            }
-            .checkbox-track.yellow::after {
-                border-color: ${Colors.yellow};
-            }
-            .checkbox-track.grass-green::after {
-                border-color: ${Colors.grassGreen};
-            }
-            .checkbox-track.green::after {
-                border-color: ${Colors.green};
-            }
-            .checkbox-track.dark-green::after {
-                border-color: ${Colors.darkGreen};
-            }
-            .checkbox-track.teal::after {
-                border-color: ${Colors.teal};
-            }
-            .checkbox-track.blue::after {
-                border-color: ${Colors.blue};
-            }
-            .checkbox-track.indigo::after {
-                border-color: ${Colors.indigo};
-            }
-            .checkbox-track.purple::after {
-                border-color: ${Colors.purple};
-            }
-            .checkbox-track.violet::after {
-                border-color: ${Colors.violet};
-            }
-            .checkbox-track.beige::after {
-                border-color: ${Colors.beige};
-            }
-            .checkbox-track.light-brown::after {
-                border-color: ${Colors.lightBrown};
-            }
-            .checkbox-track.brown::after {
-                border-color: ${Colors.brown};
-            }
-            .checkbox-track.dark-brown::after {
-                border-color: ${Colors.darkBrown};
-            }
-            .checkbox-track.pastel-pink::after {
-                border-color: ${Colors.pastelPink};
-            }
-            .checkbox-track.pastel-orange::after {
-                border-color: ${Colors.pastelOrange};
-            }
-            .checkbox-track.pastel-yellow::after {
-                border-color: ${Colors.pastelYellow};
-            }
-            .checkbox-track.pastel-green::after {
-                border-color: ${Colors.pastelGreen};
-            }
-            .checkbox-track.pastel-blue::after {
-                border-color: ${Colors.pastelBlue};
-            }
-            .checkbox-track.pastel-purple::after {
-                border-color: ${Colors.pastelPurple};
-            }
-            .checkbox-track.light-blue::after {
-                border-color: ${Colors.lightBlue};
-            }
-            .checkbox-track.pink::after {
-                border-color: ${Colors.pink};
-            }
-            input:checked + .checkbox-track {
-                background-color: ${Colors.darkGreen};
-            }
-            input:checked + .checkbox-track.black {
-                background-color: ${Colors.black};
-                border-color: ${Colors.black};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.white {
-                background-color: ${Colors.white};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.silver {
-                background-color: ${Colors.silver};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.gray {
-                background-color: ${Colors.gray};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.dark-gray {
-                background-color: ${Colors.darkGray};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.charcoal {
-                background-color: ${Colors.charcoal};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.magenta {
-                background-color: ${Colors.magenta};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.red {
-                background-color: ${Colors.red};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.red-orange {
-                background-color: ${Colors.redOrange};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.orange {
-                background-color: ${Colors.orange};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.gold {
-                background-color: ${Colors.gold};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.yellow {
-                background-color: ${Colors.yellow};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.grass-green {
-                background-color: ${Colors.grassGreen};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.green {
-                background-color: ${Colors.green};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.dark-green {
-                background-color: ${Colors.darkGreen};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.teal {
-                background-color: ${Colors.teal};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.blue {
-                background-color: ${Colors.blue};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.indigo {
-                background-color: ${Colors.indigo};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.purple {
-                background-color: ${Colors.purple};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.violet {
-                background-color: ${Colors.violet};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.beige {
-                background-color: ${Colors.beige};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.light-brown {
-                background-color: ${Colors.lightBrown};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.brown {
-                background-color: ${Colors.brown};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.dark-brown {
-                background-color: ${Colors.darkBrown};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track.pastel-pink {
-                background-color: ${Colors.pastelPink};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pastel-orange {
-                background-color: ${Colors.pastelOrange};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pastel-yellow {
-                background-color: ${Colors.pastelYellow};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pastel-green {
-                background-color: ${Colors.pastelGreen};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pastel-blue {
-                background-color: ${Colors.pastelBlue};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pastel-purple {
-                background-color: ${Colors.pastelPurple};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.light-blue {
-                background-color: ${Colors.lightBlue};
-                color: ${Colors.black};
-            }
-            input:checked + .checkbox-track.pink {
-                background-color: ${Colors.pink};
-                color: ${Colors.white};
-            }
-            input:checked + .checkbox-track:before {
-                top: 5px;
-            }
-            input:checked + .checkbox-track:after {
-                transform: translateX(35px);
-            }
-            .on-text {
-                position: absolute;
-                top: 9px;
-                left: 12px;
-                font-size: 12px;
-                display: none;
-            }
-            .on-text.show {
-                display: inline;
-            }
-            .off-text {
-                position: absolute;
-                top: 9px;
-                left: 30px;
-                font-size: 12px; 
-                display: none;
-            }
-            .off-text.show {
-                display: inline;
-            }
-            .slider-container {
-                width: 100%;
-            }
-            .slider {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 100%;
-                height: 2px;
-                margin-bottom: 10px;
-                background-color: gray;
-                outline: none;
-                opacity: 0.7;
-                -webkit-transition: .2s;
-                transition: opacity .2s;
-                display: none;
-            }
-            .slider.show {
-                display: inline-block;
-            }
-            .slider:hover {
-                opacity: 1;
-            }
-            /* prevent Firefox from adding extra styling on focused slider */
-            input[type=range]::-moz-focus-outer {
-                border: 0;
-            }
-            .slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 10px;
-                height: 25px;
-                border-radius: 5px;
-                border: none;
-                cursor: pointer;
-            }
-            .slider::-moz-range-thumb {
-                width: 10px;
-                height: 25px;
-                border: none;
-                cursor: pointer;
-            }
-            .slider.black::-webkit-slider-thumb {
-                background-color: ${Colors.black};
-            }  
-            .slider.black::-moz-range-thumb {
-                background-color: ${Colors.black};
-            }
-            .slider.white::-webkit-slider-thumb {
-                background-color: ${Colors.white};
-            }        
-            .slider.white::-moz-range-thumb {
-                background-color: ${Colors.white};
-            }
-            .slider.silver::-webkit-slider-thumb {
-                background-color: ${Colors.silver};
-            }             
-            .slider.silver::-moz-range-thumb {
-                background-color: ${Colors.silver};
-            }
-            .slider.gray::-webkit-slider-thumb {
-                background-color: ${Colors.gray};
-            }               
-            .slider.gray::-moz-range-thumb {
-                background-color: ${Colors.gray};
-            }
-            .slider.dark-gray::-webkit-slider-thumb {
-                background-color: ${Colors.darkGray};
-            }              
-            .slider.dark-gray::-moz-range-thumb {
-                background-color: ${Colors.darkGray};
-            }
-            .slider.charcoal::-webkit-slider-thumb {
-                background-color: ${Colors.charcoal};
-            }      
-            .slider.charcoal::-moz-range-thumb {
-                background-color: ${Colors.charcoal};
-            }
-            .slider.magenta::-webkit-slider-thumb {
-                background-color: ${Colors.magenta};
-            }    
-            .slider.magenta::-moz-range-thumb {
-                background-color: ${Colors.magenta};
-            }
-            .slider.red::-webkit-slider-thumb {
-                background-color: ${Colors.red};
-            }    
-            .slider.red::-moz-range-thumb {
-                background-color: ${Colors.red};
-            }
-            .slider.red-orange::-webkit-slider-thumb {
-                background-color: ${Colors.redOrange};
-            }            
-            .slider.red-orange::-moz-range-thumb {
-                background-color: ${Colors.redOrange};
-            }
-            .slider.orange::-webkit-slider-thumb {
-                background-color: ${Colors.orange};
-            }      
-            .slider.orange::-moz-range-thumb {
-                background-color: ${Colors.orange};
-            }
-            .slider.gold::-webkit-slider-thumb {
-                background-color: ${Colors.gold};
-            }      
-            .slider.gold::-moz-range-thumb {
-                background-color: ${Colors.gold};
-            }
-            .slider.yellow::-webkit-slider-thumb {
-                background-color: ${Colors.yellow};
-            }      
-            .slider.yellow::-moz-range-thumb {
-                background-color: ${Colors.yellow};
-            }
-            .slider.grass-green::-webkit-slider-thumb {
-                background-color: ${Colors.grassGreen};
-            }      
-            .slider.grass-green::-moz-range-thumb {
-                background-color: ${Colors.grassGreen};
-            }            
-            .slider.green::-webkit-slider-thumb {
-                background-color: ${Colors.green};
-            }      
-            .slider.green::-moz-range-thumb {
-                background-color: ${Colors.green};
-            }            
-            .slider.dark-green::-webkit-slider-thumb {
-                background-color: ${Colors.darkGreen};
-            }      
-            .slider.dark-green::-moz-range-thumb {
-                background-color: ${Colors.darkGreen};
-            }            
-            .slider.teal::-webkit-slider-thumb {
-                background-color: ${Colors.teal};
-            }      
-            .slider.teal::-moz-range-thumb {
-                background-color: ${Colors.teal};
-            }            
-            .slider.blue::-webkit-slider-thumb {
-                background-color: ${Colors.blue};
-            }      
-            .slider.blue::-moz-range-thumb {
-                background-color: ${Colors.blue};
-            }            
-            .slider.indigo::-webkit-slider-thumb {
-                background-color: ${Colors.indigo};
-            }      
-            .slider.indigo::-moz-range-thumb {
-                background-color: ${Colors.indigo};
-            }
-            .slider.violet::-webkit-slider-thumb {
-                background-color: ${Colors.violet};
-            }      
-            .slider.violet::-moz-range-thumb {
-                background-color: ${Colors.violet};
-            }
-            .slider.purple::-webkit-slider-thumb {
-                background-color: ${Colors.purple};
-            }      
-            .slider.purple::-moz-range-thumb {
-                background-color: ${Colors.purple};
-            }
-            .slider.beige::-webkit-slider-thumb {
-                background-color: ${Colors.beige};
-            }      
-            .slider.beige::-moz-range-thumb {
-                background-color: ${Colors.beige};
-            }
-            .slider.light-brown::-webkit-slider-thumb {
-                background-color: ${Colors.lightBrown};
-            }      
-            .slider.light-brown::-moz-range-thumb {
-                background-color: ${Colors.lightBrown};
-            }
-            .slider.brown::-webkit-slider-thumb {
-                background-color: ${Colors.brown};
-            }      
-            .slider.brown::-moz-range-thumb {
-                background-color: ${Colors.brown};
-            }
-            .slider.dark-brown::-webkit-slider-thumb {
-                background-color: ${Colors.darkBrown};
-            }      
-            .slider.dark-brown::-moz-range-thumb {
-                background-color: ${Colors.darkBrown};
-            }
-            .slider.pastel-pink::-webkit-slider-thumb {
-                background-color: ${Colors.pastelPink};
-            }      
-            .slider.pastel-pink::-moz-range-thumb {
-                background-color: ${Colors.pastelPink};
-            }
-            .slider.pastel-orange::-webkit-slider-thumb {
-                background-color: ${Colors.pastelOrange};
-            }      
-            .slider.pastel-orange::-moz-range-thumb {
-                background-color: ${Colors.pastelOrange};
-            }
-            .slider.pastel-yellow::-webkit-slider-thumb {
-                background-color: ${Colors.pastelYellow};
-            }      
-            .slider.pastel-yellow::-moz-range-thumb {
-                background-color: ${Colors.pastelYellow};
-            }
-            .slider.pastel-green::-webkit-slider-thumb {
-                background-color: ${Colors.pastelGreen};
-            }      
-            .slider.pastel-green::-moz-range-thumb {
-                background-color: ${Colors.pastelGreen};
-            }
-            .slider.pastel-blue::-webkit-slider-thumb {
-                background-color: ${Colors.pastelBlue};
-            }      
-            .slider.pastel-blue::-moz-range-thumb {
-                background-color: ${Colors.pastelBlue};
-            }
-            .slider.pastel-purple::-webkit-slider-thumb {
-                background-color: ${Colors.pastelPurple};
-            }      
-            .slider.pastel-purple::-moz-range-thumb {
-                background-color: ${Colors.pastelPurple};
-            }
-            .slider.light-blue::-webkit-slider-thumb {
-                background-color: ${Colors.lightBlue};
-            }      
-            .slider.light-blue::-moz-range-thumb {
-                background-color: ${Colors.lightBlue};
-            }
-            .slider.pink::-webkit-slider-thumb {
-                background-color: ${Colors.pink};
-            }      
-            .slider.pink::-moz-range-thumb {
-                background-color: ${Colors.pink};
-            }
+                #dropdown-container.right {
+                    right: 0;
+                    margin-right: 2px; // TODO: update to fit dev specified canvas border width
+                }
+                #dropdown-container.vertical-orientation.right {
+                    margin-right: 54px; // TODO: update to fit dev specified canvas border width
+                }
+                #dropdown-container.vertical-center {
+                    top: 100%;
+                }
+                #dropdown-container.vertical-orientation.vertical-center {
+                    top: 0;
+                }
+                #dropdown-container.bottom {
+                    bottom: 0;
+                    margin-top: 0;
+                    margin-bottom: 56px; // TODO: update to fit dev specified canvas border width
+                }
+                #dropdown-container.vertical-orientation.bottom {
+                    margin-bottom: 4px;
+                }
+                // @media screen and (max-width: 400px) {
+                //     #dropdown-container {
+                //         width: 270px;
+                //     }
+                //     #dropdown-container.vertical-orientation {
+                //         width: 220px;
+                //     }
+                // }
+                .ink-dropdown {
+                    display: none;
+                    padding: 10px;
+                    padding-bottom: 15px;
+                    font-family: sans-serif;
+                    font-size: 16px;
+                }
+                .ink-dropdown.show {
+                    display: block;
+                }
+                .palette {
+                    display: none;
+                    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                    grid-auto-rows: minmax(25px, auto);
+                    justify-items: center;
+                    align-items: center;
+                    justify-content: center;
+                    align-content: center;
+                    border: 5px solid transparent;
+                }
+                .palette.show {
+                    display: grid;
+                }
+                .circle {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    box-sizing: border-box;
+                    border: 2px solid ${Colors.colorPaletteBackground};
+                    margin: 7px;
+                    transition: all 0.1s ease;
+                }
+                .circle:hover {
+                    border: 2px solid ${Colors.red}; /* this color should be overridden by proper color class below */
+                    transition: all 0.1s ease;
+                }
+                .circle:hover.black {
+                    border-color: ${Colors.black};
+                }
+                .circle:hover.white {
+                    border-color: ${Colors.white};
+                }
+                .circle:hover.silver {
+                    border-color: ${Colors.silver};
+                }
+                .circle:hover.gray {
+                    border-color: ${Colors.gray};
+                }
+                .circle:hover.dark-gray {
+                    border-color: ${Colors.darkGray};
+                }
+                .circle:hover.charcoal {
+                    border-color: ${Colors.charcoal};
+                }
+                .circle:hover.magenta {
+                    border-color: ${Colors.magenta};
+                }
+                .circle:hover.red {
+                    border-color: ${Colors.red};
+                }
+                .circle:hover.red-orange {
+                    border-color: ${Colors.redOrange};
+                }
+                .circle:hover.orange {
+                    border-color: ${Colors.orange};
+                }
+                .circle:hover.gold {
+                    border-color: ${Colors.gold};
+                }
+                .circle:hover.yellow {
+                    border-color: ${Colors.yellow};
+                }
+                .circle:hover.grass-green {
+                    border-color: ${Colors.grassGreen};
+                }
+                .circle:hover.green {
+                    border-color: ${Colors.green};
+                }
+                .circle:hover.dark-green {
+                    border-color: ${Colors.darkGreen};
+                }
+                .circle:hover.teal {
+                    border-color: ${Colors.teal};
+                }
+                .circle:hover.blue {
+                    border-color: ${Colors.blue};
+                }
+                .circle:hover.indigo {
+                    border-color: ${Colors.indigo};
+                }
+                .circle:hover.violet {
+                    border-color: ${Colors.violet};
+                }
+                .circle:hover.purple {
+                    border-color: ${Colors.purple};
+                }
+                .circle:hover.beige {
+                    border-color: ${Colors.beige};
+                }
+                .circle:hover.light-brown {
+                    border-color: ${Colors.lightBrown};
+                }
+                .circle:hover.brown {
+                    border-color: ${Colors.brown};
+                }
+                .circle:hover.dark-brown {
+                    border-color: ${Colors.darkBrown};
+                }
+                .circle:hover.pastel-pink {
+                    border-color: ${Colors.pastelPink};
+                }
+                .circle:hover.pastel-orange {
+                    border-color: ${Colors.pastelOrange};
+                }
+                .circle:hover.pastel-yellow {
+                    border-color: ${Colors.pastelYellow};
+                }
+                .circle:hover.pastel-green {
+                    border-color: ${Colors.pastelGreen};
+                }
+                .circle:hover.pastel-blue {
+                    border-color: ${Colors.pastelBlue};
+                }
+                .circle:hover.pastel-purple {
+                    border-color: ${Colors.pastelPurple};
+                }
+                .circle:hover.light-blue {
+                    border-color: ${Colors.lightBlue};
+                }
+                .circle:hover.pink {
+                    border-color: ${Colors.pink};
+                }
+                .circle.clicked, .circle.clicked:hover {
+                    border: 2px solid ${Colors.colorPaletteBackground};
+                    box-shadow: 0px 0px 0px 2px black;
+                    transition: all 0.2s ease;
+                }
+                .circle.black {                
+                    background-color: ${Colors.black};
+                }            
+                .circle.white {              
+                    background-color: ${Colors.white};
+                }
+                .circle.silver {            
+                    background-color: ${Colors.silver};
+                }
+                .circle.gray {            
+                    background-color: ${Colors.gray};
+                }
+                .circle.dark-gray {               
+                    background-color: ${Colors.darkGray};
+                }
+                .circle.charcoal {               
+                    background-color: ${Colors.charcoal};
+                }
+                .circle.magenta {              
+                    background-color: ${Colors.magenta};
+                }
+                .circle.red {
+                    background-color: ${Colors.red};
+                }
+                .circle.red-orange {
+                    background-color: ${Colors.redOrange};
+                }
+                .circle.orange {
+                    background-color: ${Colors.orange};
+                }
+                .circle.gold {
+                    background-color: ${Colors.gold};
+                }
+                .circle.yellow {
+                    background-color: ${Colors.yellow};
+                }
+                .circle.grass-green {
+                    background-color: ${Colors.grassGreen};
+                }
+                .circle.green {
+                    background-color: ${Colors.green};
+                }
+                .circle.dark-green {
+                    background-color: ${Colors.darkGreen};
+                }
+                .circle.teal {
+                    background-color: ${Colors.teal};
+                }
+                .circle.blue {
+                    background-color: ${Colors.blue};
+                }
+                .circle.indigo {
+                    background-color: ${Colors.indigo};
+                }
+                .circle.violet {
+                    background-color: ${Colors.violet};
+                }
+                .circle.purple {
+                    background-color: ${Colors.purple};
+                }
+                .circle.beige {
+                    background-color: ${Colors.beige};
+                }
+                .circle.light-brown {
+                    background-color: ${Colors.lightBrown};
+                }
+                .circle.brown {
+                    background-color: ${Colors.brown};
+                }
+                .circle.dark-brown {
+                    background-color: ${Colors.darkBrown};
+                }
+                .circle.pastel-pink {
+                    background-color: ${Colors.pastelPink};
+                }
+                .circle.pastel-orange {
+                    background-color: ${Colors.pastelOrange};
+                }
+                .circle.pastel-yellow {
+                    background-color: ${Colors.pastelYellow};
+                }
+                .circle.pastel-green {
+                    background-color: ${Colors.pastelGreen};
+                }
+                .circle.pastel-blue {
+                    background-color: ${Colors.pastelBlue};
+                }
+                .circle.pastel-purple {
+                    background-color: ${Colors.pastelPurple};
+                }
+                .circle.light-blue {
+                    background-color: ${Colors.lightBlue};
+                }
+                .circle.pink {
+                    background-color: ${Colors.pink};
+                }
+                .sineCanvas {
+                    height: 100px;
+                    width: 100%;
+                    max-height: 150px;
+                    background-color: transparent;
+                    padding-left: 0;
+                    padding-right: 0;
+                    padding-bottom: 17px; /* TODO: find better to prevent slider cutoff */
+                    margin-left: auto;
+                    margin-right: auto;
+                    display: none;
+                }
+                .sineCanvas.show {
+                    display: block;
+                }
+                .checkbox-label {
+                    position: relative;
+                    display: block;
+                    width: 65px;
+                    height: 30px;
+                }
+                .checkbox-label input {
+                    display: none;
+                }
+                .checkbox-label-text {
+                    position: relative;
+                    top: 7px;
+                    margin-left: 75px;
+                    white-space: nowrap;
+                }
+                .checkbox-track {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    left: 0;
+                    background: ${Colors.darkGray};
+                    border-radius: 20px;
+                    transition: all 0.2s ease;
+                    color: ${Colors.white};
+                }
+                .checkbox-track::after {
+                    position: absolute;
+                    content: "";
+                    width: 20px;
+                    height: 20px;
+                    background-color: ${Colors.white};
+                    border-radius: 50%;
+                    border: 4px solid ${Colors.darkGray};
+                    top: 1px;
+                    left: 1px;
+                    transition: all 0.2s ease;
+                }
+                input:checked + .checkbox-track.white::after {
+                    background-color: ${Colors.silver};
+                    border-color: ${Colors.white};
+                }
+                .checkbox-track.black::after {
+                    border-color: ${Colors.black};
+                }
+                .checkbox-track.silver::after {
+                    border-color: ${Colors.silver};
+                }
+                .checkbox-track.gray::after {
+                    border-color: ${Colors.gray};
+                }
+                .checkbox-track.dark-gray::after {
+                    border-color: ${Colors.darkGray};
+                }
+                .slider-checkbox-track.charcoal::after {
+                    border-color: ${Colors.charcoal};
+                }
+                .checkbox-track.magenta::after {
+                    border-color: ${Colors.magenta};
+                }
+                .checkbox-track.red::after {
+                    border-color: ${Colors.red};
+                }
+                .checkbox-track.red-orange::after {
+                    border-color: ${Colors.redOrange};
+                }
+                .checkbox-track.orange::after {
+                    border-color: ${Colors.orange};
+                }
+                .checkbox-track.gold::after {
+                    border-color: ${Colors.gold};
+                }
+                .checkbox-track.yellow::after {
+                    border-color: ${Colors.yellow};
+                }
+                .checkbox-track.grass-green::after {
+                    border-color: ${Colors.grassGreen};
+                }
+                .checkbox-track.green::after {
+                    border-color: ${Colors.green};
+                }
+                .checkbox-track.dark-green::after {
+                    border-color: ${Colors.darkGreen};
+                }
+                .checkbox-track.teal::after {
+                    border-color: ${Colors.teal};
+                }
+                .checkbox-track.blue::after {
+                    border-color: ${Colors.blue};
+                }
+                .checkbox-track.indigo::after {
+                    border-color: ${Colors.indigo};
+                }
+                .checkbox-track.purple::after {
+                    border-color: ${Colors.purple};
+                }
+                .checkbox-track.violet::after {
+                    border-color: ${Colors.violet};
+                }
+                .checkbox-track.beige::after {
+                    border-color: ${Colors.beige};
+                }
+                .checkbox-track.light-brown::after {
+                    border-color: ${Colors.lightBrown};
+                }
+                .checkbox-track.brown::after {
+                    border-color: ${Colors.brown};
+                }
+                .checkbox-track.dark-brown::after {
+                    border-color: ${Colors.darkBrown};
+                }
+                .checkbox-track.pastel-pink::after {
+                    border-color: ${Colors.pastelPink};
+                }
+                .checkbox-track.pastel-orange::after {
+                    border-color: ${Colors.pastelOrange};
+                }
+                .checkbox-track.pastel-yellow::after {
+                    border-color: ${Colors.pastelYellow};
+                }
+                .checkbox-track.pastel-green::after {
+                    border-color: ${Colors.pastelGreen};
+                }
+                .checkbox-track.pastel-blue::after {
+                    border-color: ${Colors.pastelBlue};
+                }
+                .checkbox-track.pastel-purple::after {
+                    border-color: ${Colors.pastelPurple};
+                }
+                .checkbox-track.light-blue::after {
+                    border-color: ${Colors.lightBlue};
+                }
+                .checkbox-track.pink::after {
+                    border-color: ${Colors.pink};
+                }
+                input:checked + .checkbox-track {
+                    background-color: ${Colors.darkGreen};
+                }
+                input:checked + .checkbox-track.black {
+                    background-color: ${Colors.black};
+                    border-color: ${Colors.black};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.white {
+                    background-color: ${Colors.white};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.silver {
+                    background-color: ${Colors.silver};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.gray {
+                    background-color: ${Colors.gray};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.dark-gray {
+                    background-color: ${Colors.darkGray};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.charcoal {
+                    background-color: ${Colors.charcoal};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.magenta {
+                    background-color: ${Colors.magenta};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.red {
+                    background-color: ${Colors.red};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.red-orange {
+                    background-color: ${Colors.redOrange};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.orange {
+                    background-color: ${Colors.orange};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.gold {
+                    background-color: ${Colors.gold};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.yellow {
+                    background-color: ${Colors.yellow};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.grass-green {
+                    background-color: ${Colors.grassGreen};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.green {
+                    background-color: ${Colors.green};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.dark-green {
+                    background-color: ${Colors.darkGreen};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.teal {
+                    background-color: ${Colors.teal};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.blue {
+                    background-color: ${Colors.blue};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.indigo {
+                    background-color: ${Colors.indigo};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.purple {
+                    background-color: ${Colors.purple};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.violet {
+                    background-color: ${Colors.violet};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.beige {
+                    background-color: ${Colors.beige};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.light-brown {
+                    background-color: ${Colors.lightBrown};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.brown {
+                    background-color: ${Colors.brown};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.dark-brown {
+                    background-color: ${Colors.darkBrown};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track.pastel-pink {
+                    background-color: ${Colors.pastelPink};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pastel-orange {
+                    background-color: ${Colors.pastelOrange};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pastel-yellow {
+                    background-color: ${Colors.pastelYellow};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pastel-green {
+                    background-color: ${Colors.pastelGreen};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pastel-blue {
+                    background-color: ${Colors.pastelBlue};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pastel-purple {
+                    background-color: ${Colors.pastelPurple};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.light-blue {
+                    background-color: ${Colors.lightBlue};
+                    color: ${Colors.black};
+                }
+                input:checked + .checkbox-track.pink {
+                    background-color: ${Colors.pink};
+                    color: ${Colors.white};
+                }
+                input:checked + .checkbox-track:before {
+                    top: 5px;
+                }
+                input:checked + .checkbox-track:after {
+                    transform: translateX(35px);
+                }
+                .on-text {
+                    position: absolute;
+                    top: 9px;
+                    left: 12px;
+                    font-size: 12px;
+                    display: none;
+                }
+                .on-text.show {
+                    display: inline;
+                }
+                .off-text {
+                    position: absolute;
+                    top: 9px;
+                    left: 30px;
+                    font-size: 12px; 
+                    display: none;
+                }
+                .off-text.show {
+                    display: inline;
+                }
+                input[type="range" i] {
+                    margin: auto;
+                }
+                .slider-container {
+                    width: 100%;
+                    padding-bottom: 8px;
+                }
+                .slider {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 100%;
+                    height: 2px;
+                    margin-bottom: 10px;
+                    background-color: gray;
+                    outline: none;
+                    opacity: 0.7;
+                    -webkit-transition: .2s;
+                    transition: opacity .2s;
+                    display: none;
+                }
+                .slider.show {
+                    display: inline-block;
+                }
+                .slider:hover {
+                    opacity: 1;
+                }
+                /* prevent Firefox from adding extra styling on focused slider */
+                input[type=range]::-moz-focus-outer {
+                    border: 0;
+                }
+                .slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 10px;
+                    height: 25px;
+                    border-radius: 5px;
+                    border: none;
+                    cursor: pointer;
+                }
+                .slider::-moz-range-thumb {
+                    width: 10px;
+                    height: 25px;
+                    border: none;
+                    cursor: pointer;
+                }
+                .slider.black::-webkit-slider-thumb {
+                    background-color: ${Colors.black};
+                }  
+                .slider.black::-moz-range-thumb {
+                    background-color: ${Colors.black};
+                }
+                .slider.white::-webkit-slider-thumb {
+                    background-color: ${Colors.white};
+                }        
+                .slider.white::-moz-range-thumb {
+                    background-color: ${Colors.white};
+                }
+                .slider.silver::-webkit-slider-thumb {
+                    background-color: ${Colors.silver};
+                }             
+                .slider.silver::-moz-range-thumb {
+                    background-color: ${Colors.silver};
+                }
+                .slider.gray::-webkit-slider-thumb {
+                    background-color: ${Colors.gray};
+                }               
+                .slider.gray::-moz-range-thumb {
+                    background-color: ${Colors.gray};
+                }
+                .slider.dark-gray::-webkit-slider-thumb {
+                    background-color: ${Colors.darkGray};
+                }              
+                .slider.dark-gray::-moz-range-thumb {
+                    background-color: ${Colors.darkGray};
+                }
+                .slider.charcoal::-webkit-slider-thumb {
+                    background-color: ${Colors.charcoal};
+                }      
+                .slider.charcoal::-moz-range-thumb {
+                    background-color: ${Colors.charcoal};
+                }
+                .slider.magenta::-webkit-slider-thumb {
+                    background-color: ${Colors.magenta};
+                }    
+                .slider.magenta::-moz-range-thumb {
+                    background-color: ${Colors.magenta};
+                }
+                .slider.red::-webkit-slider-thumb {
+                    background-color: ${Colors.red};
+                }    
+                .slider.red::-moz-range-thumb {
+                    background-color: ${Colors.red};
+                }
+                .slider.red-orange::-webkit-slider-thumb {
+                    background-color: ${Colors.redOrange};
+                }            
+                .slider.red-orange::-moz-range-thumb {
+                    background-color: ${Colors.redOrange};
+                }
+                .slider.orange::-webkit-slider-thumb {
+                    background-color: ${Colors.orange};
+                }      
+                .slider.orange::-moz-range-thumb {
+                    background-color: ${Colors.orange};
+                }
+                .slider.gold::-webkit-slider-thumb {
+                    background-color: ${Colors.gold};
+                }      
+                .slider.gold::-moz-range-thumb {
+                    background-color: ${Colors.gold};
+                }
+                .slider.yellow::-webkit-slider-thumb {
+                    background-color: ${Colors.yellow};
+                }      
+                .slider.yellow::-moz-range-thumb {
+                    background-color: ${Colors.yellow};
+                }
+                .slider.grass-green::-webkit-slider-thumb {
+                    background-color: ${Colors.grassGreen};
+                }      
+                .slider.grass-green::-moz-range-thumb {
+                    background-color: ${Colors.grassGreen};
+                }            
+                .slider.green::-webkit-slider-thumb {
+                    background-color: ${Colors.green};
+                }      
+                .slider.green::-moz-range-thumb {
+                    background-color: ${Colors.green};
+                }            
+                .slider.dark-green::-webkit-slider-thumb {
+                    background-color: ${Colors.darkGreen};
+                }      
+                .slider.dark-green::-moz-range-thumb {
+                    background-color: ${Colors.darkGreen};
+                }            
+                .slider.teal::-webkit-slider-thumb {
+                    background-color: ${Colors.teal};
+                }      
+                .slider.teal::-moz-range-thumb {
+                    background-color: ${Colors.teal};
+                }            
+                .slider.blue::-webkit-slider-thumb {
+                    background-color: ${Colors.blue};
+                }      
+                .slider.blue::-moz-range-thumb {
+                    background-color: ${Colors.blue};
+                }            
+                .slider.indigo::-webkit-slider-thumb {
+                    background-color: ${Colors.indigo};
+                }      
+                .slider.indigo::-moz-range-thumb {
+                    background-color: ${Colors.indigo};
+                }
+                .slider.violet::-webkit-slider-thumb {
+                    background-color: ${Colors.violet};
+                }      
+                .slider.violet::-moz-range-thumb {
+                    background-color: ${Colors.violet};
+                }
+                .slider.purple::-webkit-slider-thumb {
+                    background-color: ${Colors.purple};
+                }      
+                .slider.purple::-moz-range-thumb {
+                    background-color: ${Colors.purple};
+                }
+                .slider.beige::-webkit-slider-thumb {
+                    background-color: ${Colors.beige};
+                }      
+                .slider.beige::-moz-range-thumb {
+                    background-color: ${Colors.beige};
+                }
+                .slider.light-brown::-webkit-slider-thumb {
+                    background-color: ${Colors.lightBrown};
+                }      
+                .slider.light-brown::-moz-range-thumb {
+                    background-color: ${Colors.lightBrown};
+                }
+                .slider.brown::-webkit-slider-thumb {
+                    background-color: ${Colors.brown};
+                }      
+                .slider.brown::-moz-range-thumb {
+                    background-color: ${Colors.brown};
+                }
+                .slider.dark-brown::-webkit-slider-thumb {
+                    background-color: ${Colors.darkBrown};
+                }      
+                .slider.dark-brown::-moz-range-thumb {
+                    background-color: ${Colors.darkBrown};
+                }
+                .slider.pastel-pink::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelPink};
+                }      
+                .slider.pastel-pink::-moz-range-thumb {
+                    background-color: ${Colors.pastelPink};
+                }
+                .slider.pastel-orange::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelOrange};
+                }      
+                .slider.pastel-orange::-moz-range-thumb {
+                    background-color: ${Colors.pastelOrange};
+                }
+                .slider.pastel-yellow::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelYellow};
+                }      
+                .slider.pastel-yellow::-moz-range-thumb {
+                    background-color: ${Colors.pastelYellow};
+                }
+                .slider.pastel-green::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelGreen};
+                }      
+                .slider.pastel-green::-moz-range-thumb {
+                    background-color: ${Colors.pastelGreen};
+                }
+                .slider.pastel-blue::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelBlue};
+                }      
+                .slider.pastel-blue::-moz-range-thumb {
+                    background-color: ${Colors.pastelBlue};
+                }
+                .slider.pastel-purple::-webkit-slider-thumb {
+                    background-color: ${Colors.pastelPurple};
+                }      
+                .slider.pastel-purple::-moz-range-thumb {
+                    background-color: ${Colors.pastelPurple};
+                }
+                .slider.light-blue::-webkit-slider-thumb {
+                    background-color: ${Colors.lightBlue};
+                }      
+                .slider.light-blue::-moz-range-thumb {
+                    background-color: ${Colors.lightBlue};
+                }
+                .slider.pink::-webkit-slider-thumb {
+                    background-color: ${Colors.pink};
+                }      
+                .slider.pink::-moz-range-thumb {
+                    background-color: ${Colors.pink};
+                }
 
-            /* change tool color on selection (horizontal orientation) */
-
-            button.clicked.black.horizontal-orientation {
-                border-bottom-color: ${Colors.black};
-                box-shadow: 0 3px 0px 0px ${Colors.black};
-            }  
-            button.clicked.white.horizontal-orientation {
-                border-bottom-color: ${Colors.white};
-                box-shadow: 0 3px 0px 0px ${Colors.white};
-            }        
-            button.clicked.silver.horizontal-orientation {
-                border-bottom-color: ${Colors.silver};
-                box-shadow: 0 3px 0px 0px ${Colors.silver};
-            }             
-            button.clicked.gray.horizontal-orientation {
-                border-bottom-color: ${Colors.gray};
-                box-shadow: 0 3px 0px 0px ${Colors.gray};
-            }               
-            button.clicked.dark-gray.horizontal-orientation {
-                border-bottom-color: ${Colors.darkGray};
-                box-shadow: 0 3px 0px 0px ${Colors.darkGray};
-            }              
-            button.clicked.charcoal.horizontal-orientation {
-                border-bottom-color: ${Colors.charcoal};
-                box-shadow: 0 3px 0px 0px ${Colors.charcoal};
-            }      
-            button.clicked.magenta.horizontal-orientation {
-                border-bottom-color: ${Colors.magenta};
-                box-shadow: 0 3px 0px 0px ${Colors.magenta};
-            }    
-            button.clicked.red.horizontal-orientation {
-                border-bottom-color: ${Colors.red};
-                box-shadow: 0 3px 0px 0px ${Colors.red};
-            }    
-            button.clicked.red-orange.horizontal-orientation {
-                border-bottom-color: ${Colors.redOrange};
-                box-shadow: 0 3px 0px 0px ${Colors.redOrange};
-            }            
-            button.clicked.orange.horizontal-orientation {
-                border-bottom-color: ${Colors.orange};
-                box-shadow: 0 3px 0px 0px ${Colors.orange};
-            }      
-            button.clicked.gold.horizontal-orientation {
-                border-bottom-color: ${Colors.gold};
-                box-shadow: 0 3px 0px 0px ${Colors.orange};
-            }      
-            button.clicked.yellow.horizontal-orientation {
-                border-bottom-color: ${Colors.yellow};
-                box-shadow: 0 3px 0px 0px ${Colors.yellow};
-            }      
-            button.clicked.grass-green.horizontal-orientation {
-                border-bottom-color: ${Colors.grassGreen};
-                box-shadow: 0 3px 0px 0px ${Colors.grassGreen};
-            }               
-            button.clicked.green.horizontal-orientation {
-                border-bottom-color: ${Colors.green};
-                box-shadow: 0 3px 0px 0px ${Colors.green};
-            }                
-            button.clicked.dark-green.horizontal-orientation {
-                border-bottom-color: ${Colors.darkGreen};
-                box-shadow: 0 3px 0px 0px ${Colors.darkGreen};
-            }                
-            button.clicked.teal.horizontal-orientation {
-                border-bottom-color: ${Colors.teal};
-                box-shadow: 0 3px 0px 0px ${Colors.teal};
-            }                 
-            button.clicked.blue.horizontal-orientation {
-                border-bottom-color: ${Colors.blue};
-                box-shadow: 0 3px 0px 0px ${Colors.blue};
-            }                 
-            button.clicked.indigo.horizontal-orientation {
-                border-bottom-color: ${Colors.indigo};
-                box-shadow: 0 3px 0px 0px ${Colors.indigo};
-            }      
-            button.clicked.violet.horizontal-orientation {
-                border-bottom-color: ${Colors.violet};
-                box-shadow: 0 3px 0px 0px ${Colors.violet};
-            }      
-            button.clicked.purple.horizontal-orientation {
-                border-bottom-color: ${Colors.purple};
-                box-shadow: 0 3px 0px 0px ${Colors.purple};
-            }      
-            button.clicked.beige.horizontal-orientation {
-                border-bottom-color: ${Colors.beige};
-                box-shadow: 0 3px 0px 0px ${Colors.beige};
-            }      
-            button.clicked.light-brown.horizontal-orientation {
-                border-bottom-color: ${Colors.lightBrown};
-                box-shadow: 0 3px 0px 0px ${Colors.lightBrown};
-            }      
-            button.clicked.brown.horizontal-orientation {
-                border-bottom-color: ${Colors.brown};
-                box-shadow: 0 3px 0px 0px ${Colors.brown};
-            }      
-            button.clicked.dark-brown.horizontal-orientation {
-                border-bottom-color: ${Colors.darkBrown};
-                box-shadow: 0 3px 0px 0px ${Colors.darkBrown};
-            }      
-            button.clicked.pastel-pink.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelPink};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelPink};
-            }      
-            button.clicked.pastel-orange.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelOrange};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelOrange};
-            }      
-            button.clicked.pastel-yellow.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelYellow};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelYellow};
-            }      
-            button.clicked.pastel-green.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelGreen};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelGreen};
-            }      
-            button.clicked.pastel-blue.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelBlue};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelBlue};
-            }      
-            button.clicked.pastel-purple.horizontal-orientation {
-                border-bottom-color: ${Colors.pastelPurple};
-                box-shadow: 0 3px 0px 0px ${Colors.pastelPurple};
-            }         
-            button.clicked.light-blue.horizontal-orientation {
-                border-bottom-color: ${Colors.lightBlue};
-                box-shadow: 0 3px 0px 0px ${Colors.lightBlue};
-            }      
-            button.clicked.pink.horizontal-orientation {
-                border-bottom-color: ${Colors.pink};
-                box-shadow: 0 3px 0px 0px ${Colors.pink};
-            }
-
-            /* change tool color on selection (vertical orientation) */
-
-            button.clicked.black.vertical-orientation {
-                border-right-color: ${Colors.black};
-                box-shadow: 3px 0px 0px 0px ${Colors.black};
-            }  
-            button.clicked.white.vertical-orientation {
-                border-right-color: ${Colors.white};
-                box-shadow: 3px 0px 0px 0px ${Colors.white};
-            }        
-            button.clicked.silver.vertical-orientation {
-                border-right-color: ${Colors.silver};
-                box-shadow: 3px 0px 0px 0px ${Colors.silver};
-            }             
-            button.clicked.gray.vertical-orientation {
-                border-right-color: ${Colors.gray};
-                box-shadow: 3px 0px 0px 0px ${Colors.gray};
-            }               
-            button.clicked.dark-gray.vertical-orientation {
-                border-right-color: ${Colors.darkGray};
-                box-shadow: 3px 0px 0px 0px ${Colors.darkGray};
-            }              
-            button.clicked.charcoal.vertical-orientation {
-                border-right-color: ${Colors.charcoal};
-                box-shadow: 3px 0px 0px 0px ${Colors.charcoal};
-            }      
-            button.clicked.magenta.vertical-orientation {
-                border-right-color: ${Colors.magenta};
-                box-shadow: 3px 0px 0px 0px ${Colors.magenta};
-            }    
-            button.clicked.red.vertical-orientation {
-                border-right-color: ${Colors.red};
-                box-shadow: 3px 0px 0px 0px ${Colors.red};
-            }    
-            button.clicked.red-orange.vertical-orientation {
-                border-right-color: ${Colors.redOrange};
-                box-shadow: 3px 0px 0px 0px ${Colors.redOrange};
-            }            
-            button.clicked.orange.vertical-orientation {
-                border-right-color: ${Colors.orange};
-                box-shadow: 3px 0px 0px 0px ${Colors.orange};
-            }      
-            button.clicked.gold.vertical-orientation {
-                border-right-color: ${Colors.gold};
-                box-shadow: 3px 0px 0px 0px ${Colors.gold};
-            }      
-            button.clicked.yellow.vertical-orientation {
-                border-right-color: ${Colors.yellow};
-                box-shadow: 3px 0px 0px 0px ${Colors.yellow};
-            }      
-            button.clicked.grass-green.vertical-orientation {
-                border-right-color: ${Colors.grassGreen};
-                box-shadow: 3px 0px 0px 0px ${Colors.grassGreen};
-            }               
-            button.clicked.green.vertical-orientation {
-                border-right-color: ${Colors.green};
-                box-shadow: 3px 0px 0px 0px ${Colors.green};
-            }                
-            button.clicked.dark-green.vertical-orientation {
-                border-right-color: ${Colors.darkGreen};
-                box-shadow: 3px 0px 0px 0px ${Colors.darkGreen};
-            }                
-            button.clicked.teal.vertical-orientation {
-                border-right-color: ${Colors.teal};
-                box-shadow: 3px 0px 0px 0px ${Colors.teal};
-            }                 
-            button.clicked.blue.vertical-orientation {
-                border-right-color: ${Colors.blue};
-                box-shadow: 3px 0px 0px 0px ${Colors.blue};
-            }                 
-            button.clicked.indigo.vertical-orientation {
-                border-right-color: ${Colors.indigo};
-                box-shadow: 3px 0px 0px 0px ${Colors.indigo};
-            }      
-            button.clicked.violet.vertical-orientation {
-                border-right-color: ${Colors.violet};
-                box-shadow: 3px 0px 0px 0px ${Colors.violet};
-            }      
-            button.clicked.purple.vertical-orientation {
-                border-right-color: ${Colors.purple};
-                box-shadow: 3px 0px 0px 0px ${Colors.purple};
-            }      
-            button.clicked.beige.vertical-orientation {
-                border-right-color: ${Colors.beige};
-                box-shadow: 3px 0px 0px 0px ${Colors.beige};
-            }      
-            button.clicked.light-brown.vertical-orientation {
-                border-right-color: ${Colors.lightBrown};
-                box-shadow: 3px 0px 0px 0px ${Colors.lightBrown};
-            }      
-            button.clicked.brown.vertical-orientation {
-                border-right-color: ${Colors.brown};
-                box-shadow: 3px 0px 0px 0px ${Colors.brown};
-            }      
-            button.clicked.dark-brown.vertical-orientation {
-                border-right-color: ${Colors.darkBrown};
-                box-shadow: 3px 0px 0px 0px ${Colors.darkBrown};
-            }      
-            button.clicked.pastel-pink.vertical-orientation {
-                border-right-color: ${Colors.pastelPink};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelPink};
-            }      
-            button.clicked.pastel-orange.vertical-orientation {
-                border-right-color: ${Colors.pastelOrange};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelOrange};
-            }      
-            button.clicked.pastel-yellow.vertical-orientation {
-                border-right-color: ${Colors.pastelYellow};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelYellow};
-            }      
-            button.clicked.pastel-green.vertical-orientation {
-                border-right-color: ${Colors.pastelGreen};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelGreen};
-            }      
-            button.clicked.pastel-blue.vertical-orientation {
-                border-right-color: ${Colors.pastelBlue};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelBlue};
-            }      
-            button.clicked.pastel-purple.vertical-orientation {
-                border-right-color: ${Colors.pastelPurple};
-                box-shadow: 3px 0px 0px 0px ${Colors.pastelPurple};
-            }         
-            button.clicked.light-blue.vertical-orientation {
-                border-right-color: ${Colors.lightBlue};
-                box-shadow: 3px 0px 0px 0px ${Colors.lightBlue};
-            }      
-            button.clicked.pink.vertical-orientation {
-                border-right-color: ${Colors.pink};
-                box-shadow: 3px 0px 0px 0px ${Colors.pink};
-            }
-        `;
+                #snackbar {
+                    visibility: hidden;
+                    min-width: 250px;
+                    margin-left: -125px; /* Divide value of min-width by 2 */
+                    background-color: ${Colors.colorPaletteBackground};
+                    color: ${Colors.black};
+                    font-size: 16px;
+                    font-family: sans-serif;
+                    text-align: center;
+                    border-radius: 2px;
+                    padding: 16px;
+                    position: fixed;
+                    z-index: 1;
+                    left: 50%;
+                    bottom: 30px;
+                }          
+                #snackbar.show {
+                    visibility: visible;
+                    -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+                    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+                }
+                @-webkit-keyframes fadein {
+                    from {bottom: 0; opacity: 0;}
+                    to {bottom: 30px; opacity: 1;}
+                }
+                @keyframes fadein {
+                    from {bottom: 0; opacity: 0;}
+                    to {bottom: 30px; opacity: 1;}
+                }
+                @-webkit-keyframes fadeout {
+                    from {bottom: 30px; opacity: 1;}
+                    to {bottom: 0; opacity: 0;}
+                }
+                @keyframes fadeout {
+                    from {bottom: 30px; opacity: 1;}
+                    to {bottom: 0; opacity: 0;}
+                }
+            `,
+        ]
     }
 }
