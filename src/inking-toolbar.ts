@@ -69,22 +69,22 @@ export class InkingToolbar extends LitElement {
                     <slot @click="${this.clickedUtensil}"></slot>
                     <slot @click="${this.clickedUtensil}"></slot>
                     <div id="default-toolbar-selection">
-                        <button id="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="pen" name="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pen</span>
                         </button>
-                        <button id="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="pencil" name="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pencil</span>
                         </button>
-                        <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="highlighter" name="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Highlighter</span>
                         </button>
-                        <button id="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="eraser" name="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Eraser</span>
                         </button>
-                        <button id-"copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                        <button id="copy" name="copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
                             <span class="tooltip-text">Copy</span>
                         </button>
-                        <button id-"save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                        <button id="save" name="save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
                             <span class="tooltip-text">Save</span>
                         </button>
                     </div>
@@ -213,7 +213,7 @@ export class InkingToolbar extends LitElement {
                         <div class="slider-container">
                             <input type="range" min="1" max="48" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
-                        <button id="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
+                        <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
                 <div id="snackbar"></div>

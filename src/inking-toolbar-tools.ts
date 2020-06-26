@@ -6,7 +6,7 @@ import { InkingToolbar } from "./inking-toolbar";
 export class InkingToolbarPen extends LitElement {
     render() {
         return html`
-            <button part="button" id="pen" class="toolbar-icon pen-icon tooltip">
+            <button part="button" id="pen" name="pen" class="toolbar-icon pen-icon tooltip">
                 <span class="tooltip-text">Pen</span>
             </button>
         `;
@@ -32,7 +32,7 @@ export class InkingToolbarPen extends LitElement {
 export class InkingToolbarPencil extends LitElement {
     render() {
         return html`
-            <button part="button" id="pencil" class="toolbar-icon pencil-icon tooltip">
+            <button part="button" id="pencil" name="pencil" class="toolbar-icon pencil-icon tooltip">
                 <span class="tooltip-text">Pencil</span>
             </button>
         `;
@@ -58,7 +58,7 @@ export class InkingToolbarPencil extends LitElement {
 export class InkingToolbarHighlighter extends LitElement {
     render() {
         return html`
-            <button part="button" id="highlighter" class="toolbar-icon highlighter-icon tooltip">
+            <button part="button" id="highlighter" name="highlighter" class="toolbar-icon highlighter-icon tooltip">
                 <span class="tooltip-text">Highlighter</span>
             </button>
         `;
@@ -84,7 +84,7 @@ export class InkingToolbarHighlighter extends LitElement {
 export class InkingToolbarEraser extends LitElement {
     render() {
         return html`
-            <button part="button" id="eraser" class="toolbar-icon eraser-icon tooltip">
+            <button part="button" id="eraser" name="eraser" class="toolbar-icon eraser-icon tooltip">
                 <span class="tooltip-text">Eraser</span>
             </button>
         `;
@@ -110,7 +110,7 @@ export class InkingToolbarEraser extends LitElement {
 export class InkingToolbarCopy extends LitElement {
     render() {
         return html`
-            <button part="button" id-"copy" class="toolbar-icon copy-icon tooltip">
+            <button part="button" id="copy" name="copy" class="toolbar-icon copy-icon tooltip">
                 <span class="tooltip-text">Copy</span>
             </button>
         `;
@@ -136,7 +136,7 @@ export class InkingToolbarCopy extends LitElement {
 export class InkingToolbarSave extends LitElement {
     render() {
         return html`
-            <button part="button" id-"save" class="toolbar-icon save-icon tooltip">
+            <button part="button" id="save" name="save" class="toolbar-icon save-icon tooltip">
                 <span class="tooltip-text">Save</span>
             </button>
         `;
