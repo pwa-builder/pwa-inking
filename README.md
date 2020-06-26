@@ -4,7 +4,7 @@ A [web component](https://meowni.ca/posts/web-components-with-otters/) from the 
 
 _Built with [lit-element](https://lit-element.polymer-project.org/)_
 
-### What does it look like?
+## What does it look like?
 
 ![An image of what the component looks like](assets/images/example.png?raw=true "pwa-inking")
 
