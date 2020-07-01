@@ -25,29 +25,29 @@ There are two ways to use this component. For simple projects or just to get sta
 1. Add this script tag in the head of your index.html:
 
 ```html
-<script
-  type="module"
-  src="https://cdn.jsdelivr.net/npm/@pwabuilder/pwa-inking"
-></script>
+    <script
+        type="module"
+        src="https://cdn.jsdelivr.net/npm/@pwabuilder/pwa-inking"
+    ></script>
 ```
 
 ### NPM
 
 1. Run this command in your project directory:
 ```shell
-npm install @pwabuilder/pwa-inking
+    npm install @pwabuilder/pwa-inking
 ```
 
 2. Add this import statement to your script file:
 ```js
-import @pwabuilder/pwa-inking
+    import @pwabuilder/pwa-inking
 ```
 
 ## Adding the component to your code
 
 ### Canvas only
 
-You can use the element `<inking-canvas></inking-canvas>` anywhere in your template, JSX, html etc. By itself, you will get a blank, bordered canvas which you can control through its APIs (see [table](#inking-canvas) for details).
+You can use the element `<inking-canvas></inking-canvas>` anywhere in your template, JSX, html, etc. By itself, you will get a blank, bordered canvas which you can control through its APIs (see [table](#inking-canvas) for details).
 
 ```html
     <inking-canvas name="myInkingCanvas"></inking-canvas>
@@ -89,7 +89,7 @@ Available tool components (which can be added in any order):
 Example usage:
 
 ```html
-<inking-canvas name="myInkingCanvas">
+    <inking-canvas name="myInkingCanvas">
         <inking-toolbar canvas="myInkingCanvas" orientation="vertical" vertical="bottom" horizontal="right">
             <inking-toolbar-highlighter></inking-toolbar-highlighter>
             <inking-toolbar-pen></inking-toolbar-pen>
@@ -125,8 +125,8 @@ The stroke width regardless of pointer event type can be set and fixed through t
 | Property             | Attribute            | Description                                                                     | Type      | Default                                             |
 | -------------------- | -------------------- | ------------------------------------------------------------------------------- | --------- | --------------------------------------------------- |
 | `name`               | `name`               | Used to connect an inking toolbar                                               | `string`  | `""`                                                |
-| `canvasHeight`       | `height`             | Fills parent by default                                                         | `number`  | `-1`                                                |
-| `canvasWidth`        | `width`              | Fills parent by default                                                         | `number`  | `-1`                                                |
+| `canvasHeight`       | `height`             | Fills parent height default                                                         | `number`  | `-1`                                              |
+| `canvasWidth`        | `width`              | Fills parent width by default                                                       | `number`  | `-1`                                              |
 
 
 ### Methods

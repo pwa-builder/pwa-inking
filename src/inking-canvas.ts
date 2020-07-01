@@ -155,22 +155,24 @@ export class InkingCanvas extends LitElement {
 
     private async setUpCanvas() {
 
-        if (this.canvasHeight === -1) {
+        // set css canvas dimensions prior to setting logical canvas dimensions (including calling getBoundingClientRect())
+        if (this.isCanvasHeightSet()) {
+            this.canvas.style.height = this.canvasHeight + "px";
+            this.canvas.height = this.canvasHeight * devicePixelRatio;
+        } else {
             this.canvas.style.height = '100%';
-        } else {
-            this.canvas.height = this.canvasHeight;
         }
-        if (this.canvasWidth === -1) {
-            this.canvas.style.width = '100%';
+        if (this.isCanvasWidthSet()) {
+            this.canvas.style.width = this.canvasWidth + "px";
+            this.canvas.width = this.canvasWidth * devicePixelRatio;
         } else {
-            this.canvas.width = this.canvasWidth;
+            this.canvas.style.width = '100%';
         }
 
-        // support HiDPI screens
-        if (this.canvasHeight === -1 || this.canvasWidth === -1) {
+        if (!this.isCanvasHeightSet || !this.isCanvasWidthSet()) {
             let rect = this.canvas.getBoundingClientRect();
-            if (this.canvasHeight === -1) this.canvas.height = rect.height * devicePixelRatio;
-            if (this.canvasWidth === -1) this.canvas.width = rect.width * devicePixelRatio;
+            if (!this.isCanvasHeightSet()) this.canvas.height = rect.height * devicePixelRatio;
+            if (!this.isCanvasWidthSet()) this.canvas.width = rect.width * devicePixelRatio;
         }
 
         // record original canvas aspect ratio for resizing
@@ -183,6 +185,14 @@ export class InkingCanvas extends LitElement {
         Utils.runAsynchronously( () => { 
             this.drawCanvas();
         });
+    }
+
+    private isCanvasHeightSet() {
+        return this.canvasHeight > 0;
+    }
+
+    private isCanvasWidthSet() {
+        return this.canvasWidth > 0;
     }
 
     private async drawCanvas() {
@@ -222,17 +232,10 @@ export class InkingCanvas extends LitElement {
 
     private async clearCanvas() {
 
-        // support HiDPI screens
-        if (this.canvasHeight === -1 || this.canvasWidth === -1) {
-            let rect = this.canvas.getBoundingClientRect();
-            if (this.canvasHeight === -1) {
-                this.canvas.height = rect.height * devicePixelRatio;
-            }
-            if (this.canvasWidth === -1) {
-                this.canvas.width = rect.width * devicePixelRatio;
-            }
-            this.context.scale(devicePixelRatio, devicePixelRatio);
-        }
+        // record new height and width
+        let rect = this.canvas.getBoundingClientRect();
+        this.canvas.height = rect.height * devicePixelRatio;
+        this.canvas.width = rect.width * devicePixelRatio;
 
         // determine scale of contents to fit canvas
         this.scale = Math.min(this.canvas.width / this.currentAspectRatio.width,
