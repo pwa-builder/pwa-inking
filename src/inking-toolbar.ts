@@ -551,7 +551,11 @@ export class InkingToolbar extends LitElement {
             }
 
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
+
+            // TODO: find better way to scale strokeWidth based on different inking canvas and sine canvas aspect ratios
+            let aspectRatioCorrection = 1.15;
+
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() * aspectRatioCorrection;
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentStrokeColor();
 
@@ -588,12 +592,12 @@ export class InkingToolbar extends LitElement {
             // calibrate sine wave rotation calcuations to center results in canvas
             let rotationDegrees = 354;
             let offsetY = a/2 + (360 - rotationDegrees);
-            let offsetX = -4 * devicePixelRatio;
+            let offsetX = -5 * devicePixelRatio;
 
             let strokesDrawn = 0;
 
             // draw the sine wave until just before the canvas ends to avoid clipping off end
-            for(let i = strokeWidth/2; i < w - strokeWidth/2; i++){
+            for (let i = strokeWidth/2 + 1; i < w - strokeWidth/2 - 1; i++) {
 
                 this.sineContext.beginPath(); 
             
