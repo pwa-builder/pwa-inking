@@ -16,8 +16,13 @@ export class InkingToolbar extends LitElement {
     @query('#toolbar-container') private toolbarContainer: HTMLElement;
     @query('#tool-container') private toolContainer: HTMLElement;
     @property({type: NodeList}) private tools: Array<HTMLButtonElement>;
+    @query("#customized-toolbar-selection") private customizedToolbarSelection: HTMLDivElement;
     @query("#default-toolbar-selection") private defaultToolbarSelection: HTMLDivElement;
+    @property({type: Object}) private toolFocus = 0;
+    @property({type: Number}) private penPencilFocus = 0;
+    @property({type: Number}) private highlighterFocus = 0;
     @property({type: HTMLButtonElement}) private selectedTool: Element;
+    @property({type: CustomEvent}) private toolChangedEvent: CustomEvent = new CustomEvent("tool-changed");
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
     @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
     @query('.ink-dropdown') private inkDropdown: HTMLDivElement;
@@ -26,7 +31,7 @@ export class InkingToolbar extends LitElement {
     @query('#erase-all') private eraseAllBtn: HTMLButtonElement;
     @query('.pen-pencil.palette') private penPencilPalette: HTMLElement;
     @query('.highlighter.palette') private highlighterPalette: HTMLElement;
-    @query('#checkbox') private sliderCheckbox: HTMLInputElement;
+    @query('#use-slider-size') private sliderCheckbox: HTMLInputElement;
     @query('.checkbox-track') private sliderCheckboxTrack: HTMLInputElement;
     @query('.on-text') private onText: HTMLElement;
     @query('.off-text') private offText: HTMLElement;
@@ -62,152 +67,166 @@ export class InkingToolbar extends LitElement {
         return html `
             <div id="toolbar-container">
                 <div id="tool-container">
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <div id="default-toolbar-selection">
-                        <button id="pen" name="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                    <div id="customized-toolbar-selection" role="tablist" aria-label="inking toolbar">
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                    </div>
+                    <div id="default-toolbar-selection" role="tablist" aria-label="inking toolbar">
+                        <button id="pen" class="toolbar-icon pen-icon tooltip" 
+                        aria-label="pen" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pen</span>
                         </button>
-                        <button id="pencil" name="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="pencil" class="toolbar-icon pencil-icon tooltip" 
+                        aria-label="pencil" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pencil</span>
                         </button>
-                        <button id="highlighter" name="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" 
+                        aria-label="highlighter" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Highlighter</span>
                         </button>
-                        <button id="eraser" name="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="eraser" class="toolbar-icon eraser-icon tooltip" 
+                        aria-label="eraser" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Eraser</span>
                         </button>
-                        <button id="copy" name="copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                        <button aria-label="copy" id="copy" class="toolbar-icon copy-icon tooltip" 
+                        aria-label="copy" role="tab"
+                        @click="${this.clickedCopy}">
                             <span class="tooltip-text">Copy</span>
                         </button>
-                        <button id="save" name="save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                        <button id="save" class="toolbar-icon save-icon tooltip" 
+                        aria-label="save" role="tab"
+                        @click="${this.clickedSave}">
                             <span class="tooltip-text">Save</span>
                         </button>
                     </div>
                 </div>
-                <div id="dropdown-container">
+                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" dropdown" tabindex="0">
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
-                        <div class="pen-pencil palette">
-                            <div class="black circle tooltip" @click="${this.clickedColor}">
+                        <div class="pen-pencil palette" role="tablist">
+                            <button role="tab" tabindex="0" aria-pressed="-1" aria-label="black" class="black circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Black</span>
-                            </div>
-                            <div class="white circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="white" class="white circle tooltip" tabindex="0" @click="${this.clickedColor}">
                                 <span class="tooltip-text">White</span>
-                            </div>
-                            <div class="silver circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="silver" class="silver circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Silver</span> 
-                            </div>
-                            <div class="gray circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="gray" class="gray circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Gray</span> 
-                            </div>
-                            <div class="dark-gray circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-gray" class="dark-gray circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark gray</span> 
-                            </div>
-                            <div class="charcoal circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="charcoal" class="charcoal circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Charcoal</span> 
-                            </div>
-                            <div class="magenta circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="magenta" class="magenta circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Magenta</span> 
-                            </div>
-                            <div class="red circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red" class="red circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red</span> 
-                            </div>
-                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red-orange</span> 
-                            </div>
-                            <div class="orange circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="orange" class="orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Orange</span> 
-                            </div>
-                            <div class="gold circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="gold" class="gold circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Gold</span> 
-                            </div>
-                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Yellow</span> 
-                            </div>
-                            <div class="grass-green circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="grass-green" class="grass-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Grass green</span> 
-                            </div>
-                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="green" class="green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Green</span> 
-                            </div>
-                            <div class="dark-green circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-green" class="dark-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark green</span> 
-                            </div>
-                            <div class="teal circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="teal" class="teal circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Teal</span> 
-                            </div>
-                            <div class="blue circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="blue" class="blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Blue</span> 
-                            </div>
-                            <div class="indigo circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="indigo" class="indigo circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Indigo</span> 
-                            </div>
-                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="violet" class="violet circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Violet</span> 
-                            </div>
-                            <div class="purple circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="purple" class="purple circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Purple</span> 
-                            </div>
-                            <div class="beige circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="beige" class="beige circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Beige</span> 
-                            </div>
-                            <div class="light-brown circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="light-brown" class="light-brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Light brown</span> 
-                            </div>
-                            <div class="brown circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="brown" class="brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Brown</span> 
-                            </div>
-                            <div class="dark-brown circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-brown" class="dark-brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark brown</span>
-                            </div>
-                            <div class="pastel-pink circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-pink" class="pastel-pink circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel pink</span> 
-                            </div>
-                            <div class="pastel-orange circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-orange" class="pastel-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel orange</span> 
-                            </div>
-                            <div class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-yellow" class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel yellow</span> 
-                            </div>
-                            <div class="pastel-green circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-green" class="pastel-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel green</span> 
-                            </div>
-                            <div class="pastel-blue circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-blue" class="pastel-blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel blue</span> 
-                            </div>
-                            <div class="pastel-purple circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-purple" class="pastel-purple circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel purple</span> 
-                            </div>
+                            </button>
                         </div>
-                        <div class="highlighter palette">
-                            <div class="yellow circle tooltip" @click="${this.clickedColor}">
+                        <div class="highlighter palette" role="tablist">
+                            <button role="tab" tabindex="0" aria-pressed="-1" aria-label="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Yellow</span> 
-                            </div>
-                            <div class="green circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="green" class="green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Green</span> 
-                            </div>
-                            <div class="light-blue circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="light-blue" class="light-blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Light blue</span> 
-                            </div>
-                            <div class="pink circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pink" class="pink circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pink</span> 
-                            </div>
-                            <div class="red-orange circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red-orange</span> 
-                            </div>
-                            <div class="violet circle tooltip" @click="${this.clickedColor}">
+                            </button>
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="violet" class="violet circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Violet</span> 
-                            </div>
+                            </button>
                         </div>
-                        <div class="checkbox-label">
-                            <input type="checkbox" id="checkbox"></input>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="use-slider-size"></input>
                             <div class="checkbox-track"><span class="on-text">ON</span><span class="off-text show">OFF</span></div>
-                            <label class="checkbox-label" for="checkbox" name="toggle"><p class="checkbox-label-text">Use slider size</p></label>
+                            <label class="checkbox-wrapper" for="use-slider-size" name="use-slider-size"><p class="checkbox-text">Use slider size</p></label>
                         </div>
                         <canvas class="sineCanvas"></canvas>
                         <div class="slider-container">
@@ -239,6 +258,21 @@ export class InkingToolbar extends LitElement {
         this.sliderCheckbox.checked = false;
         this.sliderCheckbox.addEventListener('change', () => this.toggleSliderCheckbox(), false);
 
+        // support keyboard navigation for slider checkbox and handle
+        this.sliderCheckbox.addEventListener("keydown", function(e: KeyboardEvent) {
+            if (e.keyCode === 13) { // enter/return key
+                this.click();
+            }
+        }, false);
+        this.slider.addEventListener("keydown", () => function(e: KeyboardEvent) {
+            if (e.keyCode === 37) { // left arrow key
+                this.value -= 1;
+            }
+            else if (e.keyCode === 39) { // right arrow key
+                this.value += 1;
+            }
+        }), false;
+
         // draw example stroke for ink dropdowns
         this.isWaitingToDrawSineCanvas = true;
         Utils.runAsynchronously( () => { 
@@ -249,7 +283,7 @@ export class InkingToolbar extends LitElement {
 
     // expose ability to check active tool name
     getCurrentToolName() {
-        return this.selectedTool.id;
+        return (this.selectedTool) ? this.selectedTool.id : "";
     }
 
     // expose ability to get stroke color, size, & style
@@ -413,7 +447,15 @@ export class InkingToolbar extends LitElement {
             if (!this.tools && this.children.length === 0) {
                 this.tools = Array.from(this.toolContainer.querySelectorAll("button"));
                 this.defaultToolbarSelection.classList.add("show");
+                this.defaultToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
             }
+
+            // provide keyboard navigation for toolbar colors
+            let penPencilColors = <HTMLButtonElement[]>Array.from(this.penPencilPalette.querySelectorAll('.circle'));
+            this.penPencilPalette.addEventListener("keydown", (e) => this.handlePenPencilSwitchingByKeyboard(e, penPencilColors), false);
+            let highlighterColors = <HTMLButtonElement[]>Array.from(this.highlighterPalette.querySelectorAll('.circle'));
+            this.highlighterPalette.addEventListener("keydown", (e) => this.handleHighlighterSwitchingByKeyboard(e, highlighterColors), false);
+
         }
     }
 
@@ -430,8 +472,113 @@ export class InkingToolbar extends LitElement {
                     this.setOrientation();
                     this.setVerticalAlignment();
                     this.setHorizontalAlignment();  
+                    this.customizedToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
                 }
             }
+        }
+    }
+
+    // TODO: find better to pass in & update Focus (index) properties instead of code duplication for keyboard navigation
+
+    private handleToolSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.toolFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.toolFocus++;
+
+                // if we're at the end, go to the start
+                if (this.toolFocus >= tabs.length) {
+                    this.toolFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.toolFocus--;
+
+                // if we're at the start, move to the end
+                if (this.toolFocus < 0) {
+                    this.toolFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.toolFocus].setAttribute("tabindex", "0");
+            tabs[this.toolFocus].focus();
+    
+        }
+    }
+
+    private handlePenPencilSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.penPencilFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.penPencilFocus++;
+
+                // if we're at the end, go to the start
+                if (this.penPencilFocus >= tabs.length) {
+                    this.penPencilFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.penPencilFocus--;
+                
+                // if we're at the start, move to the end
+                if (this.penPencilFocus < 0) {
+                    this.penPencilFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.penPencilFocus].setAttribute("tabindex", "0");
+            tabs[this.penPencilFocus].focus();
+    
+        }
+    }
+
+    private handleHighlighterSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.highlighterFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.highlighterFocus++;
+
+                // if we're at the end, go to the start
+                if (this.highlighterFocus >= tabs.length) {
+                    this.highlighterFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.highlighterFocus--;
+                
+                // if we're at the start, move to the end
+                if (this.highlighterFocus < 0) {
+                    this.highlighterFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.highlighterFocus].setAttribute("tabindex", "0");
+            tabs[this.highlighterFocus].focus();
+    
         }
     }
 
@@ -536,7 +683,11 @@ export class InkingToolbar extends LitElement {
             }
 
             // define stroke size and pen color for new sine wave
-            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale();
+
+            // TODO: find better way to scale strokeWidth based on different inking canvas and sine canvas aspect ratios
+            let aspectRatioCorrection = 1.15;
+
+            let strokeWidth = parseInt(this.slider.value) * this.inkingCanvas.getScale() * aspectRatioCorrection;
             this.sineContext.lineWidth = strokeWidth;
             this.sineContext.strokeStyle = this.getCurrentStrokeColor();
 
@@ -573,12 +724,12 @@ export class InkingToolbar extends LitElement {
             // calibrate sine wave rotation calcuations to center results in canvas
             let rotationDegrees = 354;
             let offsetY = a/2 + (360 - rotationDegrees);
-            let offsetX = -4 * devicePixelRatio;
+            let offsetX = -5 * devicePixelRatio;
 
             let strokesDrawn = 0;
 
             // draw the sine wave until just before the canvas ends to avoid clipping off end
-            for(let i = strokeWidth/2; i < w - strokeWidth/2; i++){
+            for (let i = strokeWidth/2 + 1; i < w - strokeWidth/2 - 1; i++) {
 
                 this.sineContext.beginPath(); 
             
@@ -747,8 +898,32 @@ export class InkingToolbar extends LitElement {
                 this.selectedTool.classList.remove('clicked');
             }
 
+            if (this.defaultToolbarSelection.classList.contains("show")) {
+                if (this.selectedTool) {
+                    this.selectedTool.setAttribute("tabindex", "-1");
+                    this.selectedTool.setAttribute("aria-pressed", "-1");
+                } else {
+                    for (let i = 0; i < this.tools.length; i++) {
+                        if (this.tools[i] !== lastClickedTool) {
+                            this.tools[i].setAttribute("tabindex", "-1");
+                            this.tools[i].setAttribute("aria-pressed", "-1");
+                        }
+                    }
+                }
+            }
+
             this.selectedTool = lastClickedTool;           
             this.selectedTool.classList.add('clicked');
+
+            if (this.defaultToolbarSelection.classList.contains("show")) {
+                this.selectedTool.setAttribute("tabindex", "0");
+                this.selectedTool.setAttribute("aria-pressed", "0");
+            } else {
+
+                // inform any connected tool components so they can update their states for accessbility
+                this.dispatchEvent(this.toolChangedEvent);
+
+            }
         
             if (this.isUtensil(this.selectedTool.id)) {
 
@@ -845,9 +1020,13 @@ export class InkingToolbar extends LitElement {
         if (this.selectedCircle !== selectedCircle) {
             if (this.selectedCircle && this.selectedCircle.classList.contains("clicked")) {
                 this.selectedCircle.classList.remove("clicked");
+                this.selectedCircle.setAttribute("tabindex", "-1");
+                this.selectedCircle.setAttribute("aria-pressed", "-1");
             }
             this.selectedCircle = selectedCircle;
             this.selectedCircle.classList.add("clicked");
+            this.selectedCircle.setAttribute("tabindex", "0");
+            this.selectedCircle.setAttribute("aria-pressed", "0")
         }
     }
 
@@ -993,216 +1172,6 @@ export class InkingToolbar extends LitElement {
                 .palette.show {
                     display: grid;
                 }
-                .circle {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    box-sizing: border-box;
-                    border: 2px solid ${Colors.colorPaletteBackground};
-                    margin: 7px;
-                    transition: all 0.1s ease;
-                }
-                .circle:hover {
-                    border: 2px solid ${Colors.red}; /* this color should be overridden by proper color class below */
-                    transition: all 0.1s ease;
-                }
-                .circle:hover.black {
-                    border-color: ${Colors.black};
-                }
-                .circle:hover.white {
-                    border-color: ${Colors.white};
-                }
-                .circle:hover.silver {
-                    border-color: ${Colors.silver};
-                }
-                .circle:hover.gray {
-                    border-color: ${Colors.gray};
-                }
-                .circle:hover.dark-gray {
-                    border-color: ${Colors.darkGray};
-                }
-                .circle:hover.charcoal {
-                    border-color: ${Colors.charcoal};
-                }
-                .circle:hover.magenta {
-                    border-color: ${Colors.magenta};
-                }
-                .circle:hover.red {
-                    border-color: ${Colors.red};
-                }
-                .circle:hover.red-orange {
-                    border-color: ${Colors.redOrange};
-                }
-                .circle:hover.orange {
-                    border-color: ${Colors.orange};
-                }
-                .circle:hover.gold {
-                    border-color: ${Colors.gold};
-                }
-                .circle:hover.yellow {
-                    border-color: ${Colors.yellow};
-                }
-                .circle:hover.grass-green {
-                    border-color: ${Colors.grassGreen};
-                }
-                .circle:hover.green {
-                    border-color: ${Colors.green};
-                }
-                .circle:hover.dark-green {
-                    border-color: ${Colors.darkGreen};
-                }
-                .circle:hover.teal {
-                    border-color: ${Colors.teal};
-                }
-                .circle:hover.blue {
-                    border-color: ${Colors.blue};
-                }
-                .circle:hover.indigo {
-                    border-color: ${Colors.indigo};
-                }
-                .circle:hover.violet {
-                    border-color: ${Colors.violet};
-                }
-                .circle:hover.purple {
-                    border-color: ${Colors.purple};
-                }
-                .circle:hover.beige {
-                    border-color: ${Colors.beige};
-                }
-                .circle:hover.light-brown {
-                    border-color: ${Colors.lightBrown};
-                }
-                .circle:hover.brown {
-                    border-color: ${Colors.brown};
-                }
-                .circle:hover.dark-brown {
-                    border-color: ${Colors.darkBrown};
-                }
-                .circle:hover.pastel-pink {
-                    border-color: ${Colors.pastelPink};
-                }
-                .circle:hover.pastel-orange {
-                    border-color: ${Colors.pastelOrange};
-                }
-                .circle:hover.pastel-yellow {
-                    border-color: ${Colors.pastelYellow};
-                }
-                .circle:hover.pastel-green {
-                    border-color: ${Colors.pastelGreen};
-                }
-                .circle:hover.pastel-blue {
-                    border-color: ${Colors.pastelBlue};
-                }
-                .circle:hover.pastel-purple {
-                    border-color: ${Colors.pastelPurple};
-                }
-                .circle:hover.light-blue {
-                    border-color: ${Colors.lightBlue};
-                }
-                .circle:hover.pink {
-                    border-color: ${Colors.pink};
-                }
-                .circle.clicked, .circle.clicked:hover {
-                    border: 2px solid ${Colors.colorPaletteBackground};
-                    box-shadow: 0px 0px 0px 2px black;
-                    transition: all 0.2s ease;
-                }
-                .circle.black {                
-                    background-color: ${Colors.black};
-                }            
-                .circle.white {              
-                    background-color: ${Colors.white};
-                }
-                .circle.silver {            
-                    background-color: ${Colors.silver};
-                }
-                .circle.gray {            
-                    background-color: ${Colors.gray};
-                }
-                .circle.dark-gray {               
-                    background-color: ${Colors.darkGray};
-                }
-                .circle.charcoal {               
-                    background-color: ${Colors.charcoal};
-                }
-                .circle.magenta {              
-                    background-color: ${Colors.magenta};
-                }
-                .circle.red {
-                    background-color: ${Colors.red};
-                }
-                .circle.red-orange {
-                    background-color: ${Colors.redOrange};
-                }
-                .circle.orange {
-                    background-color: ${Colors.orange};
-                }
-                .circle.gold {
-                    background-color: ${Colors.gold};
-                }
-                .circle.yellow {
-                    background-color: ${Colors.yellow};
-                }
-                .circle.grass-green {
-                    background-color: ${Colors.grassGreen};
-                }
-                .circle.green {
-                    background-color: ${Colors.green};
-                }
-                .circle.dark-green {
-                    background-color: ${Colors.darkGreen};
-                }
-                .circle.teal {
-                    background-color: ${Colors.teal};
-                }
-                .circle.blue {
-                    background-color: ${Colors.blue};
-                }
-                .circle.indigo {
-                    background-color: ${Colors.indigo};
-                }
-                .circle.violet {
-                    background-color: ${Colors.violet};
-                }
-                .circle.purple {
-                    background-color: ${Colors.purple};
-                }
-                .circle.beige {
-                    background-color: ${Colors.beige};
-                }
-                .circle.light-brown {
-                    background-color: ${Colors.lightBrown};
-                }
-                .circle.brown {
-                    background-color: ${Colors.brown};
-                }
-                .circle.dark-brown {
-                    background-color: ${Colors.darkBrown};
-                }
-                .circle.pastel-pink {
-                    background-color: ${Colors.pastelPink};
-                }
-                .circle.pastel-orange {
-                    background-color: ${Colors.pastelOrange};
-                }
-                .circle.pastel-yellow {
-                    background-color: ${Colors.pastelYellow};
-                }
-                .circle.pastel-green {
-                    background-color: ${Colors.pastelGreen};
-                }
-                .circle.pastel-blue {
-                    background-color: ${Colors.pastelBlue};
-                }
-                .circle.pastel-purple {
-                    background-color: ${Colors.pastelPurple};
-                }
-                .circle.light-blue {
-                    background-color: ${Colors.lightBlue};
-                }
-                .circle.pink {
-                    background-color: ${Colors.pink};
-                }
                 .sineCanvas {
                     height: 100px;
                     width: 100%;
@@ -1218,16 +1187,23 @@ export class InkingToolbar extends LitElement {
                 .sineCanvas.show {
                     display: block;
                 }
-                .checkbox-label {
+                .checkbox-wrapper {
                     position: relative;
-                    display: block;
                     width: 65px;
                     height: 30px;
                 }
-                .checkbox-label input {
-                    display: none;
+                .checkbox-wrapper input {
+                    width: 65px;
+                    height: 30px;
+                    margin: 0 auto;
+                    position: absolute;
+                    opacity: 0;
                 }
-                .checkbox-label-text {
+                .checkbox-wrapper input:focus-visible {
+                    opacity: 1;
+                    outline: 2px solid currentColor;
+                }
+                .checkbox-text {
                     position: relative;
                     top: 7px;
                     margin-left: 75px;
@@ -1272,7 +1248,7 @@ export class InkingToolbar extends LitElement {
                 .checkbox-track.dark-gray::after {
                     border-color: ${Colors.darkGray};
                 }
-                .slider-checkbox-track.charcoal::after {
+                .checkbox-track.charcoal::after {
                     border-color: ${Colors.charcoal};
                 }
                 .checkbox-track.magenta::after {
@@ -1511,8 +1487,14 @@ export class InkingToolbar extends LitElement {
                 .off-text.show {
                     display: inline;
                 }
-                input[type="range" i] {
+                input[type="range"] {
                     margin: auto;
+                }
+                input[type="range"]:focus:not(:focus-visible) {
+                    border: none;
+                }
+                input[type="range"]:focus-visible {
+                    box-shadow: 0px 0px 0px 2px currentColor;
                 }
                 .slider-container {
                     width: 100%;
@@ -1541,7 +1523,7 @@ export class InkingToolbar extends LitElement {
                 input[type=range]::-moz-focus-outer {
                     border: 0;
                 }
-                .slider::-webkit-slider-thumb {
+                input[type="range"]::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
                     width: 10px;
@@ -1550,7 +1532,13 @@ export class InkingToolbar extends LitElement {
                     border: none;
                     cursor: pointer;
                 }
-                .slider::-moz-range-thumb {
+                input[type="range"]:focus:not(:focus-visible)::-webkit-slider-thumb {
+                    border: none;
+                }
+                input[type="range"]:focus-visible::-webkit-slider-thumb {
+                    border: 2px solid currentColor;
+                }
+                input[type="range"]::-moz-range-thumb {
                     width: 10px;
                     height: 25px;
                     border: none;
