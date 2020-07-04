@@ -16,8 +16,13 @@ export class InkingToolbar extends LitElement {
     @query('#toolbar-container') private toolbarContainer: HTMLElement;
     @query('#tool-container') private toolContainer: HTMLElement;
     @property({type: NodeList}) private tools: Array<HTMLButtonElement>;
+    @query("#customized-toolbar-selection") private customizedToolbarSelection: HTMLDivElement;
     @query("#default-toolbar-selection") private defaultToolbarSelection: HTMLDivElement;
+    @property({type: Object}) private toolFocus = 0;
+    @property({type: Number}) private penPencilFocus = 0;
+    @property({type: Number}) private highlighterFocus = 0;
     @property({type: HTMLButtonElement}) private selectedTool: Element;
+    @property({type: CustomEvent}) private toolChangedEvent: CustomEvent = new CustomEvent("tool-changed");
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
     @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
     @query('.ink-dropdown') private inkDropdown: HTMLDivElement;
@@ -62,145 +67,159 @@ export class InkingToolbar extends LitElement {
         return html `
             <div id="toolbar-container">
                 <div id="tool-container">
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <slot @click="${this.clickedUtensil}"></slot>
-                    <div id="default-toolbar-selection">
-                        <button id="pen" name="pen" class="toolbar-icon pen-icon tooltip" @click="${this.clickedUtensil}">
+                    <div id="customized-toolbar-selection" role="tablist" aria-label="inking toolbar">
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedUtensil}"></slot>
+                    </div>
+                    <div id="default-toolbar-selection" role="tablist" aria-label="inking toolbar">
+                        <button id="pen" class="toolbar-icon pen-icon tooltip" 
+                        aria-label="pen" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pen</span>
                         </button>
-                        <button id="pencil" name="pencil" class="toolbar-icon pencil-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="pencil" class="toolbar-icon pencil-icon tooltip" 
+                        aria-label="pencil" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Pencil</span>
                         </button>
-                        <button id="highlighter" name="highlighter" class="toolbar-icon highlighter-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="highlighter" class="toolbar-icon highlighter-icon tooltip" 
+                        aria-label="highlighter" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Highlighter</span>
                         </button>
-                        <button id="eraser" name="eraser" class="toolbar-icon eraser-icon tooltip" @click="${this.clickedUtensil}">
+                        <button id="eraser" class="toolbar-icon eraser-icon tooltip" 
+                        aria-label="eraser" role="tab" aria-controls="dropdown-container"
+                        @click="${this.clickedUtensil}">
                             <span class="tooltip-text">Eraser</span>
                         </button>
-                        <button id="copy" name="copy" class="toolbar-icon copy-icon tooltip" @click="${this.clickedCopy}">
+                        <button aria-label="copy" id="copy" class="toolbar-icon copy-icon tooltip" 
+                        aria-label="copy" role="tab"
+                        @click="${this.clickedCopy}">
                             <span class="tooltip-text">Copy</span>
                         </button>
-                        <button id="save" name="save" class="toolbar-icon save-icon tooltip" @click="${this.clickedSave}">
+                        <button id="save" class="toolbar-icon save-icon tooltip" 
+                        aria-label="save" role="tab"
+                        @click="${this.clickedSave}">
                             <span class="tooltip-text">Save</span>
                         </button>
                     </div>
                 </div>
-                <div id="dropdown-container">
+                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" dropdown" tabindex="0">
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
-                        <div class="pen-pencil palette">
-                            <button name="black" class="black circle tooltip" @click="${this.clickedColor}">
+                        <div class="pen-pencil palette" role="tablist">
+                            <button role="tab" tabindex="0" aria-pressed="-1" aria-label="black" class="black circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Black</span>
                             </button>
-                            <button name="white" class="white circle tooltip" tabindex="0" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="white" class="white circle tooltip" tabindex="0" @click="${this.clickedColor}">
                                 <span class="tooltip-text">White</span>
                             </button>
-                            <button name="silver" class="silver circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="silver" class="silver circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Silver</span> 
                             </button>
-                            <button name="gray" class="gray circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="gray" class="gray circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Gray</span> 
                             </button>
-                            <button name="dark-gray" class="dark-gray circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-gray" class="dark-gray circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark gray</span> 
                             </button>
-                            <button name="charcoal" class="charcoal circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="charcoal" class="charcoal circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Charcoal</span> 
                             </button>
-                            <button name="magenta" class="magenta circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="magenta" class="magenta circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Magenta</span> 
                             </button>
-                            <button name="red" class="red circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red" class="red circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red</span> 
                             </button>
-                            <button name="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red-orange</span> 
                             </button>
-                            <button name="orange" class="orange circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="orange" class="orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Orange</span> 
                             </button>
-                            <button name="gold" class="gold circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="gold" class="gold circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Gold</span> 
                             </button>
-                            <button name="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Yellow</span> 
                             </button>
-                            <button name="grass-green" class="grass-green circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="grass-green" class="grass-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Grass green</span> 
                             </button>
-                            <button name="green" class="green circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="green" class="green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Green</span> 
                             </button>
-                            <button name="dark-green" class="dark-green circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-green" class="dark-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark green</span> 
                             </button>
-                            <button name="teal" class="teal circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="teal" class="teal circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Teal</span> 
                             </button>
-                            <button name="blue" class="blue circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="blue" class="blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Blue</span> 
                             </button>
-                            <button name="indigo" class="indigo circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="indigo" class="indigo circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Indigo</span> 
                             </button>
-                            <button name="violet" class="violet circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="violet" class="violet circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Violet</span> 
                             </button>
-                            <button name="purple" class="purple circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="purple" class="purple circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Purple</span> 
                             </button>
-                            <button name="beige" class="beige circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="beige" class="beige circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Beige</span> 
                             </button>
-                            <button name="light-brown" class="light-brown circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="light-brown" class="light-brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Light brown</span> 
                             </button>
-                            <button name="brown" class="brown circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="brown" class="brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Brown</span> 
                             </button>
-                            <button name="dark-brown" class="dark-brown circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="dark-brown" class="dark-brown circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Dark brown</span>
                             </button>
-                            <button name="pastel-pink" class="pastel-pink circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-pink" class="pastel-pink circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel pink</span> 
                             </button>
-                            <button name="pastel-orange" class="pastel-orange circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-orange" class="pastel-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel orange</span> 
                             </button>
-                            <button name="pastel-yellow" class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-yellow" class="pastel-yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel yellow</span> 
                             </button>
-                            <button name="pastel-green" class="pastel-green circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-green" class="pastel-green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel green</span> 
                             </button>
-                            <button name="pastel-blue" class="pastel-blue circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-blue" class="pastel-blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel blue</span> 
                             </button>
-                            <button name="pastel-purple" class="pastel-purple circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pastel-purple" class="pastel-purple circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pastel purple</span> 
                             </button>
                         </div>
-                        <div class="highlighter palette">
-                            <button name="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
+                        <div class="highlighter palette" role="tablist">
+                            <button role="tab" tabindex="0" aria-pressed="-1" aria-label="yellow" class="yellow circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Yellow</span> 
                             </button>
-                            <button name="green" class="green circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="green" class="green circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Green</span> 
                             </button>
-                            <button name="light-blue" class="light-blue circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="light-blue" class="light-blue circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Light blue</span> 
                             </button>
-                            <button name="pink" class="pink circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="pink" class="pink circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Pink</span> 
                             </button>
-                            <button name="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="red-orange" class="red-orange circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Red-orange</span> 
                             </button>
-                            <button name="violet" class="violet circle tooltip" @click="${this.clickedColor}">
+                            <button role="tab" tabindex="-1" aria-pressed="-1" aria-label="violet" class="violet circle tooltip" @click="${this.clickedColor}">
                                 <span class="tooltip-text">Violet</span> 
                             </button>
                         </div>
@@ -264,7 +283,7 @@ export class InkingToolbar extends LitElement {
 
     // expose ability to check active tool name
     getCurrentToolName() {
-        return this.selectedTool.id;
+        return (this.selectedTool) ? this.selectedTool.id : "";
     }
 
     // expose ability to get stroke color, size, & style
@@ -428,7 +447,15 @@ export class InkingToolbar extends LitElement {
             if (!this.tools && this.children.length === 0) {
                 this.tools = Array.from(this.toolContainer.querySelectorAll("button"));
                 this.defaultToolbarSelection.classList.add("show");
+                this.defaultToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
             }
+
+            // provide keyboard navigation for toolbar colors
+            let penPencilColors = <HTMLButtonElement[]>Array.from(this.penPencilPalette.querySelectorAll('.circle'));
+            this.penPencilPalette.addEventListener("keydown", (e) => this.handlePenPencilSwitchingByKeyboard(e, penPencilColors), false);
+            let highlighterColors = <HTMLButtonElement[]>Array.from(this.highlighterPalette.querySelectorAll('.circle'));
+            this.highlighterPalette.addEventListener("keydown", (e) => this.handleHighlighterSwitchingByKeyboard(e, highlighterColors), false);
+
         }
     }
 
@@ -445,8 +472,113 @@ export class InkingToolbar extends LitElement {
                     this.setOrientation();
                     this.setVerticalAlignment();
                     this.setHorizontalAlignment();  
+                    this.customizedToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
                 }
             }
+        }
+    }
+
+    // TODO: find better to pass in & update Focus (index) properties instead of code duplication for keyboard navigation
+
+    private handleToolSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.toolFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.toolFocus++;
+
+                // if we're at the end, go to the start
+                if (this.toolFocus >= tabs.length) {
+                    this.toolFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.toolFocus--;
+
+                // if we're at the start, move to the end
+                if (this.toolFocus < 0) {
+                    this.toolFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.toolFocus].setAttribute("tabindex", "0");
+            tabs[this.toolFocus].focus();
+    
+        }
+    }
+
+    private handlePenPencilSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.penPencilFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.penPencilFocus++;
+
+                // if we're at the end, go to the start
+                if (this.penPencilFocus >= tabs.length) {
+                    this.penPencilFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.penPencilFocus--;
+                
+                // if we're at the start, move to the end
+                if (this.penPencilFocus < 0) {
+                    this.penPencilFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.penPencilFocus].setAttribute("tabindex", "0");
+            tabs[this.penPencilFocus].focus();
+    
+        }
+    }
+
+    private handleHighlighterSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
+
+        // react to only left or right arrow keys
+        if (e.keyCode === 39 || e.keyCode === 37) {
+
+            // unfocus whatever is currently selected
+            tabs[this.highlighterFocus].setAttribute("tabindex", "-1");
+
+            // right arrow key
+            if (e.keyCode === 39) {
+                this.highlighterFocus++;
+
+                // if we're at the end, go to the start
+                if (this.highlighterFocus >= tabs.length) {
+                    this.highlighterFocus = 0;
+                }
+
+            // left arrow key
+            } else if (e.keyCode === 37) {
+                this.highlighterFocus--;
+                
+                // if we're at the start, move to the end
+                if (this.highlighterFocus < 0) {
+                    this.highlighterFocus = tabs.length - 1;
+                }
+            }
+        
+            // set focus for new selection
+            tabs[this.highlighterFocus].setAttribute("tabindex", "0");
+            tabs[this.highlighterFocus].focus();
+    
         }
     }
 
@@ -766,8 +898,32 @@ export class InkingToolbar extends LitElement {
                 this.selectedTool.classList.remove('clicked');
             }
 
+            if (this.defaultToolbarSelection.classList.contains("show")) {
+                if (this.selectedTool) {
+                    this.selectedTool.setAttribute("tabindex", "-1");
+                    this.selectedTool.setAttribute("aria-pressed", "-1");
+                } else {
+                    for (let i = 0; i < this.tools.length; i++) {
+                        if (this.tools[i] !== lastClickedTool) {
+                            this.tools[i].setAttribute("tabindex", "-1");
+                            this.tools[i].setAttribute("aria-pressed", "-1");
+                        }
+                    }
+                }
+            }
+
             this.selectedTool = lastClickedTool;           
             this.selectedTool.classList.add('clicked');
+
+            if (this.defaultToolbarSelection.classList.contains("show")) {
+                this.selectedTool.setAttribute("tabindex", "0");
+                this.selectedTool.setAttribute("aria-pressed", "0");
+            } else {
+
+                // inform any connected tool components so they can update their states for accessbility
+                this.dispatchEvent(this.toolChangedEvent);
+
+            }
         
             if (this.isUtensil(this.selectedTool.id)) {
 
@@ -864,9 +1020,13 @@ export class InkingToolbar extends LitElement {
         if (this.selectedCircle !== selectedCircle) {
             if (this.selectedCircle && this.selectedCircle.classList.contains("clicked")) {
                 this.selectedCircle.classList.remove("clicked");
+                this.selectedCircle.setAttribute("tabindex", "-1");
+                this.selectedCircle.setAttribute("aria-pressed", "-1");
             }
             this.selectedCircle = selectedCircle;
             this.selectedCircle.classList.add("clicked");
+            this.selectedCircle.setAttribute("tabindex", "0");
+            this.selectedCircle.setAttribute("aria-pressed", "0")
         }
     }
 
