@@ -38,7 +38,12 @@ export class InkingToolbar extends LitElement {
     @query('.off-text') private offText: HTMLElement;
     @query('.slider') private slider: HTMLInputElement;
     @query("#slider-tooltip") private sliderTooltip: HTMLSpanElement;
-    private readonly defaultSliderSize = 24; 
+    private readonly defaultSliderSize = "24";
+    private readonly defaultSliderMin = "1";
+    private readonly defaultSliderMax = "48";
+    private readonly highlighterSliderSize = "50";
+    private readonly highlighterSliderMin= "20";
+    private readonly highlighterSliderMax = "80";
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
     @property({type: Boolean}) private isWaitingToDrawSineCanvas: boolean = false;
@@ -50,14 +55,14 @@ export class InkingToolbar extends LitElement {
     // properties to influence connected inking canvas
     @property({type: CSSResult}) private selectedPenColor: CSSResult = Colors.black;
     @property({type: CSSResult}) private selectedPenColorName: string = 'black';
-    @property({type: Number}) private selectedPenSize: number = this.defaultSliderSize;
+    @property({type: Number}) private selectedPenSize: number = parseInt(this.defaultSliderSize);
     @property({type: CSSResult}) private selectedPencilColor: CSSResult = Colors.black;
     @property({type: CSSResult}) private selectedPencilColorName: string = 'black';
-    @property({type: Number}) private selectedPencilSize: number = this.defaultSliderSize;
+    @property({type: Number}) private selectedPencilSize: number = parseInt(this.defaultSliderSize);
     @property({type: CSSResult}) private selectedHighlighterColor: CSSResult = Colors.yellow;
     @property({type: CSSResult}) private selectedHighlighterColorName: string = 'yellow';
-    @property({type: Number}) private selectedHighlighterSize: number = this.defaultSliderSize;
-    @property({type: Number}) private eraserSize: number = this.defaultSliderSize;
+    @property({type: Number}) private selectedHighlighterSize: number = parseInt(this.highlighterSliderSize);
+    @property({type: Number}) private eraserSize: number = parseInt(this.defaultSliderSize);
     @property({type: String, attribute: "canvas"}) targetInkingCanvas: string = "";
     @property({type: InkingCanvas}) private inkingCanvas: InkingCanvas;
 
@@ -312,7 +317,7 @@ export class InkingToolbar extends LitElement {
                         <canvas class="sineCanvas"></canvas>
                         <div class="slider-container tooltip">
                             <span id="slider-tooltip" class="tooltip-text"></span> 
-                            <input type="range" min="1" max="48" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
+                            <input type="range" min="${this.defaultSliderMin}" max="${this.defaultSliderMax}" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
                         <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
@@ -1036,6 +1041,7 @@ export class InkingToolbar extends LitElement {
 
                 // update slider appearance to match saved utensil settings
                 this.updateSliderColor(colorName);
+                this.updateSliderRange();
                 this.updateSliderSize();
                 this.updateCheckboxColor();
             }
@@ -1111,15 +1117,6 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    private updateSliderTooltip() {
-        let value = this.slider.value;
-        let min = parseInt(this.slider.min);
-        let max = parseInt(this.slider.max);
-        let newValue = ((parseInt(value) - min) / (max - min)) * 100;
-        this.sliderTooltip.innerHTML = value;
-        this.sliderTooltip.style.left = `calc(${newValue}% + (${8 - newValue * 0.15}px))`;
-    }
-
     private updateSelectedColor(selectedCircle: HTMLDivElement) {
         if (this.selectedCircle !== selectedCircle) {
             if (this.selectedCircle && this.selectedCircle.classList.contains("clicked")) {
@@ -1164,6 +1161,27 @@ export class InkingToolbar extends LitElement {
         if (this.slider) {
             this.slider.value = this.getCurrentStrokeSize().toString();
             this.changeStrokeSize();
+        }
+    }
+
+    private updateSliderTooltip() {
+        let value = this.slider.value;
+        let min = parseInt(this.slider.min);
+        let max = parseInt(this.slider.max);
+        let newValue = ((parseInt(value) - min) / (max - min)) * 100;
+        this.sliderTooltip.innerHTML = value;
+        this.sliderTooltip.style.left = `calc(${newValue}% + (${8 - newValue * 0.15}px))`;
+    }
+
+    private updateSliderRange() {
+        if (this.isUtensil(this.selectedTool.id)) {
+            if (this.selectedTool.id === "highlighter") {
+                this.slider.min = this.highlighterSliderMin;
+                this.slider.max = this.highlighterSliderMax;
+            } else {
+                this.slider.min = this.defaultSliderMin;
+                this.slider.max = this.defaultSliderMax;
+            }
         }
     }
 
