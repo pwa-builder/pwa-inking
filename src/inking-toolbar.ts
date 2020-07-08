@@ -37,6 +37,7 @@ export class InkingToolbar extends LitElement {
     @query('.on-text') private onText: HTMLElement;
     @query('.off-text') private offText: HTMLElement;
     @query('.slider') private slider: HTMLInputElement;
+    @query("#slider-tooltip") private sliderTooltip: HTMLSpanElement;
     private readonly defaultSliderSize = 24; 
     @query('.sineCanvas') private sineCanvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private sineContext: CanvasRenderingContext2D;
@@ -309,7 +310,8 @@ export class InkingToolbar extends LitElement {
                             <label class="checkbox-wrapper" for="use-slider-size" name="use-slider-size"><p class="checkbox-text">Use slider size</p></label>
                         </div>
                         <canvas class="sineCanvas"></canvas>
-                        <div class="slider-container">
+                        <div class="slider-container tooltip">
+                            <span id="slider-tooltip" class="tooltip-text"></span> 
                             <input type="range" min="1" max="48" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
                         <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
@@ -1100,12 +1102,22 @@ export class InkingToolbar extends LitElement {
                 this.inkingCanvas.setStrokeSize(-1); 
             } else  {
                 this.setCurrentStrokeSize();
+                this.updateSliderTooltip();
                 this.inkingCanvas.setStrokeSize(this.getCurrentStrokeSize());
                 if (this.sineCanvas) {
                     this.requestDrawSineCanvas();
                 }
             }
         }
+    }
+
+    private updateSliderTooltip() {
+        let value = this.slider.value;
+        let min = parseInt(this.slider.min);
+        let max = parseInt(this.slider.max);
+        let newValue = ((parseInt(value) - min) / (max - min)) * 100;
+        this.sliderTooltip.innerHTML = value;
+        this.sliderTooltip.style.left = `calc(${newValue}% + (${8 - newValue * 0.15}px))`;
     }
 
     private updateSelectedColor(selectedCircle: HTMLDivElement) {
