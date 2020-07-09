@@ -10,9 +10,6 @@ import PointerTracker from "./PointerTracker.js";
 import { fileSave } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
 import * as Utils from './utils';
 
-// acknowledge mouse input baseline to establish pressure-controlled pen stroke size
-const defaultMousePressure: number = 0.5;
-
 declare let ClipboardItem;
 
 @customElement('inking-canvas')
@@ -41,6 +38,12 @@ export class InkingCanvas extends LitElement {
     // all properties used by PointerTracker implementation
     @property({type: Map}) private strokes: Map<number, number>;
     @property({type: PointerTracker}) private tracker: PointerTracker;
+
+    // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
+    private readonly defaultMousePressure: number = 0.5;
+
+    // establish the default stroke width that should match the default inking-toolbar pen slider value
+    private readonly defaultStrokeSize: number = 24;
 
     // record properties set by external influencers (like toolbar)
     @property({type: Number}) private strokeSize: number = -1;
@@ -324,18 +327,18 @@ export class InkingCanvas extends LitElement {
                     // adjust stroke thickness for each input type if toolbar size slider isn't active
                     if (outerThis.strokeSize === -1) {
                         if (pointerType === 'pen') {
-                            if (defaultMousePressure > pressure) {
-                                outerThis.context.lineWidth = 1.5 - (defaultMousePressure - pressure);
-                            } else if (defaultMousePressure === pressure) {
-                                outerThis.context.lineWidth = 1.5;
-                            }else {
-                                let scaledMultiplier = 50 * (pressure - defaultMousePressure);
-                                let adjustedPressure = 1.5 + (scaledMultiplier * (pressure - defaultMousePressure));
-                                outerThis.context.lineWidth = adjustedPressure;
+                            if (outerThis.defaultMousePressure > pressure) {
+                                outerThis.context.lineWidth = outerThis.defaultStrokeSize - (2 * outerThis.defaultStrokeSize * (outerThis.defaultMousePressure - pressure));
+                            } else if (outerThis.defaultMousePressure === pressure) {
+                                outerThis.context.lineWidth = outerThis.defaultStrokeSize;
+                            } else {
+                                outerThis.context.lineWidth = outerThis.defaultStrokeSize + (2 * outerThis.defaultStrokeSize * (pressure - outerThis.defaultMousePressure));
                             }
-                        } else {
-                            // adjust stroke width for mouse & touch
+                        } else if (pointerType === "touch") {
                             outerThis.context.lineWidth = outerThis.strokes.get(pointer.id);
+                        } else {
+                            // set mouse stroke width to default inking-canvas value
+                            outerThis.context.lineWidth = outerThis.defaultStrokeSize;
                         }
                     } else {
                         // take stroke size defined by external influencer
@@ -354,7 +357,7 @@ export class InkingCanvas extends LitElement {
                             if (outerThis.strokeSize !== -1) {
                                 outerThis.context.lineWidth = outerThis.strokeSize;
                             } else {
-                                outerThis.context.lineWidth = 1;
+                                outerThis.context.lineWidth = outerThis.defaultStrokeSize;
                             }
                         }
 
