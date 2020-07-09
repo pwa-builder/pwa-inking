@@ -105,9 +105,9 @@ Try it: [live](https://pwa-inking-customized-toolbar.glitch.me/) | [code](https:
 
 By default `<inking-canvas></inking-canvas>` will create ink strokes with a width depending on the active pointer event:
 
-| Pointer event       | Property influencing ink stroke width       | Notes
+| Pointer event       | Property influencing ink stroke width       | Ink stroke width details
 | ------------------- | ------------------------------------------- | --------------------------------------------------------- |
-| `mouse`             | `width`                                     | Always 1 pixel                                            |
+| `mouse`             | none                                        | Should match the default inking-toolbar pen slider value  |
 | `touch`             | `width`                                     | Changes with surface area of inking screen pressed        |
 | `pen`               | `pressure`                                  | Changes with downward force applied to inking screen      |
 
