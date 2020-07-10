@@ -42,8 +42,10 @@ export class InkingCanvas extends LitElement {
     // acknowledge mouse input baseline to establish pressure-controlled pen stroke size
     private readonly defaultMousePressure: number = 0.5;
 
-    // establish the default stroke width that should match the default inking-toolbar pen slider value
-    private readonly defaultStrokeSize: number = 24;
+    // establish the default stroke widths that should match the default inking-toolbar tool slider values
+    private readonly nonHighlighterStrokeSize: number = 24;
+    private readonly highlighterStrokeSize: number = 50;
+    private defaultStrokeSize = this.nonHighlighterStrokeSize;
 
     // record properties set by external influencers (like toolbar)
     @property({type: Number}) private strokeSize: number = -1;
@@ -326,6 +328,11 @@ export class InkingCanvas extends LitElement {
 
                     // adjust stroke thickness for each input type if toolbar size slider isn't active
                     if (outerThis.strokeSize === -1) {
+                        if (outerThis.toolStyle === "highlighter") {
+                            outerThis.defaultStrokeSize = outerThis.highlighterStrokeSize;
+                        } else {
+                            outerThis.defaultStrokeSize = outerThis.nonHighlighterStrokeSize;
+                        }
                         if (pointerType === 'pen') {
                             if (outerThis.defaultMousePressure > pressure) {
                                 outerThis.context.lineWidth = outerThis.defaultStrokeSize - (2 * outerThis.defaultStrokeSize * (outerThis.defaultMousePressure - pressure));
