@@ -35,8 +35,13 @@ export const InkingToolbarButtonStyles = css`
         display: inline-block;
     }
     button:hover.toolbar-icon, button:focus.toolbar-icon {
-        border-color: ${Colors.gray};
         background-color: ${Colors.colorPaletteBackground};
+    }
+    button:hover.toolbar-icon {
+        border-color: ${Colors.gray};
+    }
+    button:focus.toolbar-icon {
+        border-color: ${Colors.colorPaletteBackground};
     }
     button:hover#erase-all, button:focus#erase-all {
         background-color: ${Colors.silver};
