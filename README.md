@@ -190,15 +190,15 @@ You can style the different parts of pwa-inking using [CSS ::part selectors](htt
 
 Remove the canvas border:
 ```css
-inking-canvas::part(canvas) {
-    border: none;
-}
+    inking-canvas::part(canvas) {
+        border: none;
+    }
 ```
 Change the save button color:
 ```css
-inking-toolbar-save::part(button) {
-    background-color: blue;
-}
+    inking-toolbar-save::part(button) {
+        background-color: blue;
+    }
 ```
 
 Try it: [live](https://pwa-inking-styling-samples.glitch.me/) | [code](https://glitch.com/edit/#!/pwa-inking-styling-samples?path=index.html%3A29%3A20)
