@@ -345,7 +345,7 @@ export class InkingToolbar extends LitElement {
         this.sliderCheckbox.checked = false;
         this.sliderCheckbox.addEventListener('change', () => this.toggleSliderCheckbox(), false);
 
-        // support keyboard navigation for slider checkbox and handle
+        // support keyboard navigation for slider checkbox and handle, and dropdown container
         this.sliderCheckbox.addEventListener("keydown", function(e: KeyboardEvent) {
             if (e.keyCode === 13) { // enter/return key
                 this.click();
@@ -358,6 +358,15 @@ export class InkingToolbar extends LitElement {
             else if (e.keyCode === 39) { // right arrow key
                 this.value += 1;
             }
+        }), false;
+        const outerThis = this;
+        this.toolbarContainer.addEventListener("keydown", function(e: KeyboardEvent) {
+            if (e.keyCode === 9) { // tab key
+                outerThis.dropdownContainer.classList.add("tabbing-focus");
+            }
+        }), false;
+        this.toolbarContainer.addEventListener("click", function() {
+                outerThis.dropdownContainer.classList.remove("tabbing-focus");
         }), false;
 
         // draw example stroke for ink dropdowns
@@ -1237,6 +1246,17 @@ export class InkingToolbar extends LitElement {
                     margin: 1px;
                     margin-top: 3px;
                     position: absolute;
+                }
+                #dropdown-container:focus {
+                    outline: none;
+                    -webkit-appearance: none;
+                }
+                /* make focus-visible workaround for Safari */
+                #dropdown-container.tabbing-focus:focus {
+                    outline: auto;
+                }
+                #dropdown-container:focus-visible {
+                    outline: auto;
                 }
                 #dropdown-container.vertical-orientation {
                     display: inline-block;
