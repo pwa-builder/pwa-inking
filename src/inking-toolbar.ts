@@ -527,6 +527,11 @@ export class InkingToolbar extends LitElement {
             // hide dropdown once inking starts
             this.inkingCanvas.addEventListener('inking-started', () => {
                 Utils.hideElementIfVisible(this.inkDropdown);
+                if (document.activeElement instanceof HTMLButtonElement) {
+                    (<HTMLButtonElement>document.activeElement).blur();
+                } else if (document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
+                    (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
+                }
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
@@ -1243,7 +1248,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container {
                     background-color: ${Colors.colorPaletteBackground};
                     width: 320px;
-                    margin: 1px;
+                    margin: 2px;
                     margin-top: 3px;
                     position: absolute;
                 }
