@@ -107,7 +107,7 @@ By default `<inking-canvas></inking-canvas>` will create ink strokes with a widt
 
 | Pointer event       | Property influencing ink stroke width       | Ink stroke width details
 | ------------------- | ------------------------------------------- | --------------------------------------------------------- |
-| `mouse`             | none                                        | Should match the default inking-toolbar pen slider value  |
+| `mouse`             | none                                        | Should match the default inking-toolbar tool slider value |
 | `touch`             | `width`                                     | Changes with surface area of inking screen pressed        |
 | `pen`               | `pressure`                                  | Changes with downward force applied to inking screen      |
 
@@ -182,7 +182,7 @@ You can style the different parts of pwa-inking using [CSS ::part selectors](htt
 | `inking-toolbar-pen` | `button` | The toolbar pen button |
 | `inking-toolbar-pencil` | `button` | The toolbar pencil button |
 | `inking-toolbar-highlighter` | `button` | The toolbar highlighter button |
-| `inking=toolbar-eraser` | `button` | The toolbar eraser button |
+| `inking-toolbar-eraser` | `button` | The toolbar eraser button |
 | `inking-toolbar-copy` | `button` | The toolbar copy button |
 | `inking-toolbar-save` | `button` | The toolbar save button |
 
