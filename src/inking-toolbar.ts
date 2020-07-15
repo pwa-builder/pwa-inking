@@ -529,7 +529,7 @@ export class InkingToolbar extends LitElement {
                 Utils.hideElementIfVisible(this.inkDropdown);
                 if (document.activeElement instanceof HTMLButtonElement) {
                     (<HTMLButtonElement>document.activeElement).blur();
-                } else if (document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
+                } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
                     (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
                 }
             }, false);
