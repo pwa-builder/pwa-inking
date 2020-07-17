@@ -1222,10 +1222,8 @@ export class InkingToolbar extends LitElement {
                     right: 50%;
                 }
                 #toolbar-container.right {
+                    position: fixed;
                     right: 0;
-                }
-                #toolbar-container.vertical-orientation.right {
-                    margin-right: 7px; // TODO: update to fit dev specified canvas border width
                 }
                 #tool-container {
                     background-color: ${Colors.white};
@@ -1283,7 +1281,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container.bottom {
                     bottom: 0;
                     margin-top: 0;
-                    margin-bottom: 56px; // TODO: update to fit dev specified canvas border width
+                    margin-bottom: 50px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.bottom {
                     margin-bottom: 4px;
