@@ -549,6 +549,11 @@ export class InkingToolbar extends LitElement {
                 this.tools = Array.from(this.toolContainer.querySelectorAll("button"));
                 this.defaultToolbarSelection.classList.add("show");
                 this.defaultToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
+
+                // make sure toolbar fits inside canvas
+                if (!this.toolbarContainer.classList.contains("vertical-orientation")) {
+                    this.inkingCanvas.setMinWidth(this.toolbarContainer.offsetWidth);
+                }
             }
 
             // provide keyboard navigation for toolbar colors
@@ -569,11 +574,17 @@ export class InkingToolbar extends LitElement {
                 if (!this.tools) this.tools = new Array<HTMLButtonElement>();
                 this.tools.push(tool);
                 if (this.children.length === this.tools.length) {
+
                     // done welcoming last tool, so set toolbar layout to developer's choice
                     this.setOrientation();
                     this.setVerticalAlignment();
                     this.setHorizontalAlignment();  
                     this.customizedToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
+
+                    // make sure toolbar fits inside canvas
+                    if (!this.toolbarContainer.classList.contains("vertical-orientation")) {
+                        this.inkingCanvas.setMinWidth(this.toolbarContainer.offsetWidth);
+                    }
                 }
             }
         }
@@ -1207,12 +1218,14 @@ export class InkingToolbar extends LitElement {
                     position: absolute;
                     display: none;
                     margin: 6px;
+                    white-space: nowrap;
                 }
                 #toolbar-container.show {
                     display: inline-block;
                 }
                 #toolbar-container.vertical-center {
                     bottom: 50%;
+                    transform: translateY(50%);
                 }
                 #toolbar-container.bottom {
                     bottom: 0;
@@ -1220,6 +1233,10 @@ export class InkingToolbar extends LitElement {
                 }
                 #toolbar-container.horizontal-center {
                     right: 50%;
+                    transform: translateX(50%);
+                }
+                #toolbar-container.vertical-center.horizontal-center {
+                    transform: translate(50%, 50%);
                 }
                 #toolbar-container.right {
                     position: fixed;
@@ -1232,7 +1249,6 @@ export class InkingToolbar extends LitElement {
                     display: inline-block;
                 }
                 #tool-container.vertical-orientation {
-                    vertical-align: top;
                     margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
                     border-bottom: 2px solid ${Colors.white};
                     border-right: 0px solid ${Colors.white};

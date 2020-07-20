@@ -32,7 +32,7 @@ export const InkingToolbarButtonStyles = css`
         font-size: 16px;
     }
     button#erase-all.show {
-        display: inline-block;
+        display: block;
     }
     button:hover.toolbar-icon, button:focus.toolbar-icon {
         background-color: ${Colors.colorPaletteBackground};
