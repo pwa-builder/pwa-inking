@@ -194,7 +194,7 @@ export class InkingToolbar extends LitElement {
                         </button>
                     </div>
                 </div>
-                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" dropdown" tabindex="0">
+                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" tabindex="0">
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
                         <div class="pen-pencil palette" role="tablist">
@@ -527,11 +527,13 @@ export class InkingToolbar extends LitElement {
             // hide dropdown once inking starts
             this.inkingCanvas.addEventListener('inking-started', () => {
                 Utils.hideElementIfVisible(this.inkDropdown);
+                Utils.hideElementIfVisible(this.dropdownContainer);
                 if (document.activeElement instanceof HTMLButtonElement) {
                     (<HTMLButtonElement>document.activeElement).blur();
                 } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
                     (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
                 }
+                if (this.selectedTool) Utils.hideElementIfVisible(<HTMLElement>this.selectedTool);
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
@@ -903,12 +905,11 @@ export class InkingToolbar extends LitElement {
     }
 
     private clickedEraseAll(e: Event) {
-        let eraser = (<HTMLButtonElement>e.target);
-        console.log(eraser.id + " has been clicked!");
+        let eraseAll = (<HTMLButtonElement>e.target);
+        console.log(eraseAll.id + " has been clicked!");
         Utils.runAsynchronously( () => {
             this.inkingCanvas.eraseAll();
         });
-        this.selectedTool = eraser;
     }
 
     private clickedColor(event: Event) {
@@ -987,6 +988,8 @@ export class InkingToolbar extends LitElement {
             this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
         } else {
             this.selectedDropdown.classList.toggle("show");
+            this.dropdownContainer.classList.toggle("show");
+            selectedTool.classList.toggle("show");
         }
     }
 
@@ -1016,10 +1019,12 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 6th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                // remove the color class
+                this.selectedTool.classList.remove(Utils.toDash(this.getCurrentStrokeColorName()));
 
                 this.selectedTool.classList.remove('clicked');
+                this.selectedTool.classList.remove('show');
+
             }
 
             if (this.defaultToolbarSelection.classList.contains("show")) {
@@ -1038,6 +1043,7 @@ export class InkingToolbar extends LitElement {
 
             this.selectedTool = lastClickedTool;           
             this.selectedTool.classList.add('clicked');
+            this.selectedTool.classList.add('show');
 
             if (this.defaultToolbarSelection.classList.contains("show")) {
                 this.selectedTool.setAttribute("tabindex", "0");
@@ -1094,12 +1100,15 @@ export class InkingToolbar extends LitElement {
         if (this.selectedDropdown && this.selectedDropdown === selectedDropdown) {
             if (this.selectedDropdown.classList.contains("show") && isLastElementClicked) {
                 this.selectedDropdown.classList.remove("show");
+                this.dropdownContainer.classList.remove("show");
             } else {
                 this.selectedDropdown.classList.add("show");
+                this.dropdownContainer.classList.add("show");
             }
         } else {
+            if (!this.selectedDropdown) this.dropdownContainer.classList.add("show");
             this.selectedDropdown = selectedDropdown;
-            this.selectedDropdown.classList.add("show");
+            this.selectedDropdown.classList.add("show"); 
         }
     }
 
@@ -1112,10 +1121,13 @@ export class InkingToolbar extends LitElement {
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
                 // remove the color class
-                if (this.selectedTool.classList[5] !== "clicked") {
-                    this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                let length = this.selectedTool.classList.length;
+                if (this.selectedTool.classList[length-1] !== "clicked" && this.selectedTool.classList[length-1] !== "show") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-1]);
+                } else if (this.selectedTool.classList[length-2] !== "clicked" && this.selectedTool.classList[length-2] !== "show") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-2]);
                 } else {
-                    this.selectedTool.classList.remove(this.selectedTool.classList[6]);
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-3]);
                 }
 
                 // use the css friendly color class name with dashes
@@ -1244,9 +1256,9 @@ export class InkingToolbar extends LitElement {
                 }
                 #tool-container {
                     background-color: ${Colors.white};
-                    border: 2px solid ${Colors.white};
-                    border-bottom: 0px solid ${Colors.white};
+                    margin: 2px 2px 0px 2px;
                     display: inline-block;
+                    font-size: 0; // remove children's inline-block spacing
                 }
                 #tool-container.vertical-orientation {
                     margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
@@ -1261,10 +1273,15 @@ export class InkingToolbar extends LitElement {
                 }
                 #dropdown-container {
                     background-color: ${Colors.colorPaletteBackground};
-                    width: 320px;
-                    margin: 2px;
-                    margin-top: 3px;
+                    width: 300px;
                     position: absolute;
+                    border: none;
+                    margin: -2px 2px 2px;
+                }
+                #dropdown-container.show {
+                    box-sizing: border-box;
+                    border: 2px solid ${Colors.gray};
+                    border-radius: 2px;
                 }
                 #dropdown-container:focus {
                     outline: none;
@@ -1322,13 +1339,13 @@ export class InkingToolbar extends LitElement {
                 }
                 .palette {
                     display: none;
-                    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
                     grid-auto-rows: minmax(25px, auto);
                     justify-items: center;
                     align-items: center;
                     justify-content: center;
                     align-content: center;
-                    border: 5px solid transparent;
+                    // border: 5px solid transparent;
                 }
                 .palette.show {
                     display: grid;

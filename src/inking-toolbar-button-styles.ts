@@ -14,7 +14,21 @@ export const InkingToolbarButtonStyles = css`
         background-color: ${Colors.white};
         outline: none;
         border: 2px solid ${Colors.white};
-        border-radius: 0px;
+        border-radius: 2px;
+        display: inline-block;
+        white-space: nowrap;
+        padding: 2%;
+    }
+    button.toolbar-icon.show {
+        padding: 1% 2% 2% 2%;
+        z-index: 1;
+    }
+    button.toolbar-icon.show:focus-visible {
+        padding: 2%;
+    }
+    button.toolbar-icon svg {
+        height: 34px;
+        width: 34px;
     }
     button.vertical-orientation {
         display: block;
@@ -35,13 +49,12 @@ export const InkingToolbarButtonStyles = css`
         display: block;
     }
     button:hover.toolbar-icon, button:focus.toolbar-icon {
-        background-color: ${Colors.colorPaletteBackground};
+        background-color: ${Colors.silver};
+        border-color: ${Colors.silver};
     }
-    button:hover.toolbar-icon {
-        border-color: ${Colors.gray};
-    }
-    button:focus.toolbar-icon {
-        border-color: ${Colors.colorPaletteBackground};
+    button.toolbar-icon:focus-visible, button.toolbar-icon.horizontal-orientation.clicked:focus-visible {
+        border: 2px solid ${Colors.colorPaletteBackground};
+        border-color: ${Colors.charcoal};
     }
     button:hover#erase-all, button:focus#erase-all {
         background-color: ${Colors.silver};
@@ -84,6 +97,18 @@ export const InkingToolbarButtonStyles = css`
         left: 50%;
         transform: translateX(-50%);
         transition: none;
+    }
+    .toolbar-icon.tooltip .tooltip-text {
+        bottom: 125%;
+    }
+    .toolbar-icon.tooltip.show .tooltip-text {
+        bottom: 123%;
+    }
+    .toolbar-icon.tooltip.show:focus-visible .tooltip-text {
+        bottom: 125%;
+    }
+    .toolbar-icon.tooltip:focus-visible .tooltip-text {
+        bottom: 125%;
     }
     .tooltip:hover .tooltip-text {
         visibility: visible;
@@ -431,6 +456,14 @@ export const InkingToolbarButtonStyles = css`
     button.clicked.pink.horizontal-orientation {
         border-bottom-color: ${Colors.pink};
         box-shadow: 0 3px 0px 0px ${Colors.pink};
+    }
+
+    button.clicked.horizontal-orientation.show {
+        background-color: ${Colors.colorPaletteBackground};
+        box-shadow: none;
+        padding-top: 6px;
+        border: 2px solid ${Colors.gray};
+        border-bottom: none;
     }
 
     /* change tool color on selection (vertical orientation) */
