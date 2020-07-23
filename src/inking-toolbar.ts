@@ -322,8 +322,8 @@ export class InkingToolbar extends LitElement {
                         <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
-                <div id="snackbar"></div>
             </div>
+            <div id="snackbar"></div>
         `;
     }
 
@@ -528,11 +528,7 @@ export class InkingToolbar extends LitElement {
             this.inkingCanvas.addEventListener('inking-started', () => {
                 Utils.hideElementIfVisible(this.inkDropdown);
                 Utils.hideElementIfVisible(this.dropdownContainer);
-                if (document.activeElement instanceof HTMLButtonElement) {
-                    (<HTMLButtonElement>document.activeElement).blur();
-                } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
-                    (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
-                }
+                this.blurToolButtonFocus();
                 if (this.selectedTool) Utils.hideElementIfVisible(<HTMLElement>this.selectedTool);
             }, false);
 
@@ -596,14 +592,14 @@ export class InkingToolbar extends LitElement {
 
     private handleToolSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.toolFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.toolFocus++;
 
                 // if we're at the end, go to the start
@@ -611,8 +607,8 @@ export class InkingToolbar extends LitElement {
                     this.toolFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
                 this.toolFocus--;
 
                 // if we're at the start, move to the end
@@ -630,14 +626,14 @@ export class InkingToolbar extends LitElement {
 
     private handlePenPencilSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.penPencilFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.penPencilFocus++;
 
                 // if we're at the end, go to the start
@@ -645,8 +641,8 @@ export class InkingToolbar extends LitElement {
                     this.penPencilFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
                 this.penPencilFocus--;
                 
                 // if we're at the start, move to the end
@@ -664,14 +660,14 @@ export class InkingToolbar extends LitElement {
 
     private handleHighlighterSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.highlighterFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.highlighterFocus++;
 
                 // if we're at the end, go to the start
@@ -679,9 +675,9 @@ export class InkingToolbar extends LitElement {
                     this.highlighterFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
-                this.highlighterFocus--;
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
+            this.highlighterFocus--;
                 
                 // if we're at the start, move to the end
                 if (this.highlighterFocus < 0) {
@@ -737,6 +733,11 @@ export class InkingToolbar extends LitElement {
             case "bottom":
                 if (this.toolbarContainer) this.toolbarContainer.classList.add("bottom");
                 if (this.dropdownContainer) this.dropdownContainer.classList.add("bottom");
+                if (this.tools) {
+                    this.tools.forEach(tool => {
+                        tool.classList.add("bottom");
+                    });
+                }
                 break;
             default:
                 console.log("Could not set vertical toolbar alignment");
@@ -987,9 +988,18 @@ export class InkingToolbar extends LitElement {
             }
             this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
         } else {
+            // this.blurToolButtonFocus();
             this.selectedDropdown.classList.toggle("show");
             this.dropdownContainer.classList.toggle("show");
             selectedTool.classList.toggle("show");
+        }
+    }
+
+    private blurToolButtonFocus() {
+        if (document.activeElement instanceof HTMLButtonElement) {
+            (<HTMLButtonElement>document.activeElement).blur();
+        } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
+            (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
         }
     }
 
@@ -1296,14 +1306,18 @@ export class InkingToolbar extends LitElement {
                 }
                 #dropdown-container.vertical-orientation {
                     display: inline-block;
-                    margin-left: 3px;
+                    margin-top: 2px;
+                    margin-left: -2px;
+                }
+                #dropdown-container.vertical-orientation.show {
+                    min-height: 200px;
                 }
                 #dropdown-container.right {
                     right: 0;
                     margin-right: 2px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.right {
-                    margin-right: 54px; // TODO: update to fit dev specified canvas border width
+                    margin-right: 48px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-center {
                     top: 100%;
@@ -1314,7 +1328,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container.bottom {
                     bottom: 0;
                     margin-top: 0;
-                    margin-bottom: 50px; // TODO: update to fit dev specified canvas border width
+                    margin-bottom: 48px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.bottom {
                     margin-bottom: 4px;
@@ -1330,7 +1344,7 @@ export class InkingToolbar extends LitElement {
                 .ink-dropdown {
                     display: none;
                     padding: 10px;
-                    padding-bottom: 15px;
+                    padding-bottom: 14px;
                     font-family: sans-serif;
                     font-size: 16px;
                 }
@@ -1918,7 +1932,6 @@ export class InkingToolbar extends LitElement {
                 #snackbar {
                     visibility: hidden;
                     min-width: 250px;
-                    margin-left: -125px; /* Divide value of min-width by 2 */
                     background-color: ${Colors.colorPaletteBackground};
                     color: ${Colors.black};
                     font-size: 16px;
@@ -1928,7 +1941,8 @@ export class InkingToolbar extends LitElement {
                     padding: 16px;
                     position: fixed;
                     z-index: 1;
-                    left: 50%;
+                    right: 50%;
+                    transform: translateX(50%);
                     bottom: 30px;
                 }          
                 #snackbar.show {

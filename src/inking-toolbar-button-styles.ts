@@ -23,6 +23,9 @@ export const InkingToolbarButtonStyles = css`
         padding: 1% 2% 2% 2%;
         z-index: 1;
     }
+    button.toolbar-icon.vertical-orientation.show {
+        padding: 2% 1% 2% 2%;
+    }
     button.toolbar-icon.show:focus-visible {
         padding: 2%;
     }
@@ -41,7 +44,7 @@ export const InkingToolbarButtonStyles = css`
         min-width: 200px;
         background-color: ${Colors.lightGray};
         padding: 25px;
-        margin-top: 15px;
+        margin-top: 14px;
         font-family: sans-serif;
         font-size: 16px;
     }
@@ -52,9 +55,19 @@ export const InkingToolbarButtonStyles = css`
         background-color: ${Colors.silver};
         border-color: ${Colors.silver};
     }
-    button.toolbar-icon:focus-visible, button.toolbar-icon.horizontal-orientation.clicked:focus-visible {
+    button.toolbar-icon:focus-visible, button.toolbar-icon.horizontal-orientation.clicked:focus-visible,
+    button.toolbar-icon.vertical-orientation.clicked.left:focus-visible,
+    button.toolbar-icon.vertical-orientation.clicked.center:focus-visible,
+    button.toolbar-icon.vertical-orientation.clicked.right:focus-visible {
         border: 2px solid ${Colors.colorPaletteBackground};
         border-color: ${Colors.charcoal};
+    }
+    button.toolbar-icon.vertical-orientation.clicked.left:focus-visible,
+    button.toolbar-icon.vertical-orientation.clicked.center:focus-visible {
+        padding-right: 1px;
+    }
+    button.toolbar-icon.vertical-orientation.clicked.right:focus-visible {
+        padding-left: 1px;
     }
     button:hover#erase-all, button:focus#erase-all {
         background-color: ${Colors.silver};
@@ -104,8 +117,35 @@ export const InkingToolbarButtonStyles = css`
     .toolbar-icon.tooltip.show .tooltip-text {
         bottom: 123%;
     }
+    .toolbar-icon.tooltip.bottom .tooltip-text {
+        bottom: 125%;
+    }
+    .toolbar-icon.tooltip.bottom.show .tooltip-text {
+        bottom: 120%;
+    }
+    .toolbar-icon.tooltip.vertical-orientation.left.show .tooltip-text,
+    .toolbar-icon.tooltip.vertical-orientation.center.show .tooltip-text {
+        bottom: 125%;
+        left: 48%;
+    }
+    .toolbar-icon.tooltip.vertical-orientation.left.show:focus-visible .tooltip-text,
+    .toolbar-icon.tooltip.vertical-orientation.center.show:focus-visible .tooltip-text {
+        bottom: 125%;
+        left: 50%;
+    }
+    .toolbar-icon.tooltip.vertical-orientation.right.show .tooltip-text {
+        bottom: 125%;
+        left: 52%;
+    }
+    .toolbar-icon.tooltip.vertical-orientation.right.show:focus-visible .tooltip-text {
+        bottom: 125%;
+        left: 50%;
+    }
     .toolbar-icon.tooltip.show:focus-visible .tooltip-text {
         bottom: 125%;
+    }
+    .toolbar-icon.tooltip.bottom.show:focus-visible .tooltip-text {
+        bottom: 120%;
     }
     .toolbar-icon.tooltip:focus-visible .tooltip-text {
         bottom: 125%;
@@ -466,6 +506,14 @@ export const InkingToolbarButtonStyles = css`
         border-bottom: none;
     }
 
+    button.clicked.horizontal-orientation.bottom.show {
+        background-color: ${Colors.colorPaletteBackground};
+        box-shadow: none;
+        padding-top: 8px;
+        border: 2px solid ${Colors.gray};
+        border-top: none;
+    }
+
     /* change tool color on selection (vertical orientation) */
 
     button.clicked.black.vertical-orientation.left, button.clicked.black.vertical-orientation.center {
@@ -597,6 +645,14 @@ export const InkingToolbarButtonStyles = css`
         box-shadow: 3px 0px 0px 0px ${Colors.pink};
     }
 
+    button.clicked.vertical-orientation.left.show, button.clicked.vertical-orientation.center.show {
+        background-color: ${Colors.colorPaletteBackground};
+        box-shadow: none;
+        padding-right: 3px;
+        border: 2px solid ${Colors.gray};
+        border-right: none;
+    }
+
     button.clicked.black.vertical-orientation.right {
         border-left-color: ${Colors.black};
         box-shadow: -3px 0px 0px 0px ${Colors.black};
@@ -724,6 +780,14 @@ export const InkingToolbarButtonStyles = css`
     button.clicked.pink.vertical-orientation.right {
         border-left-color: ${Colors.pink};
         box-shadow: -3px 0px 0px 0px ${Colors.pink};
+    }
+
+    button.clicked.vertical-orientation.right.show {
+        background-color: ${Colors.colorPaletteBackground};
+        box-shadow: none;
+        padding-left: 3px;
+        border: 2px solid ${Colors.gray};
+        border-left: none;
     }
     
 `;
