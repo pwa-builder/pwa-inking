@@ -194,7 +194,7 @@ export class InkingToolbar extends LitElement {
                         </button>
                     </div>
                 </div>
-                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" dropdown" tabindex="0">
+                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" tabindex="0">
                     <div class="ink-dropdown">
                         <div class="title">Colors</div>
                         <div class="pen-pencil palette" role="tablist">
@@ -322,8 +322,8 @@ export class InkingToolbar extends LitElement {
                         <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
                     </div>
                 </div>
-                <div id="snackbar"></div>
             </div>
+            <div id="snackbar"></div>
         `;
     }
 
@@ -527,11 +527,9 @@ export class InkingToolbar extends LitElement {
             // hide dropdown once inking starts
             this.inkingCanvas.addEventListener('inking-started', () => {
                 Utils.hideElementIfVisible(this.inkDropdown);
-                if (document.activeElement instanceof HTMLButtonElement) {
-                    (<HTMLButtonElement>document.activeElement).blur();
-                } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
-                    (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
-                }
+                Utils.hideElementIfVisible(this.dropdownContainer);
+                this.blurToolButtonFocus();
+                if (this.selectedTool) Utils.hideElementIfVisible(<HTMLElement>this.selectedTool);
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
@@ -549,6 +547,11 @@ export class InkingToolbar extends LitElement {
                 this.tools = Array.from(this.toolContainer.querySelectorAll("button"));
                 this.defaultToolbarSelection.classList.add("show");
                 this.defaultToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
+
+                // make sure toolbar fits inside canvas
+                if (!this.toolbarContainer.classList.contains("vertical-orientation")) {
+                    this.inkingCanvas.setMinWidth(this.toolbarContainer.offsetWidth);
+                }
             }
 
             // provide keyboard navigation for toolbar colors
@@ -569,11 +572,17 @@ export class InkingToolbar extends LitElement {
                 if (!this.tools) this.tools = new Array<HTMLButtonElement>();
                 this.tools.push(tool);
                 if (this.children.length === this.tools.length) {
+
                     // done welcoming last tool, so set toolbar layout to developer's choice
                     this.setOrientation();
                     this.setVerticalAlignment();
                     this.setHorizontalAlignment();  
                     this.customizedToolbarSelection.addEventListener("keydown", (e) => this.handleToolSwitchingByKeyboard(e, this.tools), false);
+
+                    // make sure toolbar fits inside canvas
+                    if (!this.toolbarContainer.classList.contains("vertical-orientation")) {
+                        this.inkingCanvas.setMinWidth(this.toolbarContainer.offsetWidth);
+                    }
                 }
             }
         }
@@ -583,14 +592,14 @@ export class InkingToolbar extends LitElement {
 
     private handleToolSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.toolFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.toolFocus++;
 
                 // if we're at the end, go to the start
@@ -598,8 +607,8 @@ export class InkingToolbar extends LitElement {
                     this.toolFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
                 this.toolFocus--;
 
                 // if we're at the start, move to the end
@@ -617,14 +626,14 @@ export class InkingToolbar extends LitElement {
 
     private handlePenPencilSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.penPencilFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.penPencilFocus++;
 
                 // if we're at the end, go to the start
@@ -632,8 +641,8 @@ export class InkingToolbar extends LitElement {
                     this.penPencilFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
                 this.penPencilFocus--;
                 
                 // if we're at the start, move to the end
@@ -651,14 +660,14 @@ export class InkingToolbar extends LitElement {
 
     private handleHighlighterSwitchingByKeyboard(e: KeyboardEvent, tabs: HTMLButtonElement[]) {
 
-        // react to only left or right arrow keys
-        if (e.keyCode === 39 || e.keyCode === 37) {
+        // react to only left, up, right, or down arrow keys
+        if (e.keyCode > 36 && e.keyCode < 41) {
 
             // unfocus whatever is currently selected
             tabs[this.highlighterFocus].setAttribute("tabindex", "-1");
 
-            // right arrow key
-            if (e.keyCode === 39) {
+            // right or down arrow key, respectively
+            if (e.keyCode === 39 || e.keyCode === 40) {
                 this.highlighterFocus++;
 
                 // if we're at the end, go to the start
@@ -666,9 +675,9 @@ export class InkingToolbar extends LitElement {
                     this.highlighterFocus = 0;
                 }
 
-            // left arrow key
-            } else if (e.keyCode === 37) {
-                this.highlighterFocus--;
+            // left or up arrow key, respectively
+            } else if (e.keyCode === 37 || e.keyCode === 38) {
+            this.highlighterFocus--;
                 
                 // if we're at the start, move to the end
                 if (this.highlighterFocus < 0) {
@@ -724,6 +733,11 @@ export class InkingToolbar extends LitElement {
             case "bottom":
                 if (this.toolbarContainer) this.toolbarContainer.classList.add("bottom");
                 if (this.dropdownContainer) this.dropdownContainer.classList.add("bottom");
+                if (this.tools) {
+                    this.tools.forEach(tool => {
+                        tool.classList.add("bottom");
+                    });
+                }
                 break;
             default:
                 console.log("Could not set vertical toolbar alignment");
@@ -892,12 +906,11 @@ export class InkingToolbar extends LitElement {
     }
 
     private clickedEraseAll(e: Event) {
-        let eraser = (<HTMLButtonElement>e.target);
-        console.log(eraser.id + " has been clicked!");
+        let eraseAll = (<HTMLButtonElement>e.target);
+        console.log(eraseAll.id + " has been clicked!");
         Utils.runAsynchronously( () => {
             this.inkingCanvas.eraseAll();
         });
-        this.selectedTool = eraser;
     }
 
     private clickedColor(event: Event) {
@@ -975,7 +988,18 @@ export class InkingToolbar extends LitElement {
             }
             this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
         } else {
+            // this.blurToolButtonFocus();
             this.selectedDropdown.classList.toggle("show");
+            this.dropdownContainer.classList.toggle("show");
+            selectedTool.classList.toggle("show");
+        }
+    }
+
+    private blurToolButtonFocus() {
+        if (document.activeElement instanceof HTMLButtonElement) {
+            (<HTMLButtonElement>document.activeElement).blur();
+        } else if (document.activeElement.shadowRoot && document.activeElement.shadowRoot.activeElement instanceof HTMLButtonElement) {
+            (<HTMLButtonElement>document.activeElement.shadowRoot.activeElement).blur();
         }
     }
 
@@ -1005,10 +1029,12 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class which should be the last and 6th class
-                this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                // remove the color class
+                this.selectedTool.classList.remove(Utils.toDash(this.getCurrentStrokeColorName()));
 
                 this.selectedTool.classList.remove('clicked');
+                this.selectedTool.classList.remove('show');
+
             }
 
             if (this.defaultToolbarSelection.classList.contains("show")) {
@@ -1027,6 +1053,7 @@ export class InkingToolbar extends LitElement {
 
             this.selectedTool = lastClickedTool;           
             this.selectedTool.classList.add('clicked');
+            this.selectedTool.classList.add('show');
 
             if (this.defaultToolbarSelection.classList.contains("show")) {
                 this.selectedTool.setAttribute("tabindex", "0");
@@ -1083,12 +1110,15 @@ export class InkingToolbar extends LitElement {
         if (this.selectedDropdown && this.selectedDropdown === selectedDropdown) {
             if (this.selectedDropdown.classList.contains("show") && isLastElementClicked) {
                 this.selectedDropdown.classList.remove("show");
+                this.dropdownContainer.classList.remove("show");
             } else {
                 this.selectedDropdown.classList.add("show");
+                this.dropdownContainer.classList.add("show");
             }
         } else {
+            if (!this.selectedDropdown) this.dropdownContainer.classList.add("show");
             this.selectedDropdown = selectedDropdown;
-            this.selectedDropdown.classList.add("show");
+            this.selectedDropdown.classList.add("show"); 
         }
     }
 
@@ -1101,10 +1131,13 @@ export class InkingToolbar extends LitElement {
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
                 // remove the color class
-                if (this.selectedTool.classList[5] !== "clicked") {
-                    this.selectedTool.classList.remove(this.selectedTool.classList[5]);
+                let length = this.selectedTool.classList.length;
+                if (this.selectedTool.classList[length-1] !== "clicked" && this.selectedTool.classList[length-1] !== "show") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-1]);
+                } else if (this.selectedTool.classList[length-2] !== "clicked" && this.selectedTool.classList[length-2] !== "show") {
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-2]);
                 } else {
-                    this.selectedTool.classList.remove(this.selectedTool.classList[6]);
+                    this.selectedTool.classList.remove(this.selectedTool.classList[length-3]);
                 }
 
                 // use the css friendly color class name with dashes
@@ -1207,12 +1240,14 @@ export class InkingToolbar extends LitElement {
                     position: absolute;
                     display: none;
                     margin: 6px;
+                    white-space: nowrap;
                 }
                 #toolbar-container.show {
                     display: inline-block;
                 }
                 #toolbar-container.vertical-center {
                     bottom: 50%;
+                    transform: translateY(50%);
                 }
                 #toolbar-container.bottom {
                     bottom: 0;
@@ -1220,21 +1255,22 @@ export class InkingToolbar extends LitElement {
                 }
                 #toolbar-container.horizontal-center {
                     right: 50%;
+                    transform: translateX(50%);
+                }
+                #toolbar-container.vertical-center.horizontal-center {
+                    transform: translate(50%, 50%);
                 }
                 #toolbar-container.right {
+                    position: fixed;
                     right: 0;
-                }
-                #toolbar-container.vertical-orientation.right {
-                    margin-right: 7px; // TODO: update to fit dev specified canvas border width
                 }
                 #tool-container {
                     background-color: ${Colors.white};
-                    border: 2px solid ${Colors.white};
-                    border-bottom: 0px solid ${Colors.white};
+                    margin: 2px 2px 0px 2px;
                     display: inline-block;
+                    font-size: 0; // remove children's inline-block spacing
                 }
                 #tool-container.vertical-orientation {
-                    vertical-align: top;
                     margin: 2px 0px 2px 2px; /* no gap between right of tool and dropdown */ 
                     border-bottom: 2px solid ${Colors.white};
                     border-right: 0px solid ${Colors.white};
@@ -1247,10 +1283,15 @@ export class InkingToolbar extends LitElement {
                 }
                 #dropdown-container {
                     background-color: ${Colors.colorPaletteBackground};
-                    width: 320px;
-                    margin: 2px;
-                    margin-top: 3px;
+                    width: 300px;
                     position: absolute;
+                    border: none;
+                    margin: -2px 2px 2px;
+                }
+                #dropdown-container.show {
+                    box-sizing: border-box;
+                    border: 2px solid ${Colors.gray};
+                    border-radius: 2px;
                 }
                 #dropdown-container:focus {
                     outline: none;
@@ -1265,14 +1306,18 @@ export class InkingToolbar extends LitElement {
                 }
                 #dropdown-container.vertical-orientation {
                     display: inline-block;
-                    margin-left: 3px;
+                    margin-top: 2px;
+                    margin-left: -2px;
+                }
+                #dropdown-container.vertical-orientation.show {
+                    min-height: 200px;
                 }
                 #dropdown-container.right {
                     right: 0;
                     margin-right: 2px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.right {
-                    margin-right: 54px; // TODO: update to fit dev specified canvas border width
+                    margin-right: 48px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-center {
                     top: 100%;
@@ -1283,7 +1328,7 @@ export class InkingToolbar extends LitElement {
                 #dropdown-container.bottom {
                     bottom: 0;
                     margin-top: 0;
-                    margin-bottom: 56px; // TODO: update to fit dev specified canvas border width
+                    margin-bottom: 48px; // TODO: update to fit dev specified canvas border width
                 }
                 #dropdown-container.vertical-orientation.bottom {
                     margin-bottom: 4px;
@@ -1299,7 +1344,7 @@ export class InkingToolbar extends LitElement {
                 .ink-dropdown {
                     display: none;
                     padding: 10px;
-                    padding-bottom: 15px;
+                    padding-bottom: 14px;
                     font-family: sans-serif;
                     font-size: 16px;
                 }
@@ -1308,13 +1353,13 @@ export class InkingToolbar extends LitElement {
                 }
                 .palette {
                     display: none;
-                    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
                     grid-auto-rows: minmax(25px, auto);
                     justify-items: center;
                     align-items: center;
                     justify-content: center;
                     align-content: center;
-                    border: 5px solid transparent;
+                    // border: 5px solid transparent;
                 }
                 .palette.show {
                     display: grid;
@@ -1887,7 +1932,6 @@ export class InkingToolbar extends LitElement {
                 #snackbar {
                     visibility: hidden;
                     min-width: 250px;
-                    margin-left: -125px; /* Divide value of min-width by 2 */
                     background-color: ${Colors.colorPaletteBackground};
                     color: ${Colors.black};
                     font-size: 16px;
@@ -1897,7 +1941,8 @@ export class InkingToolbar extends LitElement {
                     padding: 16px;
                     position: fixed;
                     z-index: 1;
-                    left: 50%;
+                    right: 50%;
+                    transform: translateX(50%);
                     bottom: 30px;
                 }          
                 #snackbar.show {

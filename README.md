@@ -145,6 +145,7 @@ The stroke width regardless of pointer event type can be set and fixed through t
 | `getCanvas()` | Returns inner html canvas object for advanced use cases |
 | `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
 | `requestDrawCanvas()` | Triggers an additional canvas redraw if one is not already queued up |
+| `setMinWidth(newMinWidth: number)` | Changes minimum canvas width and overrides default 300px value |
 
 
 ## inking-toolbar
