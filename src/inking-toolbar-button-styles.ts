@@ -502,6 +502,7 @@ export const InkingToolbarButtonStyles = css`
         background-color: ${Colors.colorPaletteBackground};
         box-shadow: none;
         padding-top: 6px;
+        padding-bottom: 8px;
         border: 2px solid ${Colors.gray};
         border-bottom: none;
     }
