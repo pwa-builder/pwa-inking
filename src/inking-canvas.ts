@@ -19,9 +19,9 @@ export class InkingCanvas extends LitElement {
     @query('canvas') private canvas: HTMLCanvasElement;
     @property({ type: CanvasRenderingContext2D }) private context: CanvasRenderingContext2D;
     private static readonly minCanvasHeight = 300;
-    private static readonly minCanvasWidth = 300;
+    private static minCanvasWidth = 300;
     private static readonly minCanvasHeightCSS = css`${InkingCanvas.minCanvasHeight}px`;
-    private static readonly minCanvasWidthCSS = css`${InkingCanvas.minCanvasWidth}px`;
+    private static minCanvasWidthCSS = css`${InkingCanvas.minCanvasWidth}px`;
 
     // all properties immediately customizable by developer
     @property({type: Number, attribute: "height"}) canvasHeight: number = -1;
@@ -156,6 +156,13 @@ export class InkingCanvas extends LitElement {
         if (!this.isWaitingToDraw) {
             this.isWaitingToDraw = true;
         }
+    }
+    
+    // expose ability to expand canvas to fit its toolbar width
+    setMinWidth(newMinWidth: number) {
+        InkingCanvas.minCanvasWidth = newMinWidth;
+        InkingCanvas.minCanvasWidthCSS = css`${newMinWidth}px`;
+        this.canvas.style.minWidth = InkingCanvas.minCanvasWidthCSS.toString();
     }
 
     private async setUpCanvas() {
