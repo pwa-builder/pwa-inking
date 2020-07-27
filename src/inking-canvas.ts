@@ -233,6 +233,23 @@ export class InkingCanvas extends LitElement {
             // notify external influencers that drawing happened
             this.dispatchEvent(this.inkingCanvasDrawnEvent);
 
+            // broadcast canvas blob image for live sharing
+            try {
+                Utils.runAsynchronously( async() => {
+                    const outerThis = this;
+                    this.canvas.toBlob( function(blob) {
+                        let inkingCanvasBlobUpdatedEvent = new CustomEvent("inking-canvas-blob-updated", { 
+                            detail: { 
+                                blob: blob,
+                            }
+                        });
+                        outerThis.dispatchEvent(inkingCanvasBlobUpdatedEvent);
+                    });
+                });
+            } catch (err) {
+                console.error("Could not dispatch inking canvas blob updated event: ", err);
+            }
+
             // console.log("canvas was resized");
         }
 
@@ -424,6 +441,22 @@ export class InkingCanvas extends LitElement {
                        outerThis.context.stroke();
 
                     }
+
+                    // broadcast stroke details for live sharing
+                    let inkingCanvasPointerMoveEvent = new CustomEvent("inking-canvas-pointer-move", { 
+                        detail: { 
+                            x0: previous.clientX,
+                            y0: previous.clientY,
+                            x1: (event as PointerEvent).clientX,
+                            y1: (event as PointerEvent).clientY,
+                            color: outerThis.strokeColor,
+                            pointerType: (event as PointerEvent).pointerType,
+                            pressure: (event as PointerEvent).pressure,
+                            width: (event as PointerEvent).width,
+                        }
+                    });
+                    outerThis.dispatchEvent(inkingCanvasPointerMoveEvent);
+
                 }
             }
         });
