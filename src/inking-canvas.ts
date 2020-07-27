@@ -165,6 +165,25 @@ export class InkingCanvas extends LitElement {
         this.canvas.style.minWidth = InkingCanvas.minCanvasWidthCSS.toString();
     }
 
+    // expose ability to request canvas blob image for live sharing
+    requestBlob() {
+        try {
+            Utils.runAsynchronously( async() => {
+                const outerThis = this;
+                this.canvas.toBlob( function(blob) {
+                    let inkingCanvasBlobRequestedEvent = new CustomEvent("inking-canvas-blob-requested", { 
+                        detail: { 
+                            blob: blob,
+                        }
+                    });
+                    outerThis.dispatchEvent(inkingCanvasBlobRequestedEvent);
+                });
+            });
+        } catch (err) {
+            console.error("Could not dispatch inking canvas blob requested event: ", err);
+        }
+    }
+
     private async setUpCanvas() {
 
         // set css canvas dimensions prior to setting logical canvas dimensions (including calling getBoundingClientRect())
@@ -232,23 +251,6 @@ export class InkingCanvas extends LitElement {
 
             // notify external influencers that drawing happened
             this.dispatchEvent(this.inkingCanvasDrawnEvent);
-
-            // broadcast canvas blob image for live sharing
-            try {
-                Utils.runAsynchronously( async() => {
-                    const outerThis = this;
-                    this.canvas.toBlob( function(blob) {
-                        let inkingCanvasBlobUpdatedEvent = new CustomEvent("inking-canvas-blob-updated", { 
-                            detail: { 
-                                blob: blob,
-                            }
-                        });
-                        outerThis.dispatchEvent(inkingCanvasBlobUpdatedEvent);
-                    });
-                });
-            } catch (err) {
-                console.error("Could not dispatch inking canvas blob updated event: ", err);
-            }
 
             // console.log("canvas was resized");
         }
