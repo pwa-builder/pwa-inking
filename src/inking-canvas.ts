@@ -106,26 +106,10 @@ export class InkingCanvas extends LitElement {
         return this.strokeSize;
     }
 
-    setStrokeStyle(toolName: string) {
+    setStrokeStyle(toolStyle: string) {
         if (this.context) {
-            this.toolStyle = toolName;
-            switch (toolName) {
-                case ("pen") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                case ("pencil") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("highlighter") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("eraser") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                default : 
-                    console.log("unknown pen style captured");
-                    break;
-            }
+            this.toolStyle = toolStyle;
+            this.setGlobalCompositeOperationForTool(toolStyle);
         }
     }
 
@@ -181,6 +165,26 @@ export class InkingCanvas extends LitElement {
             });
         } catch (err) {
             console.error("Could not dispatch inking canvas blob requested event: ", err);
+        }
+    }
+
+    private setGlobalCompositeOperationForTool(toolStyle: string) {
+        switch (toolStyle) {
+            case ("pen") :
+                this.context.globalCompositeOperation = "source-over";
+                break;
+            case ("pencil") :
+                this.context.globalCompositeOperation = "darken";
+                break;
+            case ("highlighter") :
+                this.context.globalCompositeOperation = "darken";
+                break;
+            case ("eraser") :
+                this.context.globalCompositeOperation = "source-over";
+                break;
+            default : 
+                console.log("unknown pen style captured");
+                break;
         }
     }
 
@@ -439,6 +443,12 @@ export class InkingCanvas extends LitElement {
             }
         }
 
+        if (remoteData) {
+            this.setGlobalCompositeOperationForTool(remoteData.toolStyle);
+        } else {
+            this.setGlobalCompositeOperationForTool(this.toolStyle);
+        }
+
         if (this.isStrokeOfToolStyle("pencil", remoteData) && !this.isStylusEraserActive(pointer)) {
 
             // update the inking texture with the correct color
@@ -457,7 +467,7 @@ export class InkingCanvas extends LitElement {
             if (this.isStylusEraserActive(pointer)) {
                 console.log("eraser detected");
                 this.context.strokeStyle = "white";
-                this.context.globalCompositeOperation = "source-over";
+                this.setGlobalCompositeOperationForTool("eraser");
             }
 
            // apply ink to canvas
