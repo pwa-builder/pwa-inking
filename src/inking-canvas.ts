@@ -337,7 +337,15 @@ export class InkingCanvas extends LitElement {
         });
     }
 
-    private adjustStrokeProperties(pointer: Pointer) {
+    private isStrokeSizeSet(remoteData?: any) {
+        return (remoteData && remoteData.strokeSize !== -1) || (!remoteData && this.strokeSize !== -1);
+    }
+
+    private isStrokeOfToolStyle(toolStyle: string, remoteData?: any) {
+        return (remoteData && remoteData.toolStyle === toolStyle) || (!remoteData && this.toolStyle === toolStyle);
+    }
+
+    private adjustStrokeProperties(pointer: Pointer, remoteData?: any) {
 
         // identify input type
         let pointerType = (pointer.nativePointer as PointerEvent).pointerType;
@@ -361,8 +369,8 @@ export class InkingCanvas extends LitElement {
         // if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
 
         // adjust stroke thickness for each input type if toolbar size slider isn't active
-        if (this.strokeSize === -1) {
-            if (this.toolStyle === "highlighter") {
+        if (!this.isStrokeSizeSet(remoteData)) {
+            if (this.isStrokeOfToolStyle("highlighter", remoteData)) {
                 this.defaultStrokeSize = this.highlighterStrokeSize;
             } else {
                 this.defaultStrokeSize = this.nonHighlighterStrokeSize;
@@ -383,13 +391,13 @@ export class InkingCanvas extends LitElement {
             }
         } else {
             // take stroke size defined by external influencer
-            this.context.lineWidth = this.strokeSize;
+            this.context.lineWidth = remoteData ? remoteData.strokeSize : this.strokeSize;
         }
     }
 
-    private drawStrokes(pointer: Pointer, previous: Pointer, event: Event) {
+    private drawStrokes(pointer: Pointer, previous: Pointer, event: Event, remoteData?: any) {
 
-        this.adjustStrokeProperties(pointer);
+        this.adjustStrokeProperties(pointer, remoteData);
 
         let previousX: number, previousY: number, currentX: number, currentY: number;
 
@@ -400,8 +408,8 @@ export class InkingCanvas extends LitElement {
             // make pen events in Firefox appear like mouse events since pressure appears 0 and width is super large
             if ((pointer.nativePointer as PointerEvent).width > window.innerWidth) {
                 // console.log(width, pressure);
-                if (this.strokeSize !== -1) {
-                    this.context.lineWidth = this.strokeSize;
+                if (this.isStrokeSizeSet(remoteData)) {
+                    this.context.lineWidth = remoteData ? remoteData.strokeSize : this.strokeSize;
                 } else {
                     this.context.lineWidth = this.defaultStrokeSize;
                 }
@@ -431,10 +439,10 @@ export class InkingCanvas extends LitElement {
             }
         }
 
-        if (this.toolStyle === "pencil" && !this.isStylusEraserActive(pointer)) {
+        if (this.isStrokeOfToolStyle("pencil", remoteData) && !this.isStylusEraserActive(pointer)) {
 
             // update the inking texture with the correct color
-            this.context.fillStyle = this.strokeColor;
+            this.context.fillStyle = remoteData? remoteData.strokeColor : this.strokeColor;
 
             // change up the stroke texture
             Utils.drawPencilStroke(this.context, previousX, currentX, previousY, currentY);
@@ -442,7 +450,7 @@ export class InkingCanvas extends LitElement {
         } else {
 
             // update the stroke color (for no added texture)
-            this.context.strokeStyle = this.strokeColor;
+            this.context.strokeStyle = remoteData? remoteData.strokeColor : this.strokeColor;
 
             // TODO: make stylus erase work in Firefox (which does not seem to detect the below button states for stylus input)
             // handle pen/stylus erasing
@@ -476,16 +484,22 @@ export class InkingCanvas extends LitElement {
                 pointerType: (event as PointerEvent).pointerType,
                 pressure: (event as PointerEvent).pressure,
                 width: (event as PointerEvent).width,
+                strokeSize: this.strokeSize,
+                toolStyle: this.toolStyle
             }
         });
         this.dispatchEvent(inkingCanvasPointerMoveEvent);
     }
 
     drawRemoteStrokes(strokeData: any) {
-        if (strokeData.pointer && strokeData.previous && strokeData.event) {
-            this.drawStrokes(strokeData.pointer, strokeData.previous, strokeData.event);
-        } else {
-            console.error("Input for drawRemoteStrokes function not valid.");
+        try {
+            if (strokeData && strokeData.pointer && strokeData.previous && strokeData.event) {
+                this.drawStrokes(strokeData.pointer, strokeData.previous, strokeData.event, strokeData);
+            } else {
+                console.error("Input for drawRemoteStrokes function not valid.");
+            }
+        } catch (err) {
+            console.error("Could not draw strokes from remote source.", err);
         }
     }
 
