@@ -348,16 +348,16 @@ export class InkingCanvas extends LitElement {
     private adjustStrokeProperties(pointer: Pointer, remoteData?: any) {
 
         // identify input type
-        let pointerType = (pointer.nativePointer as PointerEvent).pointerType;
+        let pointerType = remoteData ? remoteData.pointerType : (pointer.nativePointer as PointerEvent).pointerType;
         // console.log("pointer type: " + pointerType);
 
         // collect width for touch and mouse strokes
-        let width = (pointer.nativePointer as PointerEvent).width;
+        let width = remoteData ? remoteData.width : (pointer.nativePointer as PointerEvent).width;
         this.strokes.set(pointer.id, width);
         // if (pointerType !== "pen") console.log("width: " + width);
 
         // collect info for pen/stylus strokes
-        let pressure = (pointer.nativePointer as PointerEvent).pressure;
+        let pressure = remoteData ? remoteData.pressure : (pointer.nativePointer as PointerEvent).pressure;
         // if (pointerType === "pen") console.log("pressure: " + pressure);
         let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
         // if (pointerType === "pen") console.log("tiltX: " + tiltX);
@@ -442,7 +442,7 @@ export class InkingCanvas extends LitElement {
         if (this.isStrokeOfToolStyle("pencil", remoteData) && !this.isStylusEraserActive(pointer)) {
 
             // update the inking texture with the correct color
-            this.context.fillStyle = remoteData? remoteData.strokeColor : this.strokeColor;
+            this.context.fillStyle = remoteData? remoteData.color : this.strokeColor;
 
             // change up the stroke texture
             Utils.drawPencilStroke(this.context, previousX, currentX, previousY, currentY);
@@ -450,7 +450,7 @@ export class InkingCanvas extends LitElement {
         } else {
 
             // update the stroke color (for no added texture)
-            this.context.strokeStyle = remoteData? remoteData.strokeColor : this.strokeColor;
+            this.context.strokeStyle = remoteData? remoteData.color : this.strokeColor;
 
             // TODO: make stylus erase work in Firefox (which does not seem to detect the below button states for stylus input)
             // handle pen/stylus erasing
