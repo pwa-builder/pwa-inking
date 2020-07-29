@@ -481,11 +481,11 @@ export class InkingCanvas extends LitElement {
         this.dispatchEvent(inkingCanvasPointerMoveEvent);
     }
 
-    drawRemoteStrokes(e: CustomEvent) {
-        if (e.type === "inking-canvas-pointer-move") {
-            this.drawStrokes(e.detail.pointer, e.detail.previous, e.detail.event);
+    drawRemoteStrokes(strokeData: any) {
+        if (strokeData.pointer && strokeData.previous && strokeData.event) {
+            this.drawStrokes(strokeData.pointer, strokeData.previous, strokeData.event);
         } else {
-            console.error("Custom event for drawRemoteStrokes method not recognized.");
+            console.error("Input for drawRemoteStrokes function not valid.");
         }
     }
 
