@@ -335,7 +335,7 @@ export class InkingCanvas extends LitElement {
                     // find last pointer event of same stroke to connect the new pointer event to it
                     const previous = previousPointers.find(p => p.id === pointer.id);
 
-                    outerThis.drawLocalStrokes(pointer, previous, event);
+                    outerThis.drawLocalStroke(pointer, previous, event);
                 }
             }
         });
@@ -399,7 +399,7 @@ export class InkingCanvas extends LitElement {
         }
     }
 
-    private drawStrokes(pointer: Pointer, previous: Pointer, event: Event, remoteData?: any) {
+    private drawStroke(pointer: Pointer, previous: Pointer, event: Event, remoteData?: any) {
 
         this.adjustStrokeProperties(pointer, remoteData);
 
@@ -476,9 +476,9 @@ export class InkingCanvas extends LitElement {
         }
     }
 
-    private drawLocalStrokes(pointer: Pointer, previous: Pointer, event: Event) {
+    private drawLocalStroke(pointer: Pointer, previous: Pointer, event: Event) {
 
-        this.drawStrokes(pointer, previous, event);
+        this.drawStroke(pointer, previous, event);
 
         // broadcast stroke details for live sharing
         let inkingCanvasPointerMoveEvent = new CustomEvent("inking-canvas-pointer-move", { 
@@ -501,10 +501,10 @@ export class InkingCanvas extends LitElement {
         this.dispatchEvent(inkingCanvasPointerMoveEvent);
     }
 
-    drawRemoteStrokes(strokeData: any) {
+    drawRemoteStroke(strokeData: any) {
         try {
             if (strokeData && strokeData.pointer && strokeData.previous && strokeData.event) {
-                this.drawStrokes(strokeData.pointer, strokeData.previous, strokeData.event, strokeData);
+                this.drawStroke(strokeData.pointer, strokeData.previous, strokeData.event, strokeData);
             } else {
                 console.error("Input for drawRemoteStrokes function not valid.");
             }
