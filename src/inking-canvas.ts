@@ -1,7 +1,7 @@
 import {
     LitElement, html, customElement, property, css, query
 } from 'lit-element';
-import { get, set , del } from 'idb-keyval';
+import { Store, get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
 import PointerTracker, { Pointer } from "./PointerTracker.js";
 // import { fileSave } from 'browser-nativefs';
@@ -22,6 +22,7 @@ export class InkingCanvas extends LitElement {
     private static minCanvasWidth = 300;
     private static readonly minCanvasHeightCSS = css`${InkingCanvas.minCanvasHeight}px`;
     private static minCanvasWidthCSS = css`${InkingCanvas.minCanvasWidth}px`;
+    private canvasStore: Store;
 
     // all properties immediately customizable by developer
     @property({type: Number, attribute: "height"}) canvasHeight: number = -1;
@@ -69,7 +70,10 @@ export class InkingCanvas extends LitElement {
     firstUpdated() {
 
         // TODO: put this somewhere else later
-        this.deleteCanvasContents();      
+        this.deleteCanvasContents();
+        if (!this.canvasStore) {
+            this.canvasStore = new Store(Utils.toDash(this.name) + "-store", Utils.toDash(this.name));
+        }
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
         Utils.runAsynchronously( () => { 
@@ -243,7 +247,7 @@ export class InkingCanvas extends LitElement {
 
                 // reload canvas with previous contents
                 const outerThis = this;
-                const canvasContents = await (get('canvasContents') as any);
+                const canvasContents = await (get('canvasContents', this.canvasStore) as any);
                 if (canvasContents) {
                     const tempImage = new Image();
                     tempImage.onload = () => {
@@ -495,7 +499,8 @@ export class InkingCanvas extends LitElement {
                 pressure: (event as PointerEvent).pressure,
                 width: (event as PointerEvent).width,
                 strokeSize: this.strokeSize,
-                toolStyle: this.toolStyle
+                toolStyle: this.toolStyle,
+                inkingCanvasName: this.name
             }
         });
         this.dispatchEvent(inkingCanvasPointerMoveEvent);
@@ -591,13 +596,13 @@ export class InkingCanvas extends LitElement {
 
         Utils.runAsynchronously( async () => { 
             let canvasContents = this.canvas.toDataURL();
-            await set('canvasContents', canvasContents);
+            await set('canvasContents', canvasContents, this.canvasStore);
         });
     }
 
     private deleteCanvasContents() {
         Utils.runAsynchronously( async () => { 
-            await del('canvasContents');
+            await del('canvasContents', this.canvasStore);
         });
     }
 
