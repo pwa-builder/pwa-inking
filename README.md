@@ -118,7 +118,7 @@ The stroke width regardless of pointer event type can be set and fixed through t
 
 ## Live sharing
 
-The `<inking-canvas></inking-canvas>` supports live sharing the drawing on its contents on different browsers and devices. A custom event is broadcasted for external influencers to collect. The following snippet detailing the stroke data is taken from the inking-canvas source code:
+The `<inking-canvas></inking-canvas>` supports live sharing the drawing of its contents on different browsers and devices. A custom event is broadcasted for external influencers to collect. The following snippet detailing the stroke data is taken from the inking-canvas source code:
 
 ```js
     // broadcast stroke details for live sharing
@@ -147,7 +147,7 @@ External strokes (ones originally drawn on a different browser or device) can al
 
 You can use any websocket-based sharing solution to broadcast and deliver stroke data. It is recommended to prevent stroke duplication by ensuring the recipient client is not the stroke's origin and that the destination `<inking-canvas></inking-canvas>` matches the origin `<inking-canvas></inking-canvas>` by name (in case the app hosts multiple instances of the component).
 
-The following code is a snippet from a [Socket.IO]((https://socket.io/) example [client](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9) (found in src/script/pages/app-home.ts):
+The following code is a snippet from a [Socket.IO](https://socket.io/) example [client](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9) (found in src/script/pages/app-home.ts):
 
 ```js
     socket.on('drawing', (data: any) => {
@@ -188,7 +188,7 @@ Try it: [live](https://pwabuilder-inking-live.glitch.me/) | [code](https://glitc
 | `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, highlighter, or eraser)                            | 
 | `copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
 | `saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
-| `drawRemoteStroke(strokeData: any)` | Draws stroke to canvas based on passed pointer event and origin canvas state |
+| `drawRemoteStroke(strokeData: any)` | Draws remote stroke to local canvas based on passed pointer event and remote canvas state |
 | `eraseAll()`                              | Deletes all visible and cached canvas ink                                        |
 | `getCanvas()` | Returns inner html canvas object for advanced use cases |
 | `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
