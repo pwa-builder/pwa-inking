@@ -1,9 +1,9 @@
 import {
     LitElement, html, customElement, property, css, query
 } from 'lit-element';
-import { get, set , del } from 'idb-keyval';
+import { Store, get, set , del } from 'idb-keyval';
 // import PointerTracker from 'pointer-tracker';
-import PointerTracker from "./PointerTracker.js";
+import PointerTracker, { Pointer } from "./PointerTracker.js";
 // import { fileSave } from 'browser-nativefs';
 
 // @ts-ignore
@@ -22,6 +22,7 @@ export class InkingCanvas extends LitElement {
     private static minCanvasWidth = 300;
     private static readonly minCanvasHeightCSS = css`${InkingCanvas.minCanvasHeight}px`;
     private static minCanvasWidthCSS = css`${InkingCanvas.minCanvasWidth}px`;
+    private canvasStore: Store;
 
     // all properties immediately customizable by developer
     @property({type: Number, attribute: "height"}) canvasHeight: number = -1;
@@ -69,7 +70,10 @@ export class InkingCanvas extends LitElement {
     firstUpdated() {
 
         // TODO: put this somewhere else later
-        this.deleteCanvasContents();      
+        this.deleteCanvasContents();
+        if (!this.canvasStore) {
+            this.canvasStore = new Store(Utils.toDash(this.name) + "-store", Utils.toDash(this.name));
+        }
 
         // establish canvas w & h, low-latency, stroke shape, starting image, etc
         Utils.runAsynchronously( () => { 
@@ -106,26 +110,10 @@ export class InkingCanvas extends LitElement {
         return this.strokeSize;
     }
 
-    setStrokeStyle(toolName: string) {
+    setStrokeStyle(toolStyle: string) {
         if (this.context) {
-            this.toolStyle = toolName;
-            switch (toolName) {
-                case ("pen") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                case ("pencil") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("highlighter") :
-                    this.context.globalCompositeOperation = "darken";
-                    break;
-                case ("eraser") :
-                    this.context.globalCompositeOperation = "source-over";
-                    break;
-                default : 
-                    console.log("unknown pen style captured");
-                    break;
-            }
+            this.toolStyle = toolStyle;
+            this.setGlobalCompositeOperationForTool(toolStyle);
         }
     }
 
@@ -163,6 +151,45 @@ export class InkingCanvas extends LitElement {
         InkingCanvas.minCanvasWidth = newMinWidth;
         InkingCanvas.minCanvasWidthCSS = css`${newMinWidth}px`;
         this.canvas.style.minWidth = InkingCanvas.minCanvasWidthCSS.toString();
+    }
+
+    // expose ability to request canvas blob image for live sharing
+    requestBlob() {
+        try {
+            Utils.runAsynchronously( async() => {
+                const outerThis = this;
+                this.canvas.toBlob( function(blob) {
+                    let inkingCanvasBlobRequestedEvent = new CustomEvent("inking-canvas-blob-requested", { 
+                        detail: { 
+                            blob: blob,
+                        }
+                    });
+                    outerThis.dispatchEvent(inkingCanvasBlobRequestedEvent);
+                });
+            });
+        } catch (err) {
+            console.error("Could not dispatch inking canvas blob requested event: ", err);
+        }
+    }
+
+    private setGlobalCompositeOperationForTool(toolStyle: string) {
+        switch (toolStyle) {
+            case ("pen") :
+                this.context.globalCompositeOperation = "source-over";
+                break;
+            case ("pencil") :
+                this.context.globalCompositeOperation = "darken";
+                break;
+            case ("highlighter") :
+                this.context.globalCompositeOperation = "darken";
+                break;
+            case ("eraser") :
+                this.context.globalCompositeOperation = "source-over";
+                break;
+            default : 
+                console.log("unknown pen style captured");
+                break;
+        }
     }
 
     private async setUpCanvas() {
@@ -220,7 +247,7 @@ export class InkingCanvas extends LitElement {
 
                 // reload canvas with previous contents
                 const outerThis = this;
-                const canvasContents = await (get('canvasContents') as any);
+                const canvasContents = await (get('canvasContents', this.canvasStore) as any);
                 if (canvasContents) {
                     const tempImage = new Image();
                     tempImage.onload = () => {
@@ -312,121 +339,183 @@ export class InkingCanvas extends LitElement {
                     // find last pointer event of same stroke to connect the new pointer event to it
                     const previous = previousPointers.find(p => p.id === pointer.id);
 
-                    // identify input type
-                    let pointerType = (pointer.nativePointer as PointerEvent).pointerType;
-                    // console.log("pointer type: " + pointerType);
-
-                    // collect width for touch and mouse strokes
-                    let width = (pointer.nativePointer as PointerEvent).width;
-                    outerThis.strokes.set(pointer.id, width);
-                    // if (pointerType !== "pen") console.log("width: " + width);
-
-                    // collect info for pen/stylus strokes
-                    let pressure = (pointer.nativePointer as PointerEvent).pressure;
-                    // if (pointerType === "pen") console.log("pressure: " + pressure);
-                    let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
-                    // if (pointerType === "pen") console.log("tiltX: " + tiltX);
-                    let tiltY = (pointer.nativePointer as PointerEvent).tiltY;
-                    // if (pointerType === "pen") console.log("tiltY: " + tiltY);
-                    let twist = (pointer.nativePointer as PointerEvent).twist;
-                    // if (pointerType === "pen") console.log("twist: " + twist);
-                    let tangentialPressue = (pointer.nativePointer as PointerEvent).tangentialPressure;
-                    // if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
-
-                    // adjust stroke thickness for each input type if toolbar size slider isn't active
-                    if (outerThis.strokeSize === -1) {
-                        if (outerThis.toolStyle === "highlighter") {
-                            outerThis.defaultStrokeSize = outerThis.highlighterStrokeSize;
-                        } else {
-                            outerThis.defaultStrokeSize = outerThis.nonHighlighterStrokeSize;
-                        }
-                        if (pointerType === 'pen') {
-                            if (outerThis.defaultMousePressure > pressure) {
-                                outerThis.context.lineWidth = outerThis.defaultStrokeSize - (2 * outerThis.defaultStrokeSize * (outerThis.defaultMousePressure - pressure));
-                            } else if (outerThis.defaultMousePressure === pressure) {
-                                outerThis.context.lineWidth = outerThis.defaultStrokeSize;
-                            } else {
-                                outerThis.context.lineWidth = outerThis.defaultStrokeSize + (2 * outerThis.defaultStrokeSize * (pressure - outerThis.defaultMousePressure));
-                            }
-                        } else if (pointerType === "touch") {
-                            outerThis.context.lineWidth = outerThis.strokes.get(pointer.id);
-                        } else {
-                            // set mouse stroke width to default inking-canvas value
-                            outerThis.context.lineWidth = outerThis.defaultStrokeSize;
-                        }
-                    } else {
-                        // take stroke size defined by external influencer
-                        outerThis.context.lineWidth = outerThis.strokeSize;
-                    }
-
-                    let previousX: number, previousY: number, currentX: number, currentY: number;
-
-                    // translate pointer position if canvas has been resized/scaled & then draw the stroke
-                    if (outerThis.origin) {
-
-                        // TODO: find better way to handle pen/pointer events for Firefox
-                        // make pen events in Firefox appear like mouse events since pressure appears 0 and width is super large
-                        if (width > window.innerWidth) {
-                            // console.log(width, pressure);
-                            if (outerThis.strokeSize !== -1) {
-                                outerThis.context.lineWidth = outerThis.strokeSize;
-                            } else {
-                                outerThis.context.lineWidth = outerThis.defaultStrokeSize;
-                            }
-                        }
-
-                        let rect = outerThis.canvas.getBoundingClientRect();
-
-                        // ensure stroke does not retrace any past data
-                        outerThis.context.beginPath();
-
-                        // determine location of the stroke's start
-                        previousX = outerThis.getPosX(previous, rect);
-                        previousY = outerThis.getPosY(previous, rect);
-                        outerThis.context.moveTo(previousX, previousY);
-
-                        // determine location of the stroke's end
-                        if ('getCoalesced' in pointer.nativePointer) {
-                            for (const point of pointer.getCoalesced()) {
-                                currentX = outerThis.getPosX(point, rect);
-                                currentY = outerThis.getPosY(point, rect);
-                                outerThis.context.lineTo(currentX, currentY);
-                            }
-                        } else {
-                            currentX = outerThis.getPosX(pointer, rect);
-                            currentY = outerThis.getPosY(pointer, rect);
-                            outerThis.context.lineTo(currentX, currentY);
-                        }
-                    }
-
-                    if (outerThis.toolStyle === "pencil" && !outerThis.isStylusEraserActive(pointer)) {
-
-                        // update the inking texture with the correct color
-                        outerThis.context.fillStyle = outerThis.strokeColor;
-
-                        // change up the stroke texture
-                        Utils.drawPencilStroke(outerThis.context, previousX, currentX, previousY, currentY);
-
-                    } else {
-
-                        // update the stroke color (for no added texture)
-                        outerThis.context.strokeStyle = outerThis.strokeColor;
-
-                        // TODO: make stylus erase work in Firefox (which does not seem to detect the below button states for stylus input)
-                        // handle pen/stylus erasing
-                        if (outerThis.isStylusEraserActive(pointer)) {
-                            console.log("eraser detected");
-                            outerThis.context.strokeStyle = "white";
-                            outerThis.context.globalCompositeOperation = "source-over";
-                        }
-
-                       // apply ink to canvas
-                       outerThis.context.stroke();
-
-                    }
+                    outerThis.drawLocalStroke(pointer, previous, event);
                 }
             }
         });
+    }
+
+    private isStrokeSizeSet(remoteData?: any) {
+        return (remoteData && remoteData.strokeSize !== -1) || (!remoteData && this.strokeSize !== -1);
+    }
+
+    private isStrokeOfToolStyle(toolStyle: string, remoteData?: any) {
+        return (remoteData && remoteData.toolStyle === toolStyle) || (!remoteData && this.toolStyle === toolStyle);
+    }
+
+    private adjustStrokeProperties(pointer: Pointer, remoteData?: any) {
+
+        // identify input type
+        let pointerType = remoteData ? remoteData.pointerType : (pointer.nativePointer as PointerEvent).pointerType;
+        // console.log("pointer type: " + pointerType);
+
+        // collect width for touch and mouse strokes
+        let width = remoteData ? remoteData.width : (pointer.nativePointer as PointerEvent).width;
+        this.strokes.set(pointer.id, width);
+        // if (pointerType !== "pen") console.log("width: " + width);
+
+        // collect info for pen/stylus strokes
+        let pressure = remoteData ? remoteData.pressure : (pointer.nativePointer as PointerEvent).pressure;
+        // if (pointerType === "pen") console.log("pressure: " + pressure);
+        let tiltX = (pointer.nativePointer as PointerEvent).tiltX;
+        // if (pointerType === "pen") console.log("tiltX: " + tiltX);
+        let tiltY = (pointer.nativePointer as PointerEvent).tiltY;
+        // if (pointerType === "pen") console.log("tiltY: " + tiltY);
+        let twist = (pointer.nativePointer as PointerEvent).twist;
+        // if (pointerType === "pen") console.log("twist: " + twist);
+        let tangentialPressue = (pointer.nativePointer as PointerEvent).tangentialPressure;
+        // if (pointerType === "pen") console.log("tangentialPressure: " + tangentialPressue);
+
+        // adjust stroke thickness for each input type if toolbar size slider isn't active
+        if (!this.isStrokeSizeSet(remoteData)) {
+            if (this.isStrokeOfToolStyle("highlighter", remoteData)) {
+                this.defaultStrokeSize = this.highlighterStrokeSize;
+            } else {
+                this.defaultStrokeSize = this.nonHighlighterStrokeSize;
+            }
+            if (pointerType === 'pen') {
+                if (this.defaultMousePressure > pressure) {
+                    this.context.lineWidth = this.defaultStrokeSize - (2 * this.defaultStrokeSize * (this.defaultMousePressure - pressure));
+                } else if (this.defaultMousePressure === pressure) {
+                    this.context.lineWidth = this.defaultStrokeSize;
+                } else {
+                    this.context.lineWidth = this.defaultStrokeSize + (2 * this.defaultStrokeSize * (pressure - this.defaultMousePressure));
+                }
+            } else if (pointerType === "touch") {
+                this.context.lineWidth = this.strokes.get(pointer.id);
+            } else {
+                // set mouse stroke width to default inking-canvas value
+                this.context.lineWidth = this.defaultStrokeSize;
+            }
+        } else {
+            // take stroke size defined by external influencer
+            this.context.lineWidth = remoteData ? remoteData.strokeSize : this.strokeSize;
+        }
+    }
+
+    private drawStroke(pointer: Pointer, previous: Pointer, event: Event, remoteData?: any) {
+
+        this.adjustStrokeProperties(pointer, remoteData);
+
+        let previousX: number, previousY: number, currentX: number, currentY: number;
+
+        // translate pointer position if canvas has been resized/scaled & then draw the stroke
+        if (this.origin) {
+
+            // TODO: find better way to handle pen/pointer events for Firefox
+            // make pen events in Firefox appear like mouse events since pressure appears 0 and width is super large
+            if ((pointer.nativePointer as PointerEvent).width > window.innerWidth) {
+                // console.log(width, pressure);
+                if (this.isStrokeSizeSet(remoteData)) {
+                    this.context.lineWidth = remoteData ? remoteData.strokeSize : this.strokeSize;
+                } else {
+                    this.context.lineWidth = this.defaultStrokeSize;
+                }
+            }
+
+            let rect = this.canvas.getBoundingClientRect();
+
+            // ensure stroke does not retrace any past data
+            this.context.beginPath();
+
+            // determine location of the stroke's start
+            previousX = this.getPosX(previous, rect);
+            previousY = this.getPosY(previous, rect);
+            this.context.moveTo(previousX, previousY);
+
+            // determine location of the stroke's end
+            if ('getCoalesced' in pointer.nativePointer) {
+                for (const point of pointer.getCoalesced()) {
+                    currentX = this.getPosX(point, rect);
+                    currentY = this.getPosY(point, rect);
+                    this.context.lineTo(currentX, currentY);
+                }
+            } else {
+                currentX = this.getPosX(pointer, rect);
+                currentY = this.getPosY(pointer, rect);
+                this.context.lineTo(currentX, currentY);
+            }
+        }
+
+        if (remoteData) {
+            this.setGlobalCompositeOperationForTool(remoteData.toolStyle);
+        } else {
+            this.setGlobalCompositeOperationForTool(this.toolStyle);
+        }
+
+        if (this.isStrokeOfToolStyle("pencil", remoteData) && !this.isStylusEraserActive(pointer)) {
+
+            // update the inking texture with the correct color
+            this.context.fillStyle = remoteData? remoteData.color : this.strokeColor;
+
+            // change up the stroke texture
+            Utils.drawPencilStroke(this.context, previousX, currentX, previousY, currentY);
+
+        } else {
+
+            // update the stroke color (for no added texture)
+            this.context.strokeStyle = remoteData? remoteData.color : this.strokeColor;
+
+            // TODO: make stylus erase work in Firefox (which does not seem to detect the below button states for stylus input)
+            // handle pen/stylus erasing
+            if (this.isStylusEraserActive(pointer)) {
+                console.log("eraser detected");
+                this.context.strokeStyle = "white";
+                this.setGlobalCompositeOperationForTool("eraser");
+            }
+
+           // apply ink to canvas
+           this.context.stroke();
+
+        }
+    }
+
+    private drawLocalStroke(pointer: Pointer, previous: Pointer, event: Event) {
+
+        this.drawStroke(pointer, previous, event);
+
+        // broadcast stroke details for live sharing
+        let inkingCanvasPointerMoveEvent = new CustomEvent("inking-canvas-pointer-move", { 
+            detail: { 
+                pointer: pointer,
+                previous: previous,
+                event: event,
+                x0: previous.clientX,
+                y0: previous.clientY,
+                x1: (event as PointerEvent).clientX,
+                y1: (event as PointerEvent).clientY,
+                color: this.strokeColor,
+                pointerType: (event as PointerEvent).pointerType,
+                pressure: (event as PointerEvent).pressure,
+                width: (event as PointerEvent).width,
+                strokeSize: this.strokeSize,
+                toolStyle: this.toolStyle,
+                inkingCanvasName: this.name
+            }
+        });
+        this.dispatchEvent(inkingCanvasPointerMoveEvent);
+    }
+
+    drawRemoteStroke(strokeData: any) {
+        try {
+            if (strokeData && strokeData.pointer && strokeData.previous && strokeData.event) {
+                this.drawStroke(strokeData.pointer, strokeData.previous, strokeData.event, strokeData);
+            } else {
+                console.error("Input for drawRemoteStrokes function not valid.");
+            }
+        } catch (err) {
+            console.error("Could not draw strokes from remote source.", err);
+        }
     }
 
     async copyCanvasContents() {
@@ -507,13 +596,13 @@ export class InkingCanvas extends LitElement {
 
         Utils.runAsynchronously( async () => { 
             let canvasContents = this.canvas.toDataURL();
-            await set('canvasContents', canvasContents);
+            await set('canvasContents', canvasContents, this.canvasStore);
         });
     }
 
     private deleteCanvasContents() {
         Utils.runAsynchronously( async () => { 
-            await del('canvasContents');
+            await del('canvasContents', this.canvasStore);
         });
     }
 

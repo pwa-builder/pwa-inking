@@ -47,7 +47,7 @@ There are two ways to use this component. For simple projects or just to get sta
 
 ### Canvas only
 
-You can use the element `<inking-canvas></inking-canvas>` anywhere in your template, JSX, html, etc. By itself, you will get a blank, bordered canvas which you can control through its APIs (see [table](#inking-canvas) for details).
+You can use the element `<inking-canvas></inking-canvas>` anywhere in your template, JSX, html, etc. By itself, you will get a blank, bordered canvas which you can control through its APIs (see [table](#inking-canvas) for details). Every `<inking-canvas></inking-canvas>` must have a distinct name so that its data can be properly cached, transmitted, etc.
 
 ```html
     <inking-canvas name="myInkingCanvas"></inking-canvas>
@@ -116,6 +116,53 @@ If a browser does not provide a value for its pointer event's pressure/width, th
 
 The stroke width regardless of pointer event type can be set and fixed through the `<inking-toolbar></inking-toolbar>`.
 
+## Live sharing
+
+The `<inking-canvas></inking-canvas>` supports live sharing the drawing of its contents on different browsers and devices. A custom event is broadcasted for external influencers to collect. The following snippet detailing the stroke data is taken from the inking-canvas source code:
+
+```js
+    // broadcast stroke details for live sharing
+    let inkingCanvasPointerMoveEvent = new CustomEvent("inking-canvas-pointer-move", { 
+        detail: { 
+            pointer: pointer,
+            previous: previous,
+            event: event,
+            x0: previous.clientX,
+            y0: previous.clientY,
+            x1: (event as PointerEvent).clientX,
+            y1: (event as PointerEvent).clientY,
+            color: this.strokeColor,
+            pointerType: (event as PointerEvent).pointerType,
+            pressure: (event as PointerEvent).pressure,
+            width: (event as PointerEvent).width,
+            strokeSize: this.strokeSize,
+            toolStyle: this.toolStyle,
+            inkingCanvasName: this.name
+        }
+    });
+    this.dispatchEvent(inkingCanvasPointerMoveEvent);
+```
+
+External strokes (ones originally drawn on a different browser or device) can also be drawn on the local `<inking-canvas></inking-canvas>` instance by accepting a data package like the one defined above using the `drawRemoteStrokes(strokeData: any)` function.
+
+You can use any websocket-based sharing solution to broadcast and deliver stroke data. It is recommended to prevent stroke duplication by ensuring the recipient client is not the stroke's origin and that the destination `<inking-canvas></inking-canvas>` matches the origin `<inking-canvas></inking-canvas>` by name (in case the app hosts multiple instances of the component).
+
+The following code is a snippet from a [Socket.IO](https://socket.io/) example [client](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9) (found in src/script/pages/app-home.ts):
+
+```js
+    socket.on('drawing', (data: any) => {
+        if (data.originID !== this.socket.id) {
+            if (data.contents.inkingCanvasName === this.firstInkingCanvas.name) {
+                this.firstInkingCanvas.drawRemoteStroke(data.contents);
+            } else if (data.contents.inkingCanvasName === this.secondInkingCanvas.name) {
+                this.secondInkingCanvas.drawRemoteStroke(data.contents);
+            }
+        }
+    });
+```
+
+Try it: [live](https://pwabuilder-inking-live.glitch.me/) | [code](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9)
+
 ## APIs
 
 ## inking-canvas
@@ -141,6 +188,7 @@ The stroke width regardless of pointer event type can be set and fixed through t
 | `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, highlighter, or eraser)                            | 
 | `copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
 | `saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
+| `drawRemoteStroke(strokeData: any)` | Draws remote stroke to local canvas based on passed pointer event and remote canvas state |
 | `eraseAll()`                              | Deletes all visible and cached canvas ink                                        |
 | `getCanvas()` | Returns inner html canvas object for advanced use cases |
 | `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
