@@ -7,7 +7,7 @@ import PointerTracker, { Pointer } from "./PointerTracker.js";
 // import { fileSave } from 'browser-nativefs';
 
 // @ts-ignore
-import { fileSave } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
+import { fileSave, fileOpen } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
 import * as Utils from './utils';
 
 declare let ClipboardItem;
@@ -578,6 +578,26 @@ export class InkingCanvas extends LitElement {
             })}
         );
 
+    }
+
+    async importCanvasContents(event: Event) {
+        const options = {
+            mimeTypes: ['image/*'],
+            extensions: ['.png', '.jpg', '.jpeg'],
+        };
+        
+        const blob: Blob = await fileOpen(options);
+
+        let outerThis = this;
+        const blobURL = URL.createObjectURL(blob);
+        let img = new Image;
+        img.onload = function(){
+            outerThis.context.drawImage(img,0,0);
+        };
+        img.src = blobURL;
+
+        this.cacheCanvasContents(event);
+        this.requestDrawCanvas();
     }
 
     private getCanvasCopiedFailedEvent() {

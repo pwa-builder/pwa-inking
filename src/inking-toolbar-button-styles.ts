@@ -36,20 +36,38 @@ export const InkingToolbarButtonStyles = css`
     button.vertical-orientation {
         display: block;
     }
-    button#erase-all {
+    button.dropdown-button {
         border: none;
         outline: none;
         display: none;
         width: 100%;
-        min-width: 200px;
         background-color: ${Colors.lightGray};
-        padding: 25px;
-        margin-top: 14px;
         font-family: sans-serif;
         font-size: 16px;
     }
+    button#erase-all {
+        min-width: 200px;
+        padding: 25px;
+        margin-top: 14px;
+    }
     button#erase-all.show {
         display: block;
+    }
+    button.more-options {
+        display: block;
+        text-align: left;
+        height: 36px;
+        background-color: transparent;
+    }
+    button.more-options svg {
+        padding-top: 2px;
+        height: 32px;
+        padding-bottom: 2px;
+    }
+    button.more-options p {
+        position: absolute;
+        top: -6px;
+        left: 50px;
     }
     button:hover.toolbar-icon, button:focus.toolbar-icon {
         background-color: ${Colors.silver};
@@ -69,7 +87,7 @@ export const InkingToolbarButtonStyles = css`
     button.toolbar-icon.vertical-orientation.clicked.right:focus-visible {
         padding-left: 1px;
     }
-    button:hover#erase-all, button:focus#erase-all {
+    button:hover#erase-all, button:focus#erase-all, button:hover.more-options, button:focus.more-options {
         background-color: ${Colors.silver};
     }  
     .toolbar-icon {

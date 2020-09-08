@@ -27,6 +27,7 @@ export class InkingToolbar extends LitElement {
     @query('#dropdown-container') private dropdownContainer: HTMLElement;
     @property({type: HTMLDivElement}) private selectedDropdown: HTMLDivElement;
     @query('.ink-dropdown') private inkDropdown: HTMLDivElement;
+    @query('.more-options-dropdown') private moreOptionsDropdown: HTMLDivElement;
     @query('.ink-dropdown .title') private inkDropdownTitle: HTMLElement;
     @property({type: HTMLDivElement}) private selectedCircle: HTMLDivElement;
     @query('#erase-all') private eraseAllBtn: HTMLButtonElement;
@@ -75,17 +76,17 @@ export class InkingToolbar extends LitElement {
             <div id="toolbar-container">
                 <div id="tool-container">
                     <div id="customized-toolbar-selection" role="tablist" aria-label="inking toolbar">
-                        <slot @click="${this.clickedUtensil}"></slot>
-                        <slot @click="${this.clickedUtensil}"></slot>
-                        <slot @click="${this.clickedUtensil}"></slot>
-                        <slot @click="${this.clickedUtensil}"></slot>
-                        <slot @click="${this.clickedUtensil}"></slot>
-                        <slot @click="${this.clickedUtensil}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
+                        <slot @click="${this.clickedTool}"></slot>
                     </div>
                     <div id="default-toolbar-selection" role="tablist" aria-label="inking toolbar">
                         <button id="pen" class="toolbar-icon tooltip" 
                         aria-label="pen" role="tab" aria-controls="dropdown-container"
-                        @click="${this.clickedUtensil}">
+                        @click="${this.clickedTool}">
                             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                                 viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
                                 <style type="text/css">
@@ -103,7 +104,7 @@ export class InkingToolbar extends LitElement {
                         </button>
                         <button id="pencil" class="toolbar-icon tooltip" 
                         aria-label="pencil" role="tab" aria-controls="dropdown-container"
-                        @click="${this.clickedUtensil}">
+                        @click="${this.clickedTool}">
                             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                                 viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
                                 <style type="text/css">
@@ -130,7 +131,7 @@ export class InkingToolbar extends LitElement {
                         </button>
                         <button id="highlighter" class="toolbar-icon tooltip" 
                         aria-label="highlighter" role="tab" aria-controls="dropdown-container"
-                        @click="${this.clickedUtensil}">
+                        @click="${this.clickedTool}">
                             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                                 viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
                                 <style type="text/css">
@@ -147,7 +148,7 @@ export class InkingToolbar extends LitElement {
                         </button>
                         <button id="eraser" class="toolbar-icon tooltip" 
                         aria-label="eraser" role="tab" aria-controls="dropdown-container"
-                        @click="${this.clickedUtensil}">
+                        @click="${this.clickedTool}">
                             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                                 viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
                                 <style type="text/css">
@@ -194,8 +195,8 @@ export class InkingToolbar extends LitElement {
                         </button>
                     </div>
                 </div>
-                <div id="dropdown-container" role="tabpanel" aria-label="${this.getCurrentToolName()}" tabindex="0">
-                    <div class="ink-dropdown">
+                <div id="dropdown-container">
+                    <div class="ink-dropdown" role="tabpanel" aria-label="${this.getCurrentToolName()}" tabindex="-1">
                         <div class="title">Colors</div>
                         <div class="pen-pencil palette" role="tablist">
                             <button role="tab" tabindex="0" aria-pressed="-1" aria-label="black" class="black circle tooltip" @click="${this.clickedColor}">
@@ -310,7 +311,7 @@ export class InkingToolbar extends LitElement {
                             </button>
                         </div>
                         <div class="checkbox-wrapper">
-                            <input type="checkbox" id="use-slider-size"></input>
+                            <input type="checkbox" id="use-slider-size">
                             <div class="checkbox-track"><span class="on-text">ON</span><span class="off-text show">OFF</span></div>
                             <label class="checkbox-wrapper" for="use-slider-size" name="use-slider-size"><p class="checkbox-text">Use slider size</p></label>
                         </div>
@@ -319,7 +320,35 @@ export class InkingToolbar extends LitElement {
                             <span id="slider-tooltip" class="tooltip-text"></span> 
                             <input type="range" min="${this.defaultSliderMin}" max="${this.defaultSliderMax}" @value="${this.defaultSliderSize}" class="slider" @input="${this.changeStrokeSize}">
                         </div>
-                        <button id="erase-all" name="erase-all" @click="${this.clickedEraseAll}">Erase all ink</button>
+                        <button id="erase-all" name="erase-all" class="dropdown-button" @click="${this.clickedEraseAll}">Erase all ink</button>
+                    </div>
+                    <div class="more-options-dropdown" aria-label="more options" role="tabpanel" tabindex="-1">
+                        <button class="more-options save dropdown-button" @click="${this.clickedSave}">
+                            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
+                                <style type="text/css">
+                                    .white { fill-rule: evenodd; clip-rule: evenodd; fill: transparent; }
+                                    .outline { fill-rule: evenodd; clip-rule: evenodd; fill: currentColor; }
+                                </style>
+                                <path class="white" d="M32,32H10.1L6,27.9V7c0-0.6,0.4-1,1-1h25c0.6,0,1,0.4,1,1v24C33,31.6,32.6,32,32,32z"/>
+                                <path class="outline" d="M9.9,31L7,28.1V7h2v12h21V7h2v24h-6v-8H12v8H9.9z M24,25v6h-6v-4h-2v4h-2v-6H24z M28,7H11v10h17V7z M33,33H9.1
+                                L5,28.9V6c0-0.6,0.4-1,1-1h27c0.6,0,1,0.4,1,1v26C34,32.6,33.6,33,33,33z"/>
+                            </svg>
+                            <p>Save</p>
+                        </button>
+                        <button class="more-options import dropdown-button" @click="${this.clickedImport}">
+                            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">    
+                                <g>
+                                    <polygon points="10.4,19.6 9,21 12.3,24.3 1,24.3 1,26.3 12.4,26.3 9.1,29.7 10.5,31.1 16.2,25.4 "/>
+                                    <polygon points="4.9,5.9 4.9,22.7 6.9,22.7 6.9,7.9 36,7.9 36,19.3 32.7,16 27.1,21.6 17.5,12.1 11.8,17.8 13.3,19.2 17.5,14.9 
+                                            32.5,29.8 33.9,28.4 28.5,23.1 32.7,18.9 36,22.2 36,32.1 6.9,32.1 6.9,28 4.9,28 4.9,34.1 38,34.1 38,5.9 "/>   
+                                </g>  
+                                <path d="M26.7,16.3c-2.1,0-3.7-1.7-3.7-3.7s1.7-3.7,3.7-3.7s3.7,1.7,3.7,3.7S28.8,16.3,26.7,16.3z M26.7,10.9c-1,0-1.7,0.8-1.7,1.7
+                                    c0,1,0.8,1.7,1.7,1.7s1.7-0.8,1.7-1.7C28.5,11.6,27.7,10.9,26.7,10.9z"/>
+                            </svg>
+                            <p>Import picture</p>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -526,10 +555,7 @@ export class InkingToolbar extends LitElement {
 
             // hide dropdown once inking starts
             this.inkingCanvas.addEventListener('inking-started', () => {
-                Utils.hideElementIfVisible(this.inkDropdown);
-                Utils.hideElementIfVisible(this.dropdownContainer);
-                this.blurToolButtonFocus();
-                if (this.selectedTool) Utils.hideElementIfVisible(<HTMLElement>this.selectedTool);
+                this.closeToolbar();
             }, false);
 
             // redraw example stroke with new size when inking canvas resizes
@@ -585,6 +611,32 @@ export class InkingToolbar extends LitElement {
                     }
                 }
             }
+        }
+    }
+
+    private closeToolbar() {
+        Utils.hideElementIfVisible(this.selectedDropdown);
+        Utils.hideElementIfVisible(this.dropdownContainer);
+        this.blurToolButtonFocus();
+        if (this.selectedTool) Utils.hideElementIfVisible(<HTMLElement>this.selectedTool);
+        if (this.selectedTool.id === "more") {
+            this.resetToolbarToLastUsedUtensil();
+        }
+    }
+
+    private resetToolbarToLastUsedUtensil() {
+        let lastUsedUtensil = this.getLastUsedUtensil();
+        this.selectedTool = lastUsedUtensil;
+        this.selectedDropdown = this.inkDropdown;
+        this.selectedTool.classList.add(this.getCurrentStrokeColorName());
+        this.selectedTool.classList.add("clicked");
+    }
+
+    private getLastUsedUtensil() {
+        let name = this.inkingCanvas.getStrokeStyle();
+        for (let tool in this.tools) {
+            if (this.tools[tool].id === name)
+                return this.tools[tool];
         }
     }
 
@@ -883,26 +935,26 @@ export class InkingToolbar extends LitElement {
         });
     }
 
-    private clickedUtensil(e: Event) {
-        let utensil = <Element>e.target;
-        if (utensil.localName === "svg") {
-            utensil = utensil.parentElement;
-        } else if (utensil.parentElement.localName === "svg") {
-            utensil = utensil.parentElement.parentElement;
-        } else if (utensil.parentElement.parentElement.localName === "svg") {
-            utensil = utensil.parentElement.parentElement.parentElement;
-        } else if (utensil.id === "") {
-            utensil = utensil.shadowRoot.firstElementChild;
-            if (utensil.id === "copy") {
+    private clickedTool(e: Event) {
+        let tool = <Element>e.target;
+        if (tool.localName === "svg") {
+            tool = tool.parentElement;
+        } else if (tool.parentElement.localName === "svg") {
+            tool = tool.parentElement.parentElement;
+        } else if (tool.parentElement.parentElement.localName === "svg") {
+            tool = tool.parentElement.parentElement.parentElement;
+        } else if (tool.id === "") {
+            tool = tool.shadowRoot.firstElementChild;
+            if (tool.id === "copy") {
                 this.clickedCopy();
                 return;
-            } else if (utensil.id === "save") {
+            } else if (tool.id === "save") {
                 this.clickedSave();
                 return;
             }
         }
-        console.log(utensil.id + " button clicked!");
-        this.updateSelectedTool(utensil);
+        console.log(tool.id + " button clicked!");
+        this.updateSelectedTool(tool);
     }
 
     private clickedEraseAll(e: Event) {
@@ -962,8 +1014,22 @@ export class InkingToolbar extends LitElement {
             } else {
                 console.error("Cannot save - inking canvas not connected");
             }
+            this.closeToolbar();
         } catch (err) {
             console.error(err);
+        }
+    }
+
+    private clickedImport(event: Event) {
+        try {
+            if (this.inkingCanvas) {
+                this.inkingCanvas.importCanvasContents(event);
+            } else {
+                console.error("Cannot import - inking canvas not connected")
+            }
+            this.closeToolbar();
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -982,16 +1048,18 @@ export class InkingToolbar extends LitElement {
 
     private updateSelectedTool(selectedTool: Element) {
         if (selectedTool !== this.selectedTool) {
+            this.updateToolDropdown(selectedTool);
             if (this.isUtensil(selectedTool.id)) {
-                this.switchUtensil(selectedTool);
                 this.changeInkingColor();
+                this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
             }
-            this.inkingCanvas.setStrokeStyle(this.selectedTool.id);
         } else {
             // this.blurToolButtonFocus();
             this.selectedDropdown.classList.toggle("show");
             this.dropdownContainer.classList.toggle("show");
             selectedTool.classList.toggle("show");
+            if (!selectedTool.classList.contains("show"))
+                this.resetToolbarToLastUsedUtensil();
         }
     }
 
@@ -1003,7 +1071,7 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    private switchUtensil(el: Element) {
+    private updateToolDropdown(el: Element) {
         let utensilName = el.id;
         if (utensilName === "highlighter") {
             this.inkDropdownTitle.classList.add("show");            
@@ -1015,12 +1083,13 @@ export class InkingToolbar extends LitElement {
             Utils.hideElementIfVisible(this.highlighterPalette);
             if (!this.eraseAllBtn.classList.contains("show")) 
                 this.eraseAllBtn.classList.add("show");
-        } else  {  // must be pen or pencil
+        }  else if (utensilName === "pen" || utensilName === "pencil")  { 
             this.inkDropdownTitle.classList.add("show");            
             this.togglePalette(this.highlighterPalette, this.penPencilPalette);
             Utils.hideElementIfVisible(this.eraseAllBtn);
         }
-        this.toggleDropdown(this.inkDropdown, el === this.selectedTool);
+        let newDropdown = (utensilName === "more") ? this.moreOptionsDropdown : this.inkDropdown; 
+        this.toggleDropdown(newDropdown, el === this.selectedTool);
         this.toggleActiveTool(el);
     }
 
@@ -1029,8 +1098,9 @@ export class InkingToolbar extends LitElement {
 
             if (this.selectedTool && this.selectedTool.classList.contains('clicked')) {
 
-                // remove the color class
-                this.selectedTool.classList.remove(Utils.toDash(this.getCurrentStrokeColorName()));
+                // remove the color class of deselected utensil
+                if (this.isUtensil(this.selectedTool.id)) 
+                    this.selectedTool.classList.remove(Utils.toDash(this.getCurrentStrokeColorName()));
 
                 this.selectedTool.classList.remove('clicked');
                 this.selectedTool.classList.remove('show');
@@ -1060,7 +1130,7 @@ export class InkingToolbar extends LitElement {
                 this.selectedTool.setAttribute("aria-pressed", "0");
             } else {
 
-                // inform any connected tool components so they can update their states for accessbility
+                // inform any connected tool components so they can update their states for accessibility
                 this.dispatchEvent(this.toolChangedEvent);
 
             }
@@ -1111,14 +1181,21 @@ export class InkingToolbar extends LitElement {
             if (this.selectedDropdown.classList.contains("show") && isLastElementClicked) {
                 this.selectedDropdown.classList.remove("show");
                 this.dropdownContainer.classList.remove("show");
+                this.selectedDropdown.setAttribute("tabindex", "-1");
             } else {
                 this.selectedDropdown.classList.add("show");
                 this.dropdownContainer.classList.add("show");
+                this.selectedDropdown.setAttribute("tabindex", "0");
             }
         } else {
-            if (!this.selectedDropdown) this.dropdownContainer.classList.add("show");
+            if (this.selectedDropdown && this.selectedDropdown !== selectedDropdown) {
+                this.selectedDropdown.classList.remove("show");
+                this.selectedDropdown.setAttribute("tabindex", "-1");
+            }
             this.selectedDropdown = selectedDropdown;
-            this.selectedDropdown.classList.add("show"); 
+            this.selectedDropdown.classList.add("show");
+            this.dropdownContainer.classList.add("show"); 
+            this.selectedDropdown.setAttribute("tabindex", "0");
         }
     }
 
@@ -1927,6 +2004,15 @@ export class InkingToolbar extends LitElement {
                 }      
                 .slider.pink::-moz-range-thumb {
                     background-color: ${Colors.pink};
+                }
+                .more-options-dropdown {
+                    display: none;
+                    padding: 10px;
+                    font-family: sans-serif;
+                    font-size: 16px;
+                }
+                .more-options-dropdown.show {
+                    display: block;
                 }
 
                 #snackbar {
