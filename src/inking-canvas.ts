@@ -581,23 +581,46 @@ export class InkingCanvas extends LitElement {
     }
 
     async importCanvasContents(event: Event) {
-        const options = {
-            mimeTypes: ['image/*'],
-            extensions: ['.png', '.jpg', '.jpeg'],
-        };
-        
-        const blob: Blob = await fileOpen(options);
+        try {
+            const options = {
+                mimeTypes: ['image/*'],
+                extensions: ['.png', '.jpg', '.jpeg'],
+            };
+            
+            const blob: Blob = await fileOpen(options);
 
-        let outerThis = this;
-        const blobURL = URL.createObjectURL(blob);
-        let img = new Image;
-        img.onload = function(){
-            outerThis.context.drawImage(img,0,0);
-        };
-        img.src = blobURL;
-
-        this.cacheCanvasContents(event);
-        this.requestDrawCanvas();
+            let outerThis = this;
+            const blobURL = URL.createObjectURL(blob);
+            let img = new Image;
+            img.onload = function(){
+                let posX: number, posY: number;
+                if ((img.width === outerThis.canvas.width) && (img.height === outerThis.canvas.height)) {
+                    posX = posY = 0;
+                }
+                else if (img.width > outerThis.canvas.width || img.height > outerThis.canvas.height) {
+                    let ratioX = (outerThis.canvas.width)/img.width;
+                    let ratioY = (outerThis.canvas.height)/img.height;
+                    let ratio = Math.min(ratioX, ratioY);
+                    img.width *= ratio;
+                    img.height *= ratio;
+                    posX = posY = 0;
+                } 
+                if (img.width < outerThis.canvas.width || img.height < outerThis.canvas.height) {
+                    posX = (img.width === outerThis.canvas.width) ? 0 : (outerThis.canvas.width - img.width) / 2;
+                    posY = (img.height === outerThis.canvas.height) ? 0 : (outerThis.canvas.height - img.height) / 2;
+                }
+                if (posX > -1 && posY > -1) {
+                    outerThis.context.resetTransform();
+                    outerThis.context.drawImage(img, posX, posY, img.width, img.height);
+                    outerThis.cacheCanvasContents(event);
+                } else {
+                    console.error("Could not import picture to canvas. Either the canvas or image dimensions could not be resolved.")
+                }
+            };
+            img.src = blobURL;
+        } catch (err) {
+            console.error("Could not import picture to canvas. Error: " + err);
+        }
     }
 
     private getCanvasCopiedFailedEvent() {

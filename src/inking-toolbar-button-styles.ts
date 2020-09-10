@@ -56,18 +56,19 @@ export const InkingToolbarButtonStyles = css`
     button.more-options {
         display: block;
         text-align: left;
-        height: 36px;
+        height: 46px;
         background-color: transparent;
+        padding: 10px;
     }
     button.more-options svg {
-        padding-top: 2px;
+        margin-top: -2px;
         height: 32px;
         padding-bottom: 2px;
     }
     button.more-options p {
         position: absolute;
-        top: -6px;
-        left: 50px;
+        top: -1px;
+        left: 55px;
     }
     button:hover.toolbar-icon, button:focus.toolbar-icon {
         background-color: ${Colors.silver};

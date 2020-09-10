@@ -1424,6 +1424,7 @@ export class InkingToolbar extends LitElement {
                     padding-bottom: 14px;
                     font-family: sans-serif;
                     font-size: 16px;
+                    outline: none;
                 }
                 .ink-dropdown.show {
                     display: block;
