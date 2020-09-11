@@ -7,7 +7,7 @@ import PointerTracker, { Pointer } from "./PointerTracker.js";
 // import { fileSave } from 'browser-nativefs';
 
 // @ts-ignore
-import { fileSave } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
+import { fileSave, fileOpen } from 'https://cdn.jsdelivr.net/npm/browser-nativefs@0.8.2/dist/index.min.js';
 import * as Utils from './utils';
 
 declare let ClipboardItem;
@@ -331,7 +331,7 @@ export class InkingCanvas extends LitElement {
                 // console.log("pointer deleted");
 
                 // save snapshot of canvas to redraw if window resizes/refreshes
-                outerThis.cacheCanvasContents(event);
+                outerThis.cacheCanvasContents();
             },
             move(previousPointers, changedPointers, event) {
                 for (const pointer of changedPointers) {
@@ -580,6 +580,49 @@ export class InkingCanvas extends LitElement {
 
     }
 
+    async importCanvasContents() {
+        try {
+            const options = {
+                mimeTypes: ['image/*'],
+                extensions: ['.png', '.jpg', '.jpeg'],
+            };
+            
+            const blob: Blob = await fileOpen(options);
+
+            let outerThis = this;
+            const blobURL = URL.createObjectURL(blob);
+            let img = new Image;
+            img.onload = function(){
+                let posX: number, posY: number;
+                if ((img.width === outerThis.canvas.width) && (img.height === outerThis.canvas.height)) {
+                    posX = posY = 0;
+                }
+                else if (img.width > outerThis.canvas.width || img.height > outerThis.canvas.height) {
+                    let ratioX = (outerThis.canvas.width)/img.width;
+                    let ratioY = (outerThis.canvas.height)/img.height;
+                    let ratio = Math.min(ratioX, ratioY);
+                    img.width *= ratio;
+                    img.height *= ratio;
+                    posX = posY = 0;
+                } 
+                if (img.width < outerThis.canvas.width || img.height < outerThis.canvas.height) {
+                    posX = (img.width === outerThis.canvas.width) ? 0 : (outerThis.canvas.width - img.width) / 2;
+                    posY = (img.height === outerThis.canvas.height) ? 0 : (outerThis.canvas.height - img.height) / 2;
+                }
+                if (posX > -1 && posY > -1) {
+                    outerThis.context.resetTransform();
+                    outerThis.context.drawImage(img, posX, posY, img.width, img.height);
+                    outerThis.cacheCanvasContents();
+                } else {
+                    console.error("Could not import picture to canvas. Either the canvas or image dimensions could not be resolved.")
+                }
+            };
+            img.src = blobURL;
+        } catch (err) {
+            console.error("Could not import picture to canvas. Error: " + err);
+        }
+    }
+
     private getCanvasCopiedFailedEvent() {
         return new CustomEvent("inking-canvas-copied", { 
             detail: { message: "Could not copy canvas to clipboard :(" },
@@ -587,8 +630,7 @@ export class InkingCanvas extends LitElement {
             composed: true });
     }
 
-    private cacheCanvasContents(event) {
-        event.preventDefault();
+    private cacheCanvasContents() {
 
         // update the recorded canvas aspect ratio for future resizing
         this.currentAspectRatio.width = this.canvas.width;

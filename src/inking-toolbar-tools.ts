@@ -373,3 +373,59 @@ export class InkingToolbarSave extends LitElement {
         ]
     }
 }
+
+@customElement('inking-toolbar-more')
+export class InkingToolbarMore extends LitElement {
+
+    @property({type: InkingToolbar}) private toolbar: InkingToolbar;
+    @query("button") private toolButton: HTMLButtonElement;
+
+    render() {
+        return html`
+            <button part="button" id="more" class="toolbar-icon tooltip"
+                aria-label="more options" role="tab">
+                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 40 40" style="enable-background:new 0 0 40 40;" xml:space="preserve">
+                    <style type="text/css">
+                        .white { fill-rule: evenodd; clip-rule: evenodd; fill: ${Colors.white}; }
+                        .outline { fill-rule: evenodd; clip-rule: evenodd; fill: currentColor; }
+                    </style>    
+                    <g>        
+                        <rect x="18.5" y="11.5" class="outline" width="3" height="3"/>
+                        <rect x="18.5" y="18.5" class="outline" width="3" height="3"/>
+                        <rect x="18.5" y="25.5" class="outline" width="3" height="3"/>
+                    </g>  
+                </svg>
+                <span class="tooltip-text">More options</span>
+            </button>
+        `;
+    }
+    constructor() {
+        super();
+    }
+    firstUpdated() {
+        
+        // find parent inking toolbar
+        this.toolbar = <InkingToolbar>this.shadowRoot.host.parentElement;
+        if (this.toolbar) {
+
+            // add this tool component to its parent toolbar
+            this.toolbar.addToolbarButton(this, "inking-toolbar-more");
+
+            // update state of tool button for accessbility
+            let toolName = this.toolbar.getCurrentToolName();
+            this.toolbar.addEventListener("tool-changed", () => {
+                toolName = this.toolbar.getCurrentToolName();
+                this.toolButton.setAttribute("tabindex", toolName && toolName === "more" ? "0" : "-1");
+                this.toolButton.setAttribute("aria-pressed", toolName && toolName === "more" ? "0" : "-1");
+            }, false);
+
+        }
+
+    }
+    static get styles() {
+        return [
+            InkingToolbarButtonStyles
+        ]
+    }
+}

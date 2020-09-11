@@ -57,7 +57,7 @@ Try it: [live](https://pwa-inking-canvas-only.glitch.me/) | [code](https://glitc
 
 ### Canvas with default toolbar
 
-You can also add the `<inking-toolbar></inking-toolbar>` element within the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match. The default toolbar contains all 6 tools in the following order: pen, pencil, highlighter, eraser, copy, and save.
+You can also add the `<inking-toolbar></inking-toolbar>` element within the `<inking-canvas></inking-canvas>` element so the user can control the canvas visually. To connect these elements, their respective `canvas` and `name` attribute values must match. The default toolbar contains the default 6 tools in the following order: pen, pencil, highlighter, eraser, copy, and save.
 
 ```html
     <inking-canvas name="myInkingCanvas">
@@ -69,7 +69,7 @@ Try it: [live](https://pwa-inking.glitch.me/) | [code](https://glitch.com/edit/#
 
 ### Canvas with customized toolbar
 
-You can also specify the toolbar layout and select which subset of tools you want to include.
+You can also specify the toolbar layout and select which subset of tools you want to include (up to 6 tools).
 
 | Toolbar layout options | Possible values                                            | 
 | ---------------------- | ---------------------------------------------------------- | 
@@ -85,6 +85,7 @@ Available tool components (which can be added in any order):
 - `<inking-toolbar-eraser></inking-toolbar-eraser>`
 - `<inking-toolbar-copy></inking-toolbar-copy>`
 - `<inking-toolbar-save></inking-toolbar-save>`
+- `<inking-toolbar-more></inking-toolbar-more>`
 
 Example usage:
 
@@ -100,6 +101,26 @@ Example usage:
 ```
 
 Try it: [live](https://pwa-inking-customized-toolbar.glitch.me/) | [code](https://glitch.com/edit/#!/pwa-inking-customized-toolbar?path=index.html%3A25%3A55)
+
+#### More options tool
+Want to add the entire feature set beyond drawing, erasing, and copying? Instead of including the `<inking-toolbar-save></inking-toolbar-save>` tool, you can instead opt to add the `<inking-toolbar-more></inking-toolbar-more>` tool which includes a dropdown exposing both a save and import button. 
+
+Example usage:
+
+```html
+    <inking-canvas name="myInkingCanvas">
+        <inking-toolbar canvas="myInkingCanvas" horizontal="center">
+            <inking-toolbar-pen></inking-toolbar-pen>
+            <inking-toolbar-pencil></inking-toolbar-pencil>
+            <inking-toolbar-highlighter></inking-toolbar-highlighter>
+            <inking-toolbar-eraser></inking-toolbar-eraser>
+            <inking-toolbar-copy></inking-toolbar-copy>
+            <inking-toolbar-more></inking-toolbar-more>
+        </inking-toolbar>
+    </inking-canvas>
+```
+
+Try it: [live](https://pwa-inking-more-options.glitch.me/) | [code](https://glitch.com/edit/#!/pwa-inking-more-options?path=index.html%3A27%3A12)
 
 ## Default inking behavior
 
@@ -118,6 +139,7 @@ The stroke width regardless of pointer event type can be set and fixed through t
 
 ## Live sharing
 
+### Individual stroke data
 The `<inking-canvas></inking-canvas>` supports live sharing the drawing of its contents on different browsers and devices. A custom event is broadcasted for external influencers to collect. The following snippet detailing the stroke data is taken from the inking-canvas source code:
 
 ```js
@@ -143,11 +165,11 @@ The `<inking-canvas></inking-canvas>` supports live sharing the drawing of its c
     this.dispatchEvent(inkingCanvasPointerMoveEvent);
 ```
 
-External strokes (ones originally drawn on a different browser or device) can also be drawn on the local `<inking-canvas></inking-canvas>` instance by accepting a data package like the one defined above using the `drawRemoteStrokes(strokeData: any)` function.
+External strokes (ones originally drawn on a different browser or device) can also be drawn on the local `<inking-canvas></inking-canvas>` instance by accepting a data package like the one defined above using the `drawRemoteStrokes(strokeData: any)` function. This is the fastest and most lightweight way to share pwa-inking drawing in real time.
 
-You can use any websocket-based sharing solution to broadcast and deliver stroke data. It is recommended to prevent stroke duplication by ensuring the recipient client is not the stroke's origin and that the destination `<inking-canvas></inking-canvas>` matches the origin `<inking-canvas></inking-canvas>` by name (in case the app hosts multiple instances of the component).
+You can use any websocket-based sharing solution to broadcast and deliver stroke data. We recommend preventing stroke duplication by ensuring the recipient client is not the stroke's origin and that the destination `<inking-canvas></inking-canvas>` matches the origin `<inking-canvas></inking-canvas>` by name (in case the app hosts multiple instances of this inking web component).
 
-The following code is a snippet from a [Socket.IO](https://socket.io/) example [client](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9) (found in src/script/pages/app-home.ts):
+The following code is a snippet from a [Socket.IO](https://socket.io/) example [client](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9) (found in its src/script/pages/app-home.ts):
 
 ```js
     socket.on('drawing', (data: any) => {
@@ -159,6 +181,20 @@ The following code is a snippet from a [Socket.IO](https://socket.io/) example [
             }
         }
     });
+```
+### Entire image (blob)
+
+If transmitting the entire canvas state as a snapshot is necessary (in the case your users have imported a picture that otherwise wouldn't be dispatched), you can call the `requestBlob()` function and capture the broadcasted custom event which contains the [blob](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob) image.
+
+Example usage:
+
+```js
+    this.secondInkingCanvas.requestBlob();
+
+    this.secondInkingCanvas.addEventListener('inking-canvas-blob-requested', (e: CustomEvent) => {
+        console.log("blob updated event received");
+        console.log(e.detail.blob);
+    }, false);
 ```
 
 Try it: [live](https://pwabuilder-inking-live.glitch.me/) | [code](https://glitch.com/edit/#!/pwabuilder-inking-live?path=src%2Fscript%2Fpages%2Fapp-home.ts%3A116%3A9)
@@ -185,13 +221,15 @@ Try it: [live](https://pwabuilder-inking-live.glitch.me/) | [code](https://glitc
 | `getStrokeSize()`    | Returns ink stroke width 
 | `setStrokeSize(strokeSize: number)`    | Changes ink stroke width                                      |
 | `getStrokeStyle()`      | Returns name of active tool defining ink style     
-| `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, highlighter, or eraser)                            | 
-| `copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
-| `saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
+| `setStrokeStyle(toolName: string)`      | Changes ink style to reflect provided tool name (pen, pencil, highlighter, or eraser)    | 
+| `async copyCanvasContents()` | Copies canvas state to clipboard via Clipboard API (if supported by browser) |
+| `async importCanvasContents()` | Opens native file system to allow user to upload a picture |
+| `async saveCanvasContents()` | Opens native file system to allow user to save canvas state as png image |
 | `drawRemoteStroke(strokeData: any)` | Draws remote stroke to local canvas based on passed pointer event and remote canvas state |
 | `eraseAll()`                              | Deletes all visible and cached canvas ink                                        |
 | `getCanvas()` | Returns inner html canvas object for advanced use cases |
-| `getScale()`                              | Returns canvas size relative to its content's aspect ratio    
+| `getScale()`  | Returns canvas size relative to its content's aspect ratio 
+| `requestBlob()` | Dispatches custom event "inking-canvas-blob-requested" which contains the image blob of the current canvas state |
 | `requestDrawCanvas()` | Triggers an additional canvas redraw if one is not already queued up |
 | `setMinWidth(newMinWidth: number)` | Changes minimum canvas width and overrides default 300px value |
 
@@ -234,6 +272,7 @@ You can style the different parts of pwa-inking using [CSS ::part selectors](htt
 | `inking-toolbar-eraser` | `button` | The toolbar eraser button |
 | `inking-toolbar-copy` | `button` | The toolbar copy button |
 | `inking-toolbar-save` | `button` | The toolbar save button |
+| `inking-toolbar-more` | `button` | The toolbar more options button |
 
 ### Styling samples
 
