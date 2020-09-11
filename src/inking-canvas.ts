@@ -331,7 +331,7 @@ export class InkingCanvas extends LitElement {
                 // console.log("pointer deleted");
 
                 // save snapshot of canvas to redraw if window resizes/refreshes
-                outerThis.cacheCanvasContents(event);
+                outerThis.cacheCanvasContents();
             },
             move(previousPointers, changedPointers, event) {
                 for (const pointer of changedPointers) {
@@ -580,7 +580,7 @@ export class InkingCanvas extends LitElement {
 
     }
 
-    async importCanvasContents(event: Event) {
+    async importCanvasContents() {
         try {
             const options = {
                 mimeTypes: ['image/*'],
@@ -612,7 +612,7 @@ export class InkingCanvas extends LitElement {
                 if (posX > -1 && posY > -1) {
                     outerThis.context.resetTransform();
                     outerThis.context.drawImage(img, posX, posY, img.width, img.height);
-                    outerThis.cacheCanvasContents(event);
+                    outerThis.cacheCanvasContents();
                 } else {
                     console.error("Could not import picture to canvas. Either the canvas or image dimensions could not be resolved.")
                 }
@@ -630,8 +630,7 @@ export class InkingCanvas extends LitElement {
             composed: true });
     }
 
-    private cacheCanvasContents(event) {
-        event.preventDefault();
+    private cacheCanvasContents() {
 
         // update the recorded canvas aspect ratio for future resizing
         this.currentAspectRatio.width = this.canvas.width;

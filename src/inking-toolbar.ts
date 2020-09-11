@@ -1020,10 +1020,10 @@ export class InkingToolbar extends LitElement {
         }
     }
 
-    private clickedImport(event: Event) {
+    private clickedImport() {
         try {
             if (this.inkingCanvas) {
-                this.inkingCanvas.importCanvasContents(event);
+                this.inkingCanvas.importCanvasContents();
             } else {
                 console.error("Cannot import - inking canvas not connected")
             }
