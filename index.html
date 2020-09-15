@@ -23,6 +23,12 @@
                     </inking-toolbar>
                 </inking-canvas>
             </div>
+            <div class="child3">
+                <inking-canvas name="mySecondCanvas" height="400" width="400">
+                    <inking-toolbar canvas="mySecondCanvas" orientation="" vertical="" horizontal="">
+                    </inking-toolbar>
+                </inking-canvas>
+            </div>
         </div>
         <script type="module">
             let myCanvas = document.querySelector("inking-canvas");
@@ -52,7 +58,7 @@
         }
         .child2 {
             /* height: 400px; */
-            height: 90%;
+            height: 40%;
             /* width: 400px; */
             background: yellow;
             position: relative;
