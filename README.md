@@ -1,5 +1,7 @@
 # pwa-inking
 
+Please use our [main repository for any issues/bugs/features suggestion](https://github.com/pwa-builder/PWABuilder/issues/new/choose).
+
 A [web component](https://meowni.ca/posts/web-components-with-otters/) from the [PWABuilder](https://pwabuilder.com) team that allows you to quickly add a 2D inking canvas (with an optional toolbar) to your Progressive Web App 🎨 ✨
 
 _Built with [lit-element](https://lit-element.polymer-project.org/)_
